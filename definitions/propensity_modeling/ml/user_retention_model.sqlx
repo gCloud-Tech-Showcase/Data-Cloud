@@ -1,0 +1,83 @@
+config {
+  type: "operations",
+  schema: "propensity_modeling",
+  hasOutput: true,
+  description: "BQML logistic regression model for user retention prediction"
+}
+
+CREATE OR REPLACE MODEL ${self()}
+
+-- TRANSFORM clause bakes preprocessing into the model
+-- Same transformations are automatically applied during prediction
+TRANSFORM(
+  -- Numeric features: Standardize for better convergence
+  ML.STANDARD_SCALER(days_active) OVER() AS scaled_days_active,
+  ML.STANDARD_SCALER(total_sessions) OVER() AS scaled_total_sessions,
+  ML.STANDARD_SCALER(total_events) OVER() AS scaled_total_events,
+  ML.STANDARD_SCALER(levels_started) OVER() AS scaled_levels_started,
+  ML.STANDARD_SCALER(levels_completed) OVER() AS scaled_levels_completed,
+  ML.STANDARD_SCALER(total_engagement_minutes) OVER() AS scaled_engagement,
+  ML.STANDARD_SCALER(max_score) OVER() AS scaled_max_score,
+
+  -- Ratio features: Already normalized, pass through
+  level_completion_rate,
+  sessions_per_active_day,
+  days_since_last_activity,
+
+  -- Categorical features: One-hot encoded automatically
+  device_category,
+  operating_system,
+
+  -- Bucket countries to reduce cardinality
+  CASE
+    WHEN country IN ('United States', 'United Kingdom', 'Canada', 'Australia', 'Germany') THEN country
+    ELSE 'Other'
+  END AS country_bucket,
+
+  -- Target label
+  will_return
+)
+
+OPTIONS(
+  model_type = 'LOGISTIC_REG',
+  input_label_cols = ['will_return'],
+
+  -- Regularization
+  l2_reg = 0.1,
+
+  -- Training parameters
+  max_iterations = 20,
+  learn_rate_strategy = 'LINE_SEARCH',
+
+  -- Early stopping
+  early_stop = TRUE,
+  min_rel_progress = 0.001,
+
+  -- Register in Vertex AI Model Registry
+  model_registry = 'vertex_ai',
+  vertex_ai_model_id = 'user_retention_model',
+
+  -- Data split
+  data_split_method = 'AUTO_SPLIT',
+
+  -- Enable explainability
+  enable_global_explain = TRUE
+)
+
+AS
+SELECT
+  days_active,
+  total_sessions,
+  total_events,
+  levels_started,
+  levels_completed,
+  total_engagement_minutes,
+  max_score,
+  level_completion_rate,
+  sessions_per_active_day,
+  days_since_last_activity,
+  device_category,
+  operating_system,
+  country,
+  will_return
+FROM ${ref("training_data")}

@@ -1,0 +1,33 @@
+config {
+  type: "view",
+  schema: "ga4_source",
+  description: "Flattened GA4 events with unnested parameters for easier querying"
+}
+
+SELECT
+  PARSE_DATE('%Y%m%d', event_date) AS event_date,
+  event_name,
+  TIMESTAMP_MICROS(event_timestamp) AS event_datetime,
+  user_pseudo_id,
+
+  -- Device dimensions
+  device.category AS device_category,
+  device.operating_system AS operating_system,
+  device.language AS device_language,
+
+  -- Geo dimensions
+  geo.country AS country,
+  geo.region AS region,
+
+  -- Unnested event parameters
+  (SELECT value.int_value FROM UNNEST(event_params) WHERE key = 'engagement_time_msec') AS engagement_time_msec,
+  (SELECT value.int_value FROM UNNEST(event_params) WHERE key = 'session_id') AS session_id,
+  (SELECT value.string_value FROM UNNEST(event_params) WHERE key = 'firebase_screen') AS screen_name,
+  (SELECT value.int_value FROM UNNEST(event_params) WHERE key = 'score') AS score,
+  (SELECT value.int_value FROM UNNEST(event_params) WHERE key = 'board') AS board,
+  (SELECT value.string_value FROM UNNEST(event_params) WHERE key = 'level_name') AS level_name,
+  (SELECT value.int_value FROM UNNEST(event_params) WHERE key = 'value') AS event_value
+
+FROM ${ref("events_*")}
+WHERE _TABLE_SUFFIX BETWEEN '20201101' AND '20210x`x`131'
+

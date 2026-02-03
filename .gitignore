@@ -1,0 +1,29 @@
+# Local working files (briefings, notes, scratch)
+local/
+
+# OpenTofu / Terraform state and working files
+*.tfstate
+*.tfstate.*
+.terraform/
+.terraform.lock.hcl
+*.tfvars
+!*.tfvars.example
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Credentials (never commit)
+*.json
+!*.json.example
+!package.json
+!package-lock.json
+
+# Node.js (Dataform)
+node_modules/

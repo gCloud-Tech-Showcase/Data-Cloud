@@ -1,0 +1,117 @@
+config {
+  type: "table",
+  schema: "propensity_modeling",
+  description: "Training data for user retention model - predicts 7-day return"
+}
+
+-- Training window: First 7 days of user activity
+-- Label window: Days 9-15 (did user return?)
+
+WITH user_first_activity AS (
+  SELECT
+    user_pseudo_id,
+    MIN(event_date) AS first_activity_date
+  FROM ${ref("v_events_flattened")}
+  GROUP BY user_pseudo_id
+),
+
+user_training_features AS (
+  SELECT
+    e.user_pseudo_id,
+    ufa.first_activity_date,
+
+    -- Engagement Features
+    COUNT(DISTINCT e.event_date) AS days_active,
+    COUNT(DISTINCT e.session_id) AS total_sessions,
+    COUNT(*) AS total_events,
+
+    -- Gameplay Features
+    COUNTIF(e.event_name = 'level_start') AS levels_started,
+    COUNTIF(e.event_name = 'level_complete') AS levels_completed,
+    COUNTIF(e.event_name = 'level_fail') AS levels_failed,
+    SAFE_DIVIDE(
+      COUNTIF(e.event_name = 'level_complete'),
+      NULLIF(COUNTIF(e.event_name = 'level_start'), 0)
+    ) AS level_completion_rate,
+
+    -- Score Features
+    MAX(e.score) AS max_score,
+    AVG(e.score) AS avg_score,
+
+    -- Time Features
+    SUM(COALESCE(e.engagement_time_msec, 0)) / 1000.0 / 60.0 AS total_engagement_minutes,
+    AVG(COALESCE(e.engagement_time_msec, 0)) / 1000.0 AS avg_engagement_seconds_per_event,
+
+    -- Session Frequency
+    SAFE_DIVIDE(
+      COUNT(DISTINCT e.session_id),
+      NULLIF(COUNT(DISTINCT e.event_date), 0)
+    ) AS sessions_per_active_day,
+
+    -- Device Features
+    MAX(e.device_category) AS device_category,
+    MAX(e.operating_system) AS operating_system,
+    MAX(e.country) AS country,
+
+    -- Recency (days since last activity within training window)
+    DATE_DIFF(
+      DATE_ADD(ufa.first_activity_date, INTERVAL 7 DAY),
+      MAX(e.event_date),
+      DAY
+    ) AS days_since_last_activity
+
+  FROM ${ref("v_events_flattened")} e
+  JOIN user_first_activity ufa
+    ON e.user_pseudo_id = ufa.user_pseudo_id
+  WHERE
+    e.event_date BETWEEN ufa.first_activity_date
+                     AND DATE_ADD(ufa.first_activity_date, INTERVAL 6 DAY)
+  GROUP BY e.user_pseudo_id, ufa.first_activity_date
+),
+
+user_labels AS (
+  SELECT
+    e.user_pseudo_id,
+    1 AS returned_flag
+  FROM ${ref("v_events_flattened")} e
+  JOIN user_first_activity ufa
+    ON e.user_pseudo_id = ufa.user_pseudo_id
+  WHERE
+    e.event_date BETWEEN DATE_ADD(ufa.first_activity_date, INTERVAL 8 DAY)
+                     AND DATE_ADD(ufa.first_activity_date, INTERVAL 14 DAY)
+  GROUP BY e.user_pseudo_id
+)
+
+SELECT
+  f.user_pseudo_id,
+
+  -- Numeric Features
+  f.days_active,
+  f.total_sessions,
+  f.total_events,
+  f.levels_started,
+  f.levels_completed,
+  f.levels_failed,
+  COALESCE(f.level_completion_rate, 0) AS level_completion_rate,
+  COALESCE(f.max_score, 0) AS max_score,
+  COALESCE(f.avg_score, 0) AS avg_score,
+  COALESCE(f.total_engagement_minutes, 0) AS total_engagement_minutes,
+  COALESCE(f.avg_engagement_seconds_per_event, 0) AS avg_engagement_seconds_per_event,
+  COALESCE(f.sessions_per_active_day, 0) AS sessions_per_active_day,
+  COALESCE(f.days_since_last_activity, 0) AS days_since_last_activity,
+
+  -- Categorical Features
+  COALESCE(f.device_category, 'unknown') AS device_category,
+  COALESCE(f.operating_system, 'unknown') AS operating_system,
+  COALESCE(f.country, 'unknown') AS country,
+
+  -- Target Label
+  COALESCE(l.returned_flag, 0) AS will_return
+
+FROM user_training_features f
+LEFT JOIN user_labels l
+  ON f.user_pseudo_id = l.user_pseudo_id
+
+-- Filter for users with minimum activity
+WHERE f.total_sessions >= 1
+  AND f.total_events >= 3

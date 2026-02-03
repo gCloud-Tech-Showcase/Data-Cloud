@@ -1,0 +1,6 @@
+{
+  "name": "data-cloud",
+  "dependencies": {
+    "@dataform/core": "3.0.0"
+  }
+}

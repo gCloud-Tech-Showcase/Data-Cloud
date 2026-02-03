@@ -1,0 +1,96 @@
+config {
+  type: "operations",
+  schema: "propensity_modeling",
+  hasOutput: false,
+  description: "Prediction queries - run these to generate predictions",
+  disabled: true
+}
+
+-- =============================================================================
+-- Prediction Queries
+-- Run these individually in BigQuery console
+-- =============================================================================
+
+-- Query 1: Batch Predictions with Risk Scores
+SELECT
+  user_pseudo_id,
+  will_return AS actual_label,
+  predicted_will_return,
+  (SELECT prob FROM UNNEST(predicted_will_return_probs) WHERE label = 1) AS return_probability,
+  CASE
+    WHEN (SELECT prob FROM UNNEST(predicted_will_return_probs) WHERE label = 1) < 0.3 THEN 'HIGH CHURN RISK'
+    WHEN (SELECT prob FROM UNNEST(predicted_will_return_probs) WHERE label = 1) < 0.6 THEN 'MEDIUM RISK'
+    ELSE 'LOW RISK'
+  END AS risk_category
+FROM ML.PREDICT(
+  MODEL `data-cloud-485915.propensity_modeling.user_retention_model`,
+  (SELECT * FROM `data-cloud-485915.propensity_modeling.training_data` LIMIT 100)
+)
+ORDER BY return_probability ASC;
+
+
+-- Query 2: High-Risk Users Report by Device/OS
+WITH predictions AS (
+  SELECT
+    user_pseudo_id,
+    predicted_will_return,
+    (SELECT prob FROM UNNEST(predicted_will_return_probs) WHERE label = 1) AS return_probability,
+    device_category,
+    operating_system,
+    country,
+    total_sessions,
+    max_score,
+    days_since_last_activity
+  FROM ML.PREDICT(
+    MODEL `data-cloud-485915.propensity_modeling.user_retention_model`,
+    (SELECT * FROM `data-cloud-485915.propensity_modeling.training_data`)
+  )
+)
+SELECT
+  device_category,
+  operating_system,
+  COUNT(*) AS total_users,
+  COUNTIF(return_probability < 0.3) AS high_risk_users,
+  ROUND(AVG(return_probability), 3) AS avg_return_probability,
+  ROUND(COUNTIF(return_probability < 0.3) / COUNT(*) * 100, 1) AS high_risk_percentage
+FROM predictions
+GROUP BY device_category, operating_system
+ORDER BY high_risk_percentage DESC;
+
+
+-- Query 3: Explain Individual Predictions
+SELECT *
+FROM ML.EXPLAIN_PREDICT(
+  MODEL `data-cloud-485915.propensity_modeling.user_retention_model`,
+  (SELECT * FROM `data-cloud-485915.propensity_modeling.training_data` LIMIT 5),
+  STRUCT(3 AS top_k_features)
+);
+
+
+-- Query 4: Simulate New User Prediction
+SELECT
+  predicted_will_return,
+  predicted_will_return_probs
+FROM ML.PREDICT(
+  MODEL `data-cloud-485915.propensity_modeling.user_retention_model`,
+  (
+    SELECT
+      'new_user_demo' AS user_pseudo_id,
+      3 AS days_active,
+      5 AS total_sessions,
+      45 AS total_events,
+      10 AS levels_started,
+      6 AS levels_completed,
+      4 AS levels_failed,
+      25.5 AS total_engagement_minutes,
+      1500 AS max_score,
+      150.0 AS avg_score,
+      0.6 AS level_completion_rate,
+      5.0 AS avg_engagement_seconds_per_event,
+      1.67 AS sessions_per_active_day,
+      2 AS days_since_last_activity,
+      'mobile' AS device_category,
+      'Android' AS operating_system,
+      'United States' AS country
+  )
+);

@@ -1,0 +1,7 @@
+# Copy this file to terraform.tfvars and fill in your values
+project_id = "your-gcp-project-id"
+
+# Optional overrides (defaults shown)
+# region           = "us-central1"
+# dataset_id       = "data_cloud"
+# dataset_location = "US"

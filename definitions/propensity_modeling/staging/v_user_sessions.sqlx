@@ -1,0 +1,25 @@
+config {
+  type: "view",
+  schema: "ga4_source",
+  description: "User sessions aggregated from flattened events"
+}
+
+SELECT
+  user_pseudo_id,
+  session_id,
+  MIN(event_datetime) AS session_start,
+  MAX(event_datetime) AS session_end,
+  TIMESTAMP_DIFF(MAX(event_datetime), MIN(event_datetime), SECOND) AS session_duration_seconds,
+  COUNT(*) AS events_in_session,
+  COUNTIF(event_name = 'level_complete') AS levels_completed,
+  COUNTIF(event_name = 'level_fail') AS levels_failed,
+  COUNTIF(event_name = 'level_start') AS levels_started,
+  MAX(score) AS max_score_in_session,
+  SUM(COALESCE(engagement_time_msec, 0)) / 1000 AS total_engagement_seconds,
+  MAX(device_category) AS device_category,
+  MAX(operating_system) AS operating_system,
+  MAX(country) AS country
+
+FROM ${ref("v_events_flattened")}
+WHERE session_id IS NOT NULL
+GROUP BY user_pseudo_id, session_id
