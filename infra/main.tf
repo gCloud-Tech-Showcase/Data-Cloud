@@ -143,6 +143,14 @@ resource "google_project_iam_member" "dataform_bq_data_editor" {
   depends_on = [google_project_service_identity.dataform]
 }
 
+resource "google_project_iam_member" "dataform_vertex_ai_user" {
+  project = var.project_id
+  role    = "roles/aiplatform.user"
+  member  = "serviceAccount:${google_project_service_identity.dataform.email}"
+
+  depends_on = [google_project_service_identity.dataform]
+}
+
 # -----------------------------------------------------------------------------
 # Dataform Repository
 # -----------------------------------------------------------------------------
