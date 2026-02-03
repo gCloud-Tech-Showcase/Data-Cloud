@@ -53,7 +53,7 @@ Follow these steps to deploy the entire demo environment into your own Google Cl
 - A Google Cloud Project with Billing enabled.
 - Google Cloud SDK (`gcloud`) installed and configured.
 - Terraform (v1.6.0+) installed locally.
-- A GitLab personal access token for Dataform repository sync.
+- A GitHub personal access token for Dataform repository sync.
 - Sufficient IAM permissions (e.g., `Project Owner` or `Editor`) to create the resources defined in the Terraform scripts.
 
 ### 2. Configuration
@@ -77,7 +77,7 @@ Follow these steps to deploy the entire demo environment into your own Google Cl
     ```hcl
     project_id   = "your-gcp-project-id"
     region       = "us-central1"
-    gitlab_token = "your-gitlab-personal-access-token"
+    github_token = "your-github-personal-access-token"
 
     # Optional overrides (defaults shown)
     # dataset_id       = "propensity_modeling"
@@ -105,7 +105,7 @@ Follow these steps to deploy the entire demo environment into your own Google Cl
    - Required GCP APIs (Compute, BigQuery, Vertex AI, Dataform, Secret Manager)
    - VPC network and subnet
    - BigQuery datasets (`propensity_modeling`, `ga4_source`)
-   - Dataform repository with GitLab integration
+   - Dataform repository with GitHub integration
    - IAM bindings and service accounts
    - Dataform release and workflow configurations
 

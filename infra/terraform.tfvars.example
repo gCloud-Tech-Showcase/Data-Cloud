@@ -1,7 +1,11 @@
 # Copy this file to terraform.tfvars and fill in your values
-project_id = "your-gcp-project-id"
+project_id   = "your-gcp-project-id"
+github_token = "your-github-personal-access-token"
 
 # Optional overrides (defaults shown)
 # region           = "us-central1"
-# dataset_id       = "data_cloud"
+# dataset_id       = "propensity_modeling"
 # dataset_location = "US"
+# network_name     = "data-cloud-vpc"
+# subnet_cidr      = "10.0.0.0/24"
+# git_repo_url     = "https://github.com/gCloud-Tech-Showcase/Data-Cloud.git"

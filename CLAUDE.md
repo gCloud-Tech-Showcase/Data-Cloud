@@ -65,7 +65,7 @@ Data-Cloud/
 | Machine Learning | BigQuery ML (BQML) | - |
 | Model Registry | Vertex AI | - |
 | Secret Management | Secret Manager | - |
-| Version Control | Git (GitLab origin) | - |
+| Version Control | Git (GitHub) | - |
 
 ## Key Conventions
 
@@ -139,7 +139,7 @@ Data-Cloud/
 
 3. **Sensitive Variables**: Mark with `sensitive = true`:
    ```hcl
-   variable "gitlab_token" {
+   variable "github_token" {
      sensitive = true
    }
    ```
@@ -155,7 +155,7 @@ cd infra/
 
 # 1. Create terraform.tfvars from example
 cp terraform.tfvars.example terraform.tfvars
-# Edit with your project_id and gitlab_token
+# Edit with your project_id and github_token
 
 # 2. Initialize Terraform
 terraform init
