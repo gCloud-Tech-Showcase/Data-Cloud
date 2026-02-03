@@ -22,7 +22,6 @@ user_training_features AS (
 
     -- Engagement Features
     COUNT(DISTINCT e.event_date) AS days_active,
-    COUNT(DISTINCT e.session_id) AS total_sessions,
     COUNT(*) AS total_events,
 
     -- Gameplay Features
@@ -42,11 +41,11 @@ user_training_features AS (
     SUM(COALESCE(e.engagement_time_msec, 0)) / 1000.0 / 60.0 AS total_engagement_minutes,
     AVG(COALESCE(e.engagement_time_msec, 0)) / 1000.0 AS avg_engagement_seconds_per_event,
 
-    -- Session Frequency
+    -- Event Frequency
     SAFE_DIVIDE(
-      COUNT(DISTINCT e.session_id),
+      COUNT(*),
       NULLIF(COUNT(DISTINCT e.event_date), 0)
-    ) AS sessions_per_active_day,
+    ) AS events_per_active_day,
 
     -- Device Features
     MAX(e.device_category) AS device_category,
@@ -87,7 +86,6 @@ SELECT
 
   -- Numeric Features
   f.days_active,
-  f.total_sessions,
   f.total_events,
   f.levels_started,
   f.levels_completed,
@@ -97,7 +95,7 @@ SELECT
   COALESCE(f.avg_score, 0) AS avg_score,
   COALESCE(f.total_engagement_minutes, 0) AS total_engagement_minutes,
   COALESCE(f.avg_engagement_seconds_per_event, 0) AS avg_engagement_seconds_per_event,
-  COALESCE(f.sessions_per_active_day, 0) AS sessions_per_active_day,
+  COALESCE(f.events_per_active_day, 0) AS events_per_active_day,
   COALESCE(f.days_since_last_activity, 0) AS days_since_last_activity,
 
   -- Categorical Features
@@ -113,5 +111,5 @@ LEFT JOIN user_labels l
   ON f.user_pseudo_id = l.user_pseudo_id
 
 -- Filter for users with minimum activity
-WHERE f.total_sessions >= 1
+WHERE f.days_active >= 1
   AND f.total_events >= 3
