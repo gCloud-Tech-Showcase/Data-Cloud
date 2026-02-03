@@ -260,7 +260,7 @@ The project uses Firebase public dataset:
 - Project: `firebase-public-project`
 - Dataset: `analytics_153293282`
 - Tables: `events_*` (date-sharded)
-- Date range: `20201101` to `20210131`
+- Date range: `20180612` to `20181003`
 
 ## Quick Reference Commands
 

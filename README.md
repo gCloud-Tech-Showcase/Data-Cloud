@@ -175,7 +175,7 @@ Follow these steps to deploy the entire demo environment into your own Google Cl
 ### Source Data
 
 - **Dataset**: `firebase-public-project.analytics_153293282.events_*`
-- **Date Range**: November 1, 2020 - January 31, 2021
+- **Date Range**: June 12, 2018 - October 3, 2018
 - **Data Type**: GA4/Firebase event-level user interactions from a gaming app
 
 ### Transformation Layers

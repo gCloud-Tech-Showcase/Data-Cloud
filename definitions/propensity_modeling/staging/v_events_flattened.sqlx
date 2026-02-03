@@ -29,5 +29,4 @@ SELECT
   (SELECT value.int_value FROM UNNEST(event_params) WHERE key = 'value') AS event_value
 
 FROM ${ref("events_*")}
-WHERE _TABLE_SUFFIX BETWEEN '20201101' AND '20210x`x`131'
 
