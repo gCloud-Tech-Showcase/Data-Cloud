@@ -12,7 +12,6 @@ CREATE OR REPLACE MODEL ${self()}
 TRANSFORM(
   -- Numeric features: Standardize for better convergence
   ML.STANDARD_SCALER(days_active) OVER() AS scaled_days_active,
-  ML.STANDARD_SCALER(total_sessions) OVER() AS scaled_total_sessions,
   ML.STANDARD_SCALER(total_events) OVER() AS scaled_total_events,
   ML.STANDARD_SCALER(levels_started) OVER() AS scaled_levels_started,
   ML.STANDARD_SCALER(levels_completed) OVER() AS scaled_levels_completed,
@@ -21,7 +20,7 @@ TRANSFORM(
 
   -- Ratio features: Already normalized, pass through
   level_completion_rate,
-  sessions_per_active_day,
+  events_per_active_day,
   days_since_last_activity,
 
   -- Categorical features: One-hot encoded automatically
@@ -67,14 +66,13 @@ OPTIONS(
 AS
 SELECT
   days_active,
-  total_sessions,
   total_events,
   levels_started,
   levels_completed,
   total_engagement_minutes,
   max_score,
   level_completion_rate,
-  sessions_per_active_day,
+  events_per_active_day,
   days_since_last_activity,
   device_category,
   operating_system,
