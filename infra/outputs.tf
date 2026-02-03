@@ -59,3 +59,15 @@ output "dataform_workflow_config_name" {
   description = "The Dataform workflow configuration name"
   value       = google_dataform_repository_workflow_config.main.name
 }
+
+# -----------------------------------------------------------------------------
+# Vertex AI
+# -----------------------------------------------------------------------------
+
+output "vertex_endpoint_id" {
+  value = google_vertex_ai_endpoint.retention_endpoint.name
+}
+
+output "vertex_endpoint_predict_url" {
+  value = "https://${var.region}-aiplatform.googleapis.com/v1/${google_vertex_ai_endpoint.retention_endpoint.id}:predict"
+}

@@ -216,3 +216,18 @@ resource "google_dataform_repository_workflow_config" "main" {
     transitive_dependents_included           = false
   }
 }
+
+
+# -----------------------------------------------------------------------------
+# Vertex AI Configuration
+# Endpoint to deploy user retention model manually after created and registered
+# -----------------------------------------------------------------------------
+
+
+resource "google_vertex_ai_endpoint" "retention_endpoint" {
+  name         = var.retention_model_endpoint_name
+  display_name = "User Retention Prediction"
+  location     = var.region
+
+  depends_on = [google_project_service.vertex_ai]
+}

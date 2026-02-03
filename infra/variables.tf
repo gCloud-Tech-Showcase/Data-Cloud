@@ -56,3 +56,13 @@ variable "github_token" {
   type        = string
   sensitive   = true
 }
+
+# -----------------------------------------------------------------------------
+# Vertex AI
+# -----------------------------------------------------------------------------
+
+variable "retention_model_endpoint_name" {
+  description = "Name of endpoint used for user retention model inference"
+  type        = string
+  default     = "retention-prediction"
+}
