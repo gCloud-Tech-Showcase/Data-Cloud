@@ -90,13 +90,13 @@ resource "google_bigquery_dataset" "ga4_source" {
 }
 
 # -----------------------------------------------------------------------------
-# Secret Manager (for GitLab token)
+# Secret Manager (for GitHub token)
 # -----------------------------------------------------------------------------
 
 data "google_project" "current" {}
 
-resource "google_secret_manager_secret" "gitlab_token" {
-  secret_id = "dataform-gitlab-token"
+resource "google_secret_manager_secret" "github_token" {
+  secret_id = "dataform-github-token"
 
   replication {
     auto {}
@@ -105,13 +105,13 @@ resource "google_secret_manager_secret" "gitlab_token" {
   depends_on = [google_project_service.secretmanager]
 }
 
-resource "google_secret_manager_secret_version" "gitlab_token" {
-  secret      = google_secret_manager_secret.gitlab_token.id
-  secret_data = var.gitlab_token
+resource "google_secret_manager_secret_version" "github_token" {
+  secret      = google_secret_manager_secret.github_token.id
+  secret_data = var.github_token
 }
 
 resource "google_secret_manager_secret_iam_member" "dataform_access" {
-  secret_id = google_secret_manager_secret.gitlab_token.id
+  secret_id = google_secret_manager_secret.github_token.id
   role      = "roles/secretmanager.secretAccessor"
   member    = "serviceAccount:${google_project_service_identity.dataform.email}"
 
@@ -147,7 +147,7 @@ resource "google_dataform_repository" "main" {
   git_remote_settings {
     url                                 = var.git_repo_url
     default_branch                      = "main"
-    authentication_token_secret_version = google_secret_manager_secret_version.gitlab_token.id
+    authentication_token_secret_version = google_secret_manager_secret_version.github_token.id
   }
 
   depends_on = [

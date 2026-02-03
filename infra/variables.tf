@@ -46,13 +46,13 @@ variable "dataset_location" {
 # -----------------------------------------------------------------------------
 
 variable "git_repo_url" {
-  description = "GitLab repository URL for Dataform"
+  description = "GitHub repository URL for Dataform"
   type        = string
-  default     = "https://gitlab.com/google-cloud-tech-showcase/data-cloud.git"
+  default     = "https://github.com/gCloud-Tech-Showcase/Data-Cloud.git"
 }
 
-variable "gitlab_token" {
-  description = "GitLab personal access token for Dataform"
+variable "github_token" {
+  description = "GitHub personal access token for Dataform"
   type        = string
   sensitive   = true
 }
