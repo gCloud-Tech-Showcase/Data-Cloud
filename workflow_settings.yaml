@@ -1,3 +1,6 @@
 defaultProject: data-cloud-485915
 defaultLocation: US
 defaultDataset: propensity_modeling
+
+vars:
+  region: us-central1
