@@ -11,7 +11,7 @@ import logging
 import os
 import sys
 import time
-from datetime import datetime
+from datetime import datetime, timezone
 from pathlib import Path
 from typing import Optional, Dict, Any
 
@@ -67,14 +67,14 @@ def load_checkpoint() -> Dict[str, Any]:
         'continuation_token': None,
         'reviews_scraped': 0,
         'last_review_id': None,
-        'started_at': datetime.utcnow().isoformat(),
+        'started_at': datetime.now(timezone.utc).isoformat(),
         'last_updated': None
     }
 
 
 def save_checkpoint(checkpoint: Dict[str, Any]) -> None:
     """Save checkpoint to file."""
-    checkpoint['last_updated'] = datetime.utcnow().isoformat()
+    checkpoint['last_updated'] = datetime.now(timezone.utc).isoformat()
 
     with open(CHECKPOINT_FILE, 'w') as f:
         json.dump(checkpoint, f, indent=2)
@@ -120,7 +120,7 @@ def normalize_review(review: Dict[str, Any]) -> Dict[str, Any]:
         "thumbs_up_count": review.get('thumbsUpCount', 0),
         "developer_reply": review.get('replyContent'),
         "developer_reply_date": developer_reply_date,
-        "scraped_at": datetime.utcnow().isoformat()
+        "scraped_at": datetime.now(timezone.utc).isoformat()
     }
 
 
