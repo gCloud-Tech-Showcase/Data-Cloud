@@ -93,6 +93,8 @@ scripts/
 ## Notes
 
 - The script respects Google Play Store rate limits with automatic delays
-- Checkpoint file is saved after each batch (200 reviews)
-- Reviews are stored as individual JSON files with normalized schema
+- Checkpoint file is saved after each review upload (prevents duplicates on interruption)
+- Progress bar shows upload status for each batch of 200 reviews
+- Reviews are stored as individual JSON files with date-prefixed names
+- Best time to interrupt: during the sleep period between batches (watch for the sleep message)
 - All sensitive files (.env, credentials) are git-ignored

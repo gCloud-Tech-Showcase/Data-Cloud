@@ -18,6 +18,7 @@ from typing import Optional, Dict, Any
 from dotenv import load_dotenv
 from google.cloud import storage
 from google_play_scraper import Sort, reviews
+from tqdm import tqdm
 
 # Configuration
 APP_ID = "com.labpixies.flood"
@@ -190,12 +191,18 @@ def scrape_reviews(project_id: str) -> None:
 
             logger.info(f"Fetched {len(result)} reviews")
 
-            # Process and upload each review
-            for review in result:
+            # Track date range for this batch
+            batch_dates = []
+
+            # Process and upload each review with progress bar
+            for review in tqdm(result, desc="Uploading batch", unit="review"):
                 reviews_scraped += 1
 
                 # Normalize review
                 normalized = normalize_review(review)
+
+                # Track date for batch summary
+                batch_dates.append(normalized['review_date'])
 
                 # Upload to GCS
                 upload_to_gcs(bucket_name, normalized, reviews_scraped)
@@ -205,13 +212,19 @@ def scrape_reviews(project_id: str) -> None:
                 checkpoint['continuation_token'] = continuation_token
                 checkpoint['last_review_id'] = normalized['review_id']
 
-            # Save checkpoint after each batch
-            save_checkpoint(checkpoint)
+                # Save checkpoint after each file (prevents duplicates on interruption)
+                save_checkpoint(checkpoint)
 
-            logger.info(f"Progress: {reviews_scraped} reviews uploaded")
+            # Log date range for this batch
+            if batch_dates:
+                oldest_date = min(batch_dates)
+                newest_date = max(batch_dates)
+                logger.info(f"✓ Batch complete: {len(result)} reviews from {oldest_date} to {newest_date}")
 
-            # Rate limiting
-            logger.info(f"Rate limit delay: {RATE_LIMIT_DELAY} seconds...")
+            logger.info(f"Progress: {reviews_scraped} total reviews uploaded")
+
+            # Rate limiting - safe interruption point
+            logger.info(f"Sleeping {RATE_LIMIT_DELAY} seconds (safe to interrupt with Ctrl+C)...")
             time.sleep(RATE_LIMIT_DELAY)
 
     except KeyboardInterrupt:
