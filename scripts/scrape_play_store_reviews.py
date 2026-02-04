@@ -62,6 +62,14 @@ def load_checkpoint() -> Dict[str, Any]:
         try:
             with open(CHECKPOINT_FILE, 'r') as f:
                 checkpoint = json.load(f)
+
+                # Check if continuation_token is a string (from previous interrupted session)
+                if checkpoint.get('continuation_token') and isinstance(checkpoint['continuation_token'], str):
+                    logger.error("Cannot resume from saved checkpoint across restarts.")
+                    logger.error("To restart scraping, delete checkpoint.json and run again:")
+                    logger.error("  rm checkpoint.json && python scrape_play_store_reviews.py")
+                    sys.exit(1)
+
                 logger.info(f"Loaded checkpoint: {checkpoint['reviews_scraped']} reviews scraped")
                 return checkpoint
         except json.JSONDecodeError as e:
