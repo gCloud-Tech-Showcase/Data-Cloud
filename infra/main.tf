@@ -315,3 +315,19 @@ resource "google_vertex_ai_endpoint" "retention_endpoint" {
 
   depends_on = [google_project_service.vertex_ai]
 }
+
+# -----------------------------------------------------------------------------
+# Python Scripts Configuration
+# Generate .env file for data collection scripts
+# -----------------------------------------------------------------------------
+
+resource "local_file" "python_env" {
+  content = <<-EOT
+    GCP_PROJECT_ID=${var.project_id}
+    GCP_REGION=${var.region}
+  EOT
+
+  filename = "${path.module}/../scripts/.env"
+
+  file_permission = "0600" # Protect sensitive config
+}
