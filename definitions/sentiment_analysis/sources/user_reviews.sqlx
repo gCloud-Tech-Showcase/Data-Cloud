@@ -5,16 +5,11 @@ config {
   description: "Object table referencing user review JSON files in GCS"
 }
 
-js {
-  const project = dataform.projectConfig.defaultProject;
-  const region = dataform.projectConfig.vars.region;
-}
-
 CREATE OR REPLACE EXTERNAL TABLE ${self()}
-WITH CONNECTION `${project}.${region}.vertex-ai-connection`
+WITH CONNECTION `data-cloud-485915.US.vertex-ai-connection`
 OPTIONS (
   object_metadata = 'SIMPLE',
-  uris = ['gs://${project}-multimodal-data/user-reviews/play-store/flood-it/*.json'],
+  uris = ['gs://data-cloud-485915-multimodal-data/user-reviews/play-store/flood-it/*.json'],
   max_staleness = INTERVAL 1 HOUR,
   metadata_cache_mode = 'AUTOMATIC'
 );

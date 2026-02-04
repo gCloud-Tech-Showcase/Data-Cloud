@@ -5,13 +5,8 @@ config {
   description: "Remote Gemini model for sentiment analysis and text understanding"
 }
 
-js {
-  const project = dataform.projectConfig.defaultProject;
-  const region = dataform.projectConfig.vars.region;
-}
-
 CREATE OR REPLACE MODEL ${self()}
-REMOTE WITH CONNECTION `${project}.${region}.vertex-ai-connection`
+REMOTE WITH CONNECTION `data-cloud-485915.US.vertex-ai-connection`
 OPTIONS (
   ENDPOINT = 'gemini-1.5-flash'
 );
