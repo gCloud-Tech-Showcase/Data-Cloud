@@ -1,209 +1,337 @@
 # Google Cloud Tech Showcase: Propensity Modeling with BQML and Vertex AI
 
-This repository is the first in a series for the Google Cloud Tech Showcase. It provides a complete, end-to-end demonstration of a high-impact, real-world use case: **predicting user retention** using Google Cloud's powerful data and AI portfolio.
+This walkthrough demonstrates how to build an end-to-end **user retention prediction** pipeline using Google Cloud's data and AI tools. You'll deploy infrastructure, transform data, train a machine learning model, and run predictions—all using SQL.
 
-The primary goal is to empower data analysts and democratize the journey from raw data to deployed AI by leveraging SQL-native tools, while also providing a path to more sophisticated MLOps for advanced personas.
+**What you'll build:**
 
-## Use Case: User Retention Prediction
+- A data pipeline that transforms raw GA4 events into ML-ready features
+- A logistic regression model trained directly in BigQuery
+- Batch and real-time inference capabilities
 
-This demo solves a common business problem: identifying which users are likely to return to an application. By analyzing user behavior data from Google Analytics 4 (GA4) / Firebase, we build a machine learning model that predicts whether a user will return within 7 days based on their first week of activity.
-
-This enables product and marketing teams to:
-
-- Focus retention efforts on users who are unlikely to return on their own.
-- Optimize engagement campaigns by targeting users with low return probability.
-- Personalize the user experience to increase retention rates.
+**Business context:** Predict which users are likely to churn so you can target them with retention campaigns before they leave.
 
 ---
 
-## Architecture
-
-The entire demo is built on a modern, scalable, and serverless data architecture. All infrastructure is managed via Terraform for consistency and one-click replicability.
-
-The data flows through the following stages:
-
-1. **Source Data**: We use the public Firebase gaming dataset (`firebase-public-project.analytics_153293282.events_*`) available in BigQuery. This provides raw, event-level user interaction data.
-2. **SQL Transformation**: **Dataform** is used to orchestrate a series of SQL-based transformations. It cleans the raw, nested GA4 data, engineers features, and builds clean, model-ready tables (`training_data`). This demonstrates how to apply software engineering best practices (version control, testing, dependency management) to a data transformation pipeline.
-3. **In-Database ML Training**: **BigQuery Machine Learning (BQML)** is used to train a logistic regression model directly within BigQuery. The model is defined in Dataform using a `CREATE MODEL` statement, showcasing the democratization of ML for SQL-savvy analysts.
-4. **Centralized Model Management**: Upon creation, the BQML model is automatically registered in the **Vertex AI Model Registry**. This provides a unified hub for managing, versioning, and governing all ML models, regardless of their origin.
-5. **Operationalization (Optional Extension)**: Once in Vertex AI, the model can be easily deployed to an endpoint for real-time predictions or used in a batch prediction pipeline, catering to more advanced ML operationalization needs.
-
----
-
-## Technology Stack
-
-| Component | Technology | Version |
-|-----------|------------|---------|
-| Infrastructure as Code | Terraform | >= 1.6.0 |
-| Data Warehouse | Google BigQuery | - |
-| Data Transformation | Dataform | 3.0.0 |
-| Machine Learning | BigQuery ML (BQML) | - |
-| MLOps Platform | Vertex AI Model Registry | - |
-| Secret Management | Google Secret Manager | - |
-| Version Control | Git | - |
-
----
-
-## Getting Started
-
-Follow these steps to deploy the entire demo environment into your own Google Cloud project.
-
-### 1. Prerequisites
-
-- A Google Cloud Project with Billing enabled.
-- Google Cloud SDK (`gcloud`) installed and configured.
-- Terraform (v1.6.0+) installed locally.
-- A GitHub personal access token for Dataform repository sync.
-- Sufficient IAM permissions (e.g., `Project Owner` or `Editor`) to create the resources defined in the Terraform scripts.
-
-### 2. Configuration
-
-1. Clone this repository to your local machine:
-
-    ```bash
-    git clone <your-repository-url>
-    cd Data-Cloud
-    ```
-
-2. Create a `terraform.tfvars` file in the `infra/` directory using the provided example:
-
-    ```bash
-    cd infra
-    cp terraform.tfvars.example terraform.tfvars
-    ```
-
-3. Edit `terraform.tfvars` with your values:
-
-    ```hcl
-    project_id   = "your-gcp-project-id"
-    region       = "us-central1"
-    github_token = "your-github-personal-access-token"
-
-    # Optional overrides (defaults shown)
-    # dataset_id       = "propensity_modeling"
-    # dataset_location = "US"
-    # network_name     = "data-cloud-vpc"
-    # subnet_cidr      = "10.0.0.0/24"
-    ```
-
-### 3. Deployment
-
-1. Initialize Terraform in the `infra/` directory. This will download the necessary Google Cloud provider plugins.
-
-    ```bash
-    cd infra
-    terraform init
-    ```
-
-2. Review the execution plan to see the resources Terraform will create.
-
-    ```bash
-    terraform plan
-    ```
-
-3. Apply the configuration to deploy the infrastructure. This will provision:
-   - Required GCP APIs (Compute, BigQuery, Vertex AI, Dataform, Secret Manager)
-   - VPC network and subnet
-   - BigQuery datasets (`propensity_modeling`, `ga4_source`)
-   - Dataform repository with GitHub integration
-   - IAM bindings and service accounts
-   - Dataform release and workflow configurations
-
-    ```bash
-    terraform apply
-    ```
-
-    Enter `yes` when prompted to confirm.
-
-### 4. Running the Demo
-
-1. **Dataform Pipeline Execution**:
-   - The Dataform release configuration automatically compiles the code every hour (cron: `0 * * * *`).
-   - To trigger manually: Navigate to the Dataform UI in the Google Cloud Console, select the "data-cloud" repository, and initiate a workflow execution.
-   - This will create the staging views and `training_data` table in BigQuery.
-
-2. **Model Training**:
-   - The `user_retention_model` is defined in Dataform and trains automatically as part of the pipeline.
-   - The model uses logistic regression with L2 regularization and automatic train/test splitting.
-
-3. **Verify the Results**:
-   - **In BigQuery**: After execution completes, find your model in the BigQuery `Models` section under the `propensity_modeling` dataset. Inspect evaluation metrics, feature importance, and training statistics.
-   - **In Vertex AI**: Navigate to the Vertex AI Model Registry. Your model `user_retention_model` will be listed, ready for governance and deployment.
-
-4. **Run Predictions** (Optional):
-   - Enable the prediction queries in `definitions/propensity_modeling/ml/predictions.sqlx` by setting `hasOutput: true`.
-   - Re-run the Dataform workflow to generate batch predictions.
-
----
-
-## Project Structure
+## Architecture Overview
 
 ```
-.
-├── infra/                              # Terraform Infrastructure as Code
-│   ├── main.tf                         # Core resource definitions (APIs, VPC, BigQuery, Dataform, IAM)
-│   ├── variables.tf                    # Input variables with defaults
-│   ├── outputs.tf                      # Outputs from the deployment
-│   ├── providers.tf                    # Google Cloud provider configuration
-│   ├── versions.tf                     # Terraform and provider version constraints
-│   └── terraform.tfvars.example        # Example configuration template
-│
-├── definitions/                        # Dataform SQL transformation pipeline
-│   └── propensity_modeling/
-│       ├── sources/
-│       │   └── ga4_events.sqlx         # Declares the raw GA4/Firebase BigQuery table as source
-│       ├── staging/
-│       │   ├── v_events_flattened.sqlx # Unnests nested GA4 event parameters into flat columns
-│       │   └── v_user_sessions.sqlx    # Aggregates events into user sessions
-│       ├── marts/
-│       │   └── training_data.sqlx      # Feature engineering for ML (7-day windows, 18 features)
-│       └── ml/
-│           ├── user_retention_model.sqlx   # BQML logistic regression model definition
-│           ├── model_evaluation.sqlx       # Model evaluation queries (disabled by default)
-│           └── predictions.sqlx            # Batch prediction queries (disabled by default)
-│
-├── package.json                        # Dataform dependencies (@dataform/core 3.0.0)
-├── workflow_settings.yaml              # Dataform project configuration
-├── .gitignore                          # Excludes sensitive files (tfvars, tfstate, etc.)
-└── README.md                           # This file
+┌─────────────────────────────────────────────────────────────────────────┐
+│                        Google Cloud Platform                            │
+├─────────────────────────────────────────────────────────────────────────┤
+│                                                                         │
+│  ┌──────────────┐    ┌──────────────┐    ┌──────────────────────────┐  │
+│  │   Firebase   │    │   Dataform   │    │        BigQuery          │  │
+│  │  Public Data │───▶│  (SQL ETL)   │───▶│  ┌──────────────────┐   │  │
+│  │  (GA4 Events)│    │              │    │  │  training_data   │   │  │
+│  └──────────────┘    └──────────────┘    │  └────────┬─────────┘   │  │
+│                                          │           │              │  │
+│                                          │           ▼              │  │
+│                                          │  ┌──────────────────┐   │  │
+│                                          │  │  BQML Model      │   │  │
+│                                          │  │  (Logistic Reg)  │   │  │
+│                                          │  └────────┬─────────┘   │  │
+│                                          └───────────┼──────────────┘  │
+│                                                      │                  │
+│                              ┌───────────────────────┼───────────────┐ │
+│                              │                       ▼               │ │
+│                              │  ┌──────────────────────────────┐    │ │
+│                              │  │   Vertex AI Model Registry   │    │ │
+│                              │  │   (Versioning & Governance)  │    │ │
+│                              │  └──────────────┬───────────────┘    │ │
+│                              │                 │                     │ │
+│                              │                 ▼                     │ │
+│                              │  ┌──────────────────────────────┐    │ │
+│                              │  │   Vertex AI Endpoint         │    │ │
+│                              │  │   (Real-time Predictions)    │    │ │
+│                              │  └──────────────────────────────┘    │ │
+│                              └───────────────────────────────────────┘ │
+└─────────────────────────────────────────────────────────────────────────┘
 ```
 
 ---
 
-## Data Pipeline Details
+## Prerequisites
 
-### Source Data
+Before starting, ensure you have:
 
-- **Dataset**: `firebase-public-project.analytics_153293282.events_*`
-- **Date Range**: June 12, 2018 - October 3, 2018
-- **Data Type**: GA4/Firebase event-level user interactions from a gaming app
+- [ ] Google Cloud Project with billing enabled
+- [ ] `gcloud` CLI installed and authenticated (`gcloud auth login`)
+- [ ] Terraform >= 1.6.0 installed
+- [ ] GitHub personal access token (for Dataform to sync this repo)
 
-### Transformation Layers
+---
 
-| Layer | Schema | Purpose |
-|-------|--------|---------|
-| **Sources** | - | External table declarations |
-| **Staging** | `ga4_source` | Data cleaning, unnesting nested JSON, session aggregation |
-| **Marts** | `propensity_modeling` | Feature engineering, ML-ready datasets |
-| **ML** | `propensity_modeling` | Model training and predictions |
+## Step 1: Deploy the Infrastructure
 
-### Feature Engineering
+Terraform provisions all the GCP resources: BigQuery datasets, Dataform repository, IAM permissions, and networking.
 
-The `training_data` table creates 18 features across several categories:
+```bash
+cd infra
+cp terraform.tfvars.example terraform.tfvars
+```
 
-- **Engagement**: days_active, total_sessions, total_events
-- **Gameplay**: levels_started, levels_completed, level_completion_rate
-- **Scoring**: max_score, avg_score
-- **Time**: total_engagement_minutes, days_since_last_activity
-- **Device**: device_category, operating_system, country
+Edit `terraform.tfvars` with your values:
 
-### Model Configuration
+```hcl
+project_id   = "your-project-id"
+github_token = "ghp_your_token_here"
+```
 
-- **Algorithm**: Logistic Regression
-- **Regularization**: L2 (lambda = 0.1)
-- **Training Window**: First 7 days of user activity
-- **Label Window**: Days 8-14 (non-overlapping)
-- **Target**: `will_return` (binary: did user return in label window?)
+Deploy:
+
+```bash
+terraform init
+terraform plan    # Review what will be created
+terraform apply   # Type 'yes' to confirm
+```
+
+**What gets created:**
+| Resource | Purpose |
+|----------|---------|
+| BigQuery datasets | `propensity_modeling`, `ga4_source` |
+| Dataform repository | Connected to this GitHub repo |
+| Secret Manager secret | Stores your GitHub token securely |
+| IAM bindings | Dataform service account permissions |
+| VPC network | Private networking for GCP services |
+
+---
+
+## Step 2: Run the Data Pipeline
+
+The Dataform pipeline transforms raw GA4 events into ML-ready training data.
+
+1. Open **Google Cloud Console → Dataform**
+2. Select the `data-cloud` repository
+3. Click **Start Compilation** → **Create** (fetches latest code from GitHub)
+4. Click **Start Execution** → **Start** (runs the full workflow)
+
+**What gets built:**
+
+| Object                                     | Type  | Description                          |
+| ------------------------------------------ | ----- | ------------------------------------ |
+| `ga4_source.v_events_flattened`            | View  | Flattens nested GA4 event parameters |
+| `propensity_modeling.training_data`        | Table | ~18K rows of engineered features     |
+| `propensity_modeling.user_retention_model` | Model | Trained BQML logistic regression     |
+
+---
+
+## Step 3: Explore the Training Data
+
+Open **BigQuery Console** and run these queries to understand your data.
+
+**Preview the training data:**
+
+```sql
+SELECT *
+FROM `propensity_modeling.training_data`
+LIMIT 10;
+```
+
+**Check the class balance (churned vs. returned):**
+
+```sql
+SELECT
+  will_return,
+  COUNT(*) AS count,
+  ROUND(COUNT(*) * 100.0 / SUM(COUNT(*)) OVER(), 1) AS percentage
+FROM `propensity_modeling.training_data`
+GROUP BY will_return;
+```
+
+**How the features are engineered:**
+
+The model uses a **rolling 7-day window** approach:
+
+- **Features**: User behavior from the 7 days prior to each observation date
+- **Label**: Did the user return in the 7 days _after_ the observation date?
+- **Result**: Multiple training rows per user (one per weekly snapshot)
+
+| Category       | Features                                                                             |
+| -------------- | ------------------------------------------------------------------------------------ |
+| **Activity**   | `days_active`, `total_events`, `events_per_day`, `events_per_active_day`             |
+| **Engagement** | `total_engagement_minutes`, `engagement_minutes_per_day`, `days_since_last_activity` |
+| **Gameplay**   | `levels_started`, `levels_completed`, `levels_failed`, `level_completion_rate`       |
+| **Scoring**    | `max_score`, `avg_score`                                                             |
+| **Device**     | `device_category`, `operating_system`, `country`                                     |
+
+---
+
+## Step 4: Analyze the Model
+
+**View model evaluation metrics:**
+
+```sql
+SELECT *
+FROM ML.EVALUATE(MODEL `propensity_modeling.user_retention_model`);
+```
+
+Key metrics to look for:
+
+- **Precision**: Of users predicted to return, what % actually did?
+- **Recall**: Of users who returned, what % did we identify?
+- **AUC-ROC**: Model's ability to distinguish churners from returners (0.5 = random, 1.0 = perfect)
+
+**View feature importance (what drives predictions):**
+
+```sql
+SELECT *
+FROM ML.GLOBAL_EXPLAIN(MODEL `propensity_modeling.user_retention_model`)
+ORDER BY attribution DESC;
+```
+
+**View training progress:**
+
+```sql
+SELECT *
+FROM ML.TRAINING_INFO(MODEL `propensity_modeling.user_retention_model`);
+```
+
+**View the confusion matrix:**
+
+```sql
+SELECT *
+FROM ML.CONFUSION_MATRIX(MODEL `propensity_modeling.user_retention_model`);
+```
+
+---
+
+## Step 5: Run Batch Predictions
+
+Score all users in your training data:
+
+```sql
+SELECT
+  user_pseudo_id,
+  observation_date,
+  predicted_will_return,
+  ROUND(predicted_will_return_probs[OFFSET(1)].prob, 3) AS return_probability,
+  ROUND(predicted_will_return_probs[OFFSET(0)].prob, 3) AS churn_probability
+FROM ML.PREDICT(
+  MODEL `propensity_modeling.user_retention_model`,
+  (SELECT * FROM `propensity_modeling.training_data`)
+)
+ORDER BY churn_probability DESC
+LIMIT 20;
+```
+
+**Score a hypothetical new user:**
+
+```sql
+SELECT
+  predicted_will_return,
+  ROUND(predicted_will_return_probs[OFFSET(0)].prob, 3) AS churn_probability,
+  ROUND(predicted_will_return_probs[OFFSET(1)].prob, 3) AS return_probability
+FROM ML.PREDICT(
+  MODEL `propensity_modeling.user_retention_model`,
+  (SELECT
+    7 AS days_in_window,
+    3 AS days_active,
+    45 AS total_events,
+    6.4 AS events_per_day,
+    2.5 AS engagement_minutes_per_day,
+    5 AS levels_started,
+    3 AS levels_completed,
+    0 AS levels_failed,
+    0.6 AS level_completion_rate,
+    17.5 AS total_engagement_minutes,
+    150 AS max_score,
+    75.0 AS avg_score,
+    15.0 AS events_per_active_day,
+    2 AS days_since_last_activity,
+    'mobile' AS device_category,
+    'Android' AS operating_system,
+    'United States' AS country
+  )
+);
+```
+
+---
+
+## Step 6: Tune the Classification Threshold
+
+The model outputs a probability (0-1). The **threshold** determines when to classify a user as "will return" vs "will churn."
+
+**Default threshold: 0.5**
+
+- Probability >= 0.5 → Predicted to return
+- Probability < 0.5 → Predicted to churn
+
+**In BigQuery Console:**
+
+1. Go to your model in the BigQuery explorer
+2. Click the **Evaluation** tab
+3. Use the **Positive class threshold** slider to see how precision/recall change
+
+**Threshold tradeoffs:**
+
+| Threshold        | Effect                                                             |
+| ---------------- | ------------------------------------------------------------------ |
+| **Lower (0.3)**  | Higher recall—catches more at-risk users, but more false positives |
+| **Higher (0.7)** | Higher precision—fewer but more confident predictions              |
+
+**View the ROC curve data:**
+
+```sql
+SELECT *
+FROM ML.ROC_CURVE(MODEL `propensity_modeling.user_retention_model`);
+```
+
+---
+
+## Step 7: (Optional) Deploy for Real-time Predictions
+
+For real-time inference, deploy the model to a Vertex AI endpoint.
+
+1. Go to **Vertex AI → Model Registry**
+2. Find `user_retention_model` (auto-registered during training)
+3. Click **Deploy to Endpoint**
+4. Configure machine type and deploy
+
+**Call the endpoint via REST API:**
+
+```bash
+curl -X POST \
+  -H "Authorization: Bearer $(gcloud auth print-access-token)" \
+  -H "Content-Type: application/json" \
+  "https://REGION-aiplatform.googleapis.com/v1/projects/PROJECT/locations/REGION/endpoints/ENDPOINT_ID:predict" \
+  -d '{
+    "instances": [{
+      "days_in_window": 7,
+      "days_active": 3,
+      "total_events": 45,
+      "events_per_day": 6.4,
+      "engagement_minutes_per_day": 2.5,
+      "levels_started": 5,
+      "levels_completed": 3,
+      "levels_failed": 0,
+      "level_completion_rate": 0.6,
+      "total_engagement_minutes": 17.5,
+      "max_score": 150,
+      "avg_score": 75.0,
+      "events_per_active_day": 15.0,
+      "days_since_last_activity": 2,
+      "device_category": "mobile",
+      "operating_system": "Android",
+      "country": "United States"
+    }]
+  }'
+```
+
+---
+
+## Step 8: Explain Individual Predictions
+
+Understand why the model made a specific prediction:
+
+```sql
+SELECT *
+FROM ML.EXPLAIN_PREDICT(
+  MODEL `propensity_modeling.user_retention_model`,
+  (SELECT * FROM `propensity_modeling.training_data` LIMIT 5)
+);
+```
+
+This shows the contribution of each feature to the prediction for each user.
 
 ---
 
@@ -216,10 +344,64 @@ cd infra
 terraform destroy
 ```
 
-Enter `yes` when prompted to confirm.
+---
+
+## Project Structure
+
+```
+.
+├── infra/                              # Terraform Infrastructure as Code
+│   ├── main.tf                         # GCP resources (APIs, BigQuery, Dataform, IAM)
+│   ├── variables.tf                    # Input variables
+│   ├── outputs.tf                      # Deployment outputs
+│   ├── providers.tf                    # Google Cloud provider config
+│   ├── versions.tf                     # Version constraints
+│   └── terraform.tfvars.example        # Configuration template
+│
+├── definitions/                        # Dataform SQL pipeline
+│   └── propensity_modeling/
+│       ├── sources/
+│       │   └── ga4_events.sqlx         # Source declaration for Firebase data
+│       ├── staging/
+│       │   └── v_events_flattened.sqlx # Unnest GA4 nested params → flat columns
+│       ├── marts/
+│       │   └── training_data.sqlx      # Rolling 7-day window feature engineering
+│       └── ml/
+│           └── user_retention_model.sqlx   # BQML logistic regression model
+│
+├── package.json                        # Dataform dependencies
+├── workflow_settings.yaml              # Dataform project config
+└── README.md
+```
+
+---
+
+## Source Data
+
+This demo uses a public Firebase gaming dataset:
+
+| Property   | Value                                                  |
+| ---------- | ------------------------------------------------------ |
+| Dataset    | `firebase-public-project.analytics_153293282.events_*` |
+| Date Range | June 12, 2018 – October 3, 2018                        |
+| Events     | ~5.7M raw events                                       |
+| Users      | ~15K unique users                                      |
+
+---
+
+## Technology Stack
+
+| Component           | Technology           | Purpose                                   |
+| ------------------- | -------------------- | ----------------------------------------- |
+| Infrastructure      | Terraform (>= 1.6.0) | One-click deployment of all GCP resources |
+| Data Warehouse      | BigQuery             | Storage, transformation, and ML training  |
+| Data Transformation | Dataform (3.0.0)     | SQL-based ETL with dependency management  |
+| Machine Learning    | BigQuery ML          | In-database model training                |
+| Model Management    | Vertex AI            | Model registry, versioning, deployment    |
+| Secrets             | Secret Manager       | Secure storage of GitHub token            |
 
 ---
 
 ## License
 
-This project is provided as a demonstration for educational purposes.
+This project is provided for educational and demonstration purposes.
