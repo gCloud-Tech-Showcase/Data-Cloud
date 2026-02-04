@@ -80,8 +80,13 @@ def load_checkpoint() -> Dict[str, Any]:
     }
 
 
-def save_checkpoint(checkpoint: Dict[str, Any]) -> None:
-    """Save checkpoint to file without mutating the input dict."""
+def save_checkpoint(checkpoint: Dict[str, Any], silent: bool = False) -> None:
+    """Save checkpoint to file without mutating the input dict.
+
+    Args:
+        checkpoint: Checkpoint dict to save
+        silent: If True, don't log after saving (useful for frequent saves)
+    """
     # Create a copy for serialization (don't mutate input)
     serializable = checkpoint.copy()
     serializable['last_updated'] = datetime.now(timezone.utc).isoformat()
@@ -93,7 +98,8 @@ def save_checkpoint(checkpoint: Dict[str, Any]) -> None:
     with open(CHECKPOINT_FILE, 'w') as f:
         json.dump(serializable, f, indent=2)
 
-    logger.info(f"Checkpoint saved: {serializable['reviews_scraped']} reviews total")
+    if not silent:
+        logger.info(f"Checkpoint saved: {serializable['reviews_scraped']} reviews total")
 
 
 def normalize_review(review: Dict[str, Any]) -> Dict[str, Any]:
@@ -225,8 +231,8 @@ def scrape_reviews(project_id: str) -> None:
                 checkpoint['continuation_token'] = continuation_token
                 checkpoint['last_review_id'] = normalized['review_id']
 
-                # Save checkpoint after each file (prevents duplicates on interruption)
-                save_checkpoint(checkpoint)
+                # Save checkpoint after each review (silent to avoid breaking progress bar)
+                save_checkpoint(checkpoint, silent=True)
 
             # Log date range for this batch
             if batch_dates:
