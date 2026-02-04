@@ -28,6 +28,7 @@ Thumbs.db
 
 # Node.js (Dataform)
 node_modules/
+.df/
 
 # Python scripts
 scripts/.venv/
