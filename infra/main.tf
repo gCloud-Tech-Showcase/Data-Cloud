@@ -96,7 +96,7 @@ resource "google_bigquery_dataset" "ga4_source" {
 
 resource "google_bigquery_dataset" "sentiment_analysis" {
   dataset_id = "sentiment_analysis"
-  location   = var.dataset_location
+  location   = var.region  # Must match Vertex AI connection location
 
   description = "Gemini-powered sentiment analysis of user reviews"
 
