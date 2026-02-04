@@ -6,7 +6,7 @@ config {
 }
 
 CREATE OR REPLACE EXTERNAL TABLE ${self()}
-WITH CONNECTION `data-cloud-485915.US.vertex-ai-connection`
+WITH CONNECTION `US.vertex-ai-connection`
 OPTIONS (
   object_metadata = 'SIMPLE',
   uris = ['gs://data-cloud-485915-multimodal-data/user-reviews/play-store/flood-it/*.json'],

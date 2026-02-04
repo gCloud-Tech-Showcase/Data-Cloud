@@ -6,7 +6,7 @@ config {
 }
 
 CREATE OR REPLACE MODEL ${self()}
-REMOTE WITH CONNECTION `data-cloud-485915.US.vertex-ai-connection`
+REMOTE WITH CONNECTION `US.vertex-ai-connection`
 OPTIONS (
   ENDPOINT = 'gemini-1.5-flash'
 );
