@@ -1,0 +1,25 @@
+# Python virtual environments
+.venv/
+venv/
+env/
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.Python
+
+# Checkpoint and state files
+checkpoint.json
+*.log
+
+# Environment and credentials
+.env
+service-account-key.json
+*.json.bak
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~

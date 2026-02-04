@@ -1,0 +1,49 @@
+config {
+  type: "view",
+  schema: "sentiment_analysis",
+  description: "Extract sentiment, category, and score from reviews using Gemini"
+}
+
+SELECT
+  uri,
+
+  -- Extract original review fields from JSON
+  JSON_EXTRACT_SCALAR(data, '$.platform') AS platform,
+  JSON_EXTRACT_SCALAR(data, '$.review_id') AS review_id,
+  JSON_EXTRACT_SCALAR(data, '$.user_pseudo_id') AS user_pseudo_id,
+  JSON_EXTRACT_SCALAR(data, '$.user_name') AS user_name,
+  PARSE_DATE('%Y-%m-%d', JSON_EXTRACT_SCALAR(data, '$.review_date')) AS review_date,
+  CAST(JSON_EXTRACT_SCALAR(data, '$.rating') AS INT64) AS rating,
+  JSON_EXTRACT_SCALAR(data, '$.app_version') AS app_version,
+  CAST(JSON_EXTRACT_SCALAR(data, '$.thumbs_up_count') AS INT64) AS thumbs_up_count,
+  JSON_EXTRACT_SCALAR(data, '$.review_text') AS review_text,
+  JSON_EXTRACT_SCALAR(data, '$.developer_reply') AS developer_reply,
+
+  -- Gemini-extracted sentiment fields
+  JSON_EXTRACT_SCALAR(ml_generate_text_llm_result, '$.predictions[0].content.sentiment') AS sentiment,
+  JSON_EXTRACT_SCALAR(ml_generate_text_llm_result, '$.predictions[0].content.category') AS category,
+  SAFE_CAST(JSON_EXTRACT_SCALAR(ml_generate_text_llm_result, '$.predictions[0].content.score') AS FLOAT64) AS sentiment_score
+
+FROM
+  ML.GENERATE_TEXT(
+    MODEL ${ref("gemini_sentiment_model")},
+    (
+      SELECT
+        uri,
+        data,
+        CONCAT(
+          'Analyze this app review and return ONLY a JSON object with these exact fields:\n',
+          '{"sentiment": "positive|neutral|negative", ',
+          '"category": "performance|ads|difficulty|bugs|praise|other", ',
+          '"score": <number from -1 to 1>}\n\n',
+          'Review text: ',
+          JSON_EXTRACT_SCALAR(data, '$.review_text')
+        ) AS prompt
+      FROM ${ref("user_reviews")}
+    ),
+    STRUCT(
+      0.2 AS temperature,
+      1024 AS max_output_tokens,
+      TRUE AS flatten_json_output
+    )
+  );

@@ -1,0 +1,19 @@
+config {
+  type: "operations",
+  schema: "sentiment_analysis",
+  hasOutput: true,
+  description: "Object table referencing user review JSON files in GCS"
+}
+
+js {
+  const { GCP_PROJECT, GCP_REGION } = require("../includes/constants");
+}
+
+CREATE OR REPLACE EXTERNAL TABLE ${self()}
+WITH CONNECTION `${GCP_PROJECT}.${GCP_REGION}.vertex-ai-connection`
+OPTIONS (
+  object_metadata = 'SIMPLE',
+  uris = ['gs://${GCP_PROJECT}-multimodal-data/user-reviews/play-store/flood-it/*.json'],
+  max_staleness = INTERVAL 1 HOUR,
+  metadata_cache_mode = 'AUTOMATIC'
+);
