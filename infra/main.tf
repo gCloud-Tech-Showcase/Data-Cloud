@@ -123,14 +123,16 @@ resource "google_storage_bucket" "multimodal_data" {
     enabled = true
   }
 
-  lifecycle_rule {
-    action {
-      type = "Delete"
-    }
-    condition {
-      age = 730 # Delete after 2 years
-    }
-  }
+  # Lifecycle rule disabled to prevent automatic data deletion
+  # Uncomment if you want automatic cleanup of old data
+  # lifecycle_rule {
+  #   action {
+  #     type = "Delete"
+  #   }
+  #   condition {
+  #     age = 730 # Delete after 2 years
+  #   }
+  # }
 
   labels = {
     project = "data-cloud"
