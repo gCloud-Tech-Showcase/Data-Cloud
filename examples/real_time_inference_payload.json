@@ -1,0 +1,21 @@
+{
+  "instances": [
+    {
+      "days_in_window": 7,
+      "days_active": 2,
+      "total_events": 20,
+      "levels_started": 3,
+      "levels_completed": 1,
+      "total_engagement_minutes": 5.0,
+      "max_score": 75,
+      "events_per_day": 2.9,
+      "engagement_minutes_per_day": 0.7,
+      "level_completion_rate": 0.33,
+      "events_per_active_day": 10.0,
+      "days_since_last_activity": 4,
+      "device_category": "mobile",
+      "operating_system": "Android",
+      "country": "Brazil"
+    }
+  ]
+}
