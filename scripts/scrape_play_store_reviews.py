@@ -74,17 +74,19 @@ def load_checkpoint() -> Dict[str, Any]:
 
 
 def save_checkpoint(checkpoint: Dict[str, Any]) -> None:
-    """Save checkpoint to file."""
-    checkpoint['last_updated'] = datetime.now(timezone.utc).isoformat()
+    """Save checkpoint to file without mutating the input dict."""
+    # Create a copy for serialization (don't mutate input)
+    serializable = checkpoint.copy()
+    serializable['last_updated'] = datetime.now(timezone.utc).isoformat()
 
-    # Convert continuation_token to string if it's an object
-    if checkpoint['continuation_token'] is not None:
-        checkpoint['continuation_token'] = str(checkpoint['continuation_token'])
+    # Convert continuation_token to string only in the copy
+    if serializable['continuation_token'] is not None:
+        serializable['continuation_token'] = str(serializable['continuation_token'])
 
     with open(CHECKPOINT_FILE, 'w') as f:
-        json.dump(checkpoint, f, indent=2)
+        json.dump(serializable, f, indent=2)
 
-    logger.info(f"Checkpoint saved: {checkpoint['reviews_scraped']} reviews total")
+    logger.info(f"Checkpoint saved: {serializable['reviews_scraped']} reviews total")
 
 
 def normalize_review(review: Dict[str, Any]) -> Dict[str, Any]:
