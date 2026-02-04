@@ -57,12 +57,19 @@ def load_env() -> tuple[str, str]:
 
 
 def load_checkpoint() -> Dict[str, Any]:
-    """Load checkpoint from file if exists."""
+    """Load checkpoint from file if exists, handling corrupted files gracefully."""
     if Path(CHECKPOINT_FILE).exists():
-        with open(CHECKPOINT_FILE, 'r') as f:
-            checkpoint = json.load(f)
-            logger.info(f"Loaded checkpoint: {checkpoint['reviews_scraped']} reviews scraped")
-            return checkpoint
+        try:
+            with open(CHECKPOINT_FILE, 'r') as f:
+                checkpoint = json.load(f)
+                logger.info(f"Loaded checkpoint: {checkpoint['reviews_scraped']} reviews scraped")
+                return checkpoint
+        except json.JSONDecodeError as e:
+            # Checkpoint file is corrupted, back it up and start fresh
+            backup_file = f"{CHECKPOINT_FILE}.corrupted"
+            Path(CHECKPOINT_FILE).rename(backup_file)
+            logger.warning(f"Corrupted checkpoint file backed up to {backup_file}")
+            logger.warning(f"Starting fresh from beginning. Error: {e}")
 
     return {
         'continuation_token': None,
