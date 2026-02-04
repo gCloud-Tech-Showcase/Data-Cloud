@@ -140,14 +140,15 @@ def upload_to_gcs(
     storage_client = storage.Client()
     bucket = storage_client.bucket(bucket_name)
 
-    # Generate filename with zero-padding
-    filename = f"user-reviews/play-store/flood-it/review_{file_number:06d}.json"
+    # Generate filename with date and zero-padded number for easy sorting
+    review_date = review['review_date'].replace('-', '')  # YYYYMMDD format
+    filename = f"user-reviews/play-store/flood-it/review_{review_date}_{file_number:06d}.json"
     blob = bucket.blob(filename)
 
-    # Upload JSON
+    # Upload JSON with Unicode characters preserved (emojis, non-Latin text)
     blob.upload_from_string(
-        json.dumps(review, indent=2),
-        content_type='application/json'
+        json.dumps(review, ensure_ascii=False, indent=2),
+        content_type='application/json; charset=utf-8'
     )
 
     logger.debug(f"Uploaded: gs://{bucket_name}/{filename}")
