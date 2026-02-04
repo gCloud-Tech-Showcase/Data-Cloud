@@ -152,7 +152,10 @@ resource "google_bigquery_connection" "vertex_ai" {
 
   cloud_resource {}
 
-  depends_on = [google_project_service.bigquery]
+  depends_on = [
+    google_project_service.bigquery,
+    google_project_service.vertex_ai
+  ]
 }
 
 # Grant Vertex AI User permissions to the connection's service account
@@ -161,7 +164,10 @@ resource "google_project_iam_member" "bq_connection_vertex_ai_user" {
   role    = "roles/aiplatform.user"
   member  = "serviceAccount:${google_bigquery_connection.vertex_ai.cloud_resource[0].service_account_id}"
 
-  depends_on = [google_bigquery_connection.vertex_ai]
+  depends_on = [
+    google_bigquery_connection.vertex_ai,
+    google_project_service.vertex_ai
+  ]
 }
 
 # Grant read access to GCS bucket for BigQuery ObjectRef tables
@@ -170,7 +176,10 @@ resource "google_storage_bucket_iam_member" "bq_connection_gcs_reader" {
   role   = "roles/storage.objectViewer"
   member = "serviceAccount:${google_bigquery_connection.vertex_ai.cloud_resource[0].service_account_id}"
 
-  depends_on = [google_bigquery_connection.vertex_ai]
+  depends_on = [
+    google_bigquery_connection.vertex_ai,
+    google_storage_bucket.multimodal_data
+  ]
 }
 
 # -----------------------------------------------------------------------------
