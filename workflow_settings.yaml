@@ -3,4 +3,4 @@ defaultLocation: US
 defaultDataset: propensity_modeling
 
 vars:
-  region: us-central1
+  region: US

@@ -96,7 +96,7 @@ resource "google_bigquery_dataset" "ga4_source" {
 
 resource "google_bigquery_dataset" "sentiment_analysis" {
   dataset_id = "sentiment_analysis"
-  location   = var.region  # Must match Vertex AI connection location
+  location   = var.dataset_location  # Use US multi-region to match other datasets
 
   description = "Gemini-powered sentiment analysis of user reviews"
 
@@ -148,7 +148,7 @@ resource "google_storage_bucket" "multimodal_data" {
 
 resource "google_bigquery_connection" "vertex_ai" {
   connection_id = "vertex-ai-connection"
-  location      = var.region
+  location      = var.dataset_location  # Use US multi-region to match datasets
   friendly_name = "Vertex AI Connection for Gemini"
   description   = "Connection for accessing Gemini models from BigQuery"
 
