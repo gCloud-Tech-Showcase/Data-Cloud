@@ -77,6 +77,10 @@ def save_checkpoint(checkpoint: Dict[str, Any]) -> None:
     """Save checkpoint to file."""
     checkpoint['last_updated'] = datetime.now(timezone.utc).isoformat()
 
+    # Convert continuation_token to string if it's an object
+    if checkpoint['continuation_token'] is not None:
+        checkpoint['continuation_token'] = str(checkpoint['continuation_token'])
+
     with open(CHECKPOINT_FILE, 'w') as f:
         json.dump(checkpoint, f, indent=2)
 
