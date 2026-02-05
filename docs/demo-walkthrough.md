@@ -70,6 +70,19 @@ Combine both domains for contextualized interventions.
 
 ---
 
+### Part 4: Campaign Intelligence (Guide 7)
+
+Use public data to power AI-generated campaign recommendations.
+
+**[07 - Campaign Intelligence](demos/07-campaign-intelligence.md)**
+- Spatial joins with BigQuery Geography (ST_CONTAINS)
+- Combine Census housing data with digital engagement signals
+- Score census tracts for mortgage campaign targeting
+- Generate AI-powered campaign recommendations with Gemini
+- **Business value:** "Target first-time buyer campaigns without accessing internal mortgage data"
+
+---
+
 ## Key Differentiators
 
 This demo highlights Google Cloud capabilities that set it apart:
@@ -82,6 +95,8 @@ This demo highlights Google Cloud capabilities that set it apart:
 | Model explainability | Vertex AI | Regulatory compliance, trust |
 | Incremental pipelines | Dataform incremental processing | Only process new data |
 | Multimodal analytics | BigQuery + BigLake + Gemini | Contextualized insights, not just predictions |
+| Spatial analytics | BigQuery Geography | Join users to geographic areas at scale |
+| Public data enrichment | Census ACS + theLook | Insights without internal data access |
 
 ---
 

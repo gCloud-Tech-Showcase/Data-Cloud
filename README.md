@@ -119,8 +119,9 @@ cd infra && terraform apply
 |--------|-------|--------|---------------------|
 | **Sentiment Analysis** | 500+ Play Store reviews (JSON) | Sentiment-enriched reviews | BigLake, Gemini 2.0 Flash, Dataform |
 | **Propensity Modeling** | 5.7M GA4 events, 15K users | Churn predictions (0-100%) | BigQuery ML, Vertex AI |
+| **Campaign Intelligence** | Census ACS + theLook eCommerce | AI-generated campaign recommendations | BigQuery Geography, Gemini 2.0 Flash |
 
-**Cross-domain insight:** Join sentiment with churn risk to identify users who are *both* high-risk *and* frustrated.
+**Cross-domain insight:** Join sentiment with churn risk to identify users who are *both* high-risk *and* frustrated. Use public Census data to target mortgage campaigns without accessing internal customer records.
 
 ---
 
@@ -152,12 +153,13 @@ cd infra && terraform apply
 
 ```
 Data-Cloud/
-├── definitions/              # Dataform SQL pipelines
-│   ├── sentiment_analysis/   # Gemini-powered review analysis
-│   └── propensity_modeling/  # BQML churn prediction
-├── infra/                    # Terraform GCP resources
-├── scripts/                  # Python Play Store scraper
-└── docs/                     # Documentation
+├── definitions/                # Dataform SQL pipelines
+│   ├── sentiment_analysis/     # Gemini-powered review analysis
+│   ├── propensity_modeling/    # BQML churn prediction
+│   └── campaign_intelligence/  # Census + eCommerce campaign targeting
+├── infra/                      # Terraform GCP resources
+├── scripts/                    # Python Play Store scraper
+└── docs/                       # Documentation
 ```
 
 ---

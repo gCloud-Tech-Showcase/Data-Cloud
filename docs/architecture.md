@@ -109,6 +109,40 @@ sequenceDiagram
 
 ---
 
+## Data Flow: Campaign Intelligence Domain
+
+```mermaid
+sequenceDiagram
+    participant TL as theLook eCommerce<br/>Public Dataset
+    participant CT as Census Tracts<br/>Public Dataset
+    participant ACS as Census ACS<br/>Public Dataset
+    participant Silver as Silver Layer<br/>Spatial Joins
+    participant Gold as Gold Layer<br/>Campaign Scores
+    participant Gemini as Gemini 2.0 Flash
+
+    TL->>Silver: Users with lat/long
+    CT->>Silver: Tract geometries
+    Note over Silver: ST_CONTAINS spatial join<br/>silver_users_with_census
+
+    TL->>Silver: Events + Orders
+    Note over Silver: Aggregate engagement<br/>silver_engagement_signals
+
+    ACS->>Silver: Housing + Income data
+    Note over Silver: Demographics by tract<br/>silver_tract_demographics
+
+    Silver->>Gold: Combined features
+    Note over Gold: Campaign scoring<br/>gold_tract_campaign_features
+
+    Silver->>Gold: User-level features
+    Note over Gold: Segment assignment<br/>gold_user_segments
+
+    Gold->>Gemini: Campaign summaries
+    Gemini->>Gold: AI recommendations
+    Note over Gold: gold_campaign_recommendations
+```
+
+---
+
 ## Medallion Architecture Explained
 
 This project follows the **bronze/silver/gold pattern** popularized by modern data lakehouses.
@@ -180,11 +214,17 @@ definitions/
 │   ├── models/                 # AI models
 │   └── staging/                # Silver layer
 │
-└── propensity_modeling/        # Domain 2: User retention
-    ├── sources/                # Bronze layer
-    ├── staging/                # Silver layer
-    ├── marts/                  # Gold layer
-    └── ml/                     # Gold layer (models)
+├── propensity_modeling/        # Domain 2: User retention
+│   ├── sources/                # Bronze layer
+│   ├── staging/                # Silver layer
+│   ├── marts/                  # Gold layer
+│   └── ml/                     # Gold layer (models)
+│
+└── campaign_intelligence/      # Domain 3: Campaign targeting
+    ├── sources/                # Bronze layer (Census + theLook)
+    ├── staging/                # Silver layer (spatial joins)
+    ├── marts/                  # Gold layer (scoring)
+    └── models/                 # Gold layer (Gemini agent)
 ```
 
 **Benefits:**
@@ -371,18 +411,36 @@ WHERE JSON_EXTRACT_SCALAR(data_string, '$.review_id') NOT IN (
 │   │   └── staging/
 │   │       └── silver_review_sentiment.sqlx      # Gemini-enriched (incremental)
 │   │
-│   └── propensity_modeling/
+│   ├── propensity_modeling/
+│   │   ├── sources/
+│   │   │   └── ga4_events.sqlx                   # External GA4 declaration
+│   │   ├── staging/
+│   │   │   ├── silver_events_flattened.sqlx      # Unnested GA4 events
+│   │   │   └── silver_user_sessions.sqlx         # Session aggregations
+│   │   ├── marts/
+│   │   │   └── gold_training_features.sqlx       # 7-day rolling windows
+│   │   └── ml/
+│   │       ├── gold_user_retention_model.sqlx    # BQML logistic regression
+│   │       ├── predictions.sqlx                  # Example prediction queries
+│   │       └── model_evaluation.sqlx             # Model evaluation queries
+│   │
+│   └── campaign_intelligence/
 │       ├── sources/
-│       │   └── ga4_events.sqlx                   # External GA4 declaration
+│       │   ├── thelook_users.sqlx                # theLook users declaration
+│       │   ├── thelook_events.sqlx               # theLook events declaration
+│       │   ├── thelook_orders.sqlx               # theLook orders declaration
+│       │   ├── census_tracts.sqlx                # Census tract geometries
+│       │   └── census_acs_housing.sqlx           # Census ACS demographics
 │       ├── staging/
-│       │   ├── silver_events_flattened.sqlx      # Unnested GA4 events
-│       │   └── silver_user_sessions.sqlx         # Session aggregations
+│       │   ├── silver_users_with_census.sqlx     # Spatial join (ST_CONTAINS)
+│       │   ├── silver_engagement_signals.sqlx    # User engagement aggregates
+│       │   └── silver_tract_demographics.sqlx    # Housing/income by tract
 │       ├── marts/
-│       │   └── gold_training_features.sqlx       # 7-day rolling windows
-│       └── ml/
-│           ├── gold_user_retention_model.sqlx    # BQML logistic regression
-│           ├── predictions.sqlx                  # Example prediction queries
-│           └── model_evaluation.sqlx             # Model evaluation queries
+│       │   ├── gold_tract_campaign_features.sqlx # Campaign scoring by tract
+│       │   └── gold_user_segments.sqlx           # User segment assignment
+│       └── models/
+│           ├── gemini_campaign_agent.sqlx        # Remote Gemini model
+│           └── gold_campaign_recommendations.sqlx # AI campaign recommendations
 │
 ├── docs/                               # Documentation
 │   ├── getting-started.md              # Installation and configuration
@@ -466,6 +524,26 @@ WHERE JSON_EXTRACT_SCALAR(data_string, '$.review_id') NOT IN (
 - `level_start`, `level_complete`, `level_fail` - Gameplay
 - `post_score` - Score events
 - Device/geo metadata in event_params
+
+---
+
+### Campaign Intelligence Domain
+
+**Sources:** Three BigQuery public datasets
+
+| Dataset | Table | Purpose |
+|---------|-------|---------|
+| `bigquery-public-data.thelook_ecommerce` | `users`, `events`, `orders` | Digital engagement signals with lat/long |
+| `bigquery-public-data.geo_census_tracts` | `us_census_tracts_national` | Census tract geometries for spatial joins |
+| `bigquery-public-data.census_bureau_acs` | `censustract_2018_5yr` | Housing tenure and income demographics |
+
+**Key features:**
+- **Spatial joins**: ST_CONTAINS to assign users to census tracts
+- **No PII**: All data from public datasets
+- **Campaign scoring**: First-time buyer, refinance, and home equity scores
+- **AI recommendations**: Gemini-generated campaign strategies
+
+**Demo narrative:** "Target mortgage campaigns using public Census data and digital engagement signals — no internal customer data required."
 
 ---
 
