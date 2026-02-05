@@ -3,6 +3,5 @@ config {
   database: "firebase-public-project",
   schema: "analytics_153293282",
   name: "events_*",
-  description: "Firebase Flood-it! public dataset - GA4 event data",
-  tags: ["propensity_modeling", "sources"]
+  description: "Firebase Flood-it! public dataset - GA4 event data"
 }
