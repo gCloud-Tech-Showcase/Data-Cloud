@@ -1,43 +1,22 @@
-# Setup Guide
+# Getting Started
 
-This guide walks you through setting up the Data-Cloud project from scratch.
+Deploy the Data-Cloud project infrastructure and run your first pipeline.
 
 ---
 
 ## Prerequisites
 
-Before starting, ensure you have:
-
-- [ ] **Google Cloud Project** with billing enabled
-- [ ] **`gcloud` CLI** installed and authenticated
-  ```bash
-  gcloud auth login
-  gcloud config set project YOUR_PROJECT_ID
-  ```
-- [ ] **Terraform** >= 1.6.0 installed ([Download](https://www.terraform.io/downloads))
-- [ ] **GitHub personal access token** with `repo` scope ([Create token](https://github.com/settings/tokens))
-- [ ] **Python 3.9+** (optional, for review scraping)
-
-### Enable Required APIs
-
-The Terraform script will enable these automatically, but you can pre-enable them:
-
-```bash
-gcloud services enable \
-  bigquery.googleapis.com \
-  bigqueryconnection.googleapis.com \
-  dataform.googleapis.com \
-  storage.googleapis.com \
-  aiplatform.googleapis.com \
-  secretmanager.googleapis.com
-```
+- **Google Cloud Project** with billing enabled
+- **Terraform** >= 1.6.0 ([Download](https://www.terraform.io/downloads))
+- **GitHub personal access token** with `repo` scope ([Create token](https://github.com/settings/tokens))
+- **Python 3.9+** (optional, for review scraping)
 
 ---
 
 ## Step 1: Clone the Repository
 
 ```bash
-git clone https://github.com/your-org/Data-Cloud.git
+git clone https://github.com/gCloud-Tech-Showcase/Data-Cloud.git
 cd Data-Cloud
 ```
 
@@ -45,437 +24,157 @@ cd Data-Cloud
 
 ## Step 2: Configure Project Settings
 
-You need to configure your project ID in **two places**:
+Two files need your project ID:
 
 ### A. Terraform Configuration
 
-Create `terraform.tfvars` from the example:
-
 ```bash
-cd infra
-cp terraform.tfvars.example terraform.tfvars
+cp infra/terraform.tfvars.example infra/terraform.tfvars
 ```
 
 Edit `infra/terraform.tfvars`:
 
 ```hcl
-project_id   = "your-project-id"        # ← Your GCP project ID
-region       = "us-central1"            # Optional: change region
-location     = "US"                     # Optional: BigQuery location (US or EU)
-github_token = "ghp_your_token_here"    # ← Your GitHub personal access token
-```
+project_id   = "your-project-id"           # Required: Your GCP project ID
+github_token = "ghp_your_token_here"       # Required: GitHub personal access token
 
-**Security note:** Never commit `terraform.tfvars` to Git. It's already in `.gitignore`.
+# Optional overrides (defaults are fine for most cases)
+# region           = "us-central1"
+# dataset_location = "US"
+```
 
 ### B. Dataform Configuration
 
-Create `workflow_settings.yaml` from the example:
-
 ```bash
-cd ..  # Back to project root
 cp workflow_settings.yaml.example workflow_settings.yaml
 ```
 
 Edit `workflow_settings.yaml`:
 
 ```yaml
-defaultProject: your-project-id  # ← Change this to match terraform.tfvars
+defaultProject: your-project-id    # Must match terraform.tfvars
 defaultLocation: US
 defaultDataset: propensity_modeling
-
-vars:
-  region: US
 ```
 
-**Security note:** Never commit `workflow_settings.yaml` to Git. It's already in `.gitignore`.
+**Security note:** Both files are gitignored. Never commit them.
 
 ---
 
-## Step 3: Deploy Infrastructure with Terraform
-
-Navigate to the `infra/` directory and initialize Terraform:
+## Step 3: Deploy Infrastructure
 
 ```bash
 cd infra
 terraform init
+terraform plan    # Preview changes
+terraform apply   # Deploy (type 'yes' to confirm)
 ```
-
-Preview the resources that will be created:
-
-```bash
-terraform plan
-```
-
-Deploy the infrastructure:
-
-```bash
-terraform apply
-```
-
-Type `yes` when prompted to confirm.
 
 ### What Gets Created
 
-Terraform provisions these resources:
+| Resource | Purpose |
+|----------|---------|
+| **BigQuery Datasets** | `sentiment_analysis`, `propensity_modeling`, `ga4_source`, `campaign_intelligence` |
+| **GCS Bucket** | Storage for review JSON files |
+| **BigQuery Connection** | Enables BigLake and Gemini access |
+| **Dataform Repository** | Connected to GitHub |
+| **Secret Manager** | Secure storage for GitHub token |
+| **Service Account** | Dataform execution identity with required IAM roles |
 
-| Resource | Name/ID | Purpose |
-|----------|---------|---------|
-| **BigQuery Datasets** | `sentiment_analysis` | Bronze/Silver layers for review analysis |
-| | `propensity_modeling` | Gold layer for ML models and features |
-| | `ga4_source` | Silver layer for GA4 events |
-| **GCS Bucket** | `{project-id}-multimodal-data` | Storage for review JSON files |
-| **BigQuery Connection** | `vertex-ai-connection` | Enables BigLake and Gemini access |
-| **Dataform Repository** | `data-cloud` | Connected to your GitHub repo |
-| **Secret Manager Secret** | `github-token` | Secure storage for Dataform GitHub access |
-| **Service Account** | `dataform-sa@{project}.iam` | Dataform execution identity |
-| **IAM Bindings** | Various | Permissions for BigLake, Vertex AI, GCS |
-
-### Terraform Outputs
-
-After successful deployment, Terraform displays useful information:
-
-```
-Outputs:
-
-dataform_repository_name = "projects/your-project/locations/us-central1/repositories/data-cloud"
-gcs_bucket_name = "your-project-multimodal-data"
-vertex_ai_connection_id = "projects/your-project/locations/US/connections/vertex-ai-connection"
-```
-
-Save these for reference.
+Terraform automatically enables required APIs (BigQuery, Dataform, Vertex AI, etc.).
 
 ---
 
-## Step 4: Collect Play Store Reviews (Optional)
-
-If you want to scrape fresh review data, use the Python scraper.
-
-### Install Dependencies
-
-```bash
-cd scripts  # From project root
-python -m venv .venv
-source .venv/bin/activate  # On Windows: .venv\Scripts\activate
-pip install -r requirements.txt
-```
-
-### Run the Scraper
-
-```bash
-python scrape_play_store_reviews.py
-```
-
-**What it does:**
-1. Scrapes Google Play Store reviews for "Flood It!" game
-2. Saves each review as a JSON file locally
-3. Uploads to GCS: `gs://{project}-multimodal-data/user-reviews/play-store/flood-it/`
-4. Creates checkpoint file for resume capability
-
-**Configuration:**
-- The scraper reads GCS bucket name from `.env` (auto-generated by Terraform)
-- Service account key in `service-account-key.json` (auto-generated by Terraform)
-- Both files are gitignored and created during `terraform apply`
-
-**Sample output:**
-```
-Starting Play Store review scraper...
-App: Flood It! (com.labpixies.flood)
-Target: 2000 reviews
-
-Progress: 50/2000 reviews scraped (2.5%)
-  [OK] Review gp:AOqpTOH... uploaded to GCS
-Progress: 100/2000 reviews scraped (5.0%)
-  [OK] Review gp:AOqpTOI... uploaded to GCS
-...
-Checkpoint saved: scraper_checkpoint.json
-```
-
-**Note:** Pre-scraped reviews (~500+) are already available in the GCS bucket if you skip this step.
-
----
-
-## Step 5: Configure Dataform Workspace
+## Step 4: Create Dataform Workspace (Manual)
 
 1. Open **Google Cloud Console** → **Dataform**
 2. Click on the `data-cloud` repository
 3. Click **Create Development Workspace**
-
-**Important:** The workspace name must match your Git branch name for proper syncing.
-
-**Recommended workspace name:**
-```
-main  # If working from main branch
-```
-
-Or use a feature branch:
-```
-claude/gemini-bigquery-unstructured-data-OuNWR
-```
-
-4. Click **Create**
+4. Name it `main` (or your branch name)
+5. Click **Create**
 
 ---
 
-## Step 6: Run the Dataform Pipeline
+## Step 5: Run the Pipeline (Manual)
 
-### Compile the Pipeline
+### Compile
 
 1. In your Dataform workspace, click **Start Compilation**
 2. Wait for compilation to complete (~10 seconds)
-3. Review the compiled SQL in the file tree
 
-**What compilation does:**
-- Resolves `${ref("table_name")}` references
-- Validates dependencies
-- Generates BigQuery SQL from .sqlx files
+### Execute
 
-### Execute the Pipeline
-
-**Option A: Run Everything**
 1. Click **Start Execution**
-2. Leave "All actions" selected
+2. Select **All actions** (or filter by tag: `sentiment_analysis`, `propensity_modeling`, `campaign_intelligence`)
 3. Click **Execute**
-4. Monitor progress in the execution log
 
-**Option B: Run by Tag (Recommended)**
-1. Click **Start Execution**
-2. Select **Tags**
-3. Choose tags:
-   - `sentiment_analysis` - Run only sentiment pipeline
-   - `propensity_modeling` - Run only propensity pipeline
-   - `bronze` - Run only bronze layer
-   - `silver` - Run only silver layer
-   - `gold` - Run only gold layer
-4. Click **Execute**
-
-**What gets built:**
-
-### Sentiment Analysis Domain
-
-| Object | Type | Build Time | Rows |
-|--------|------|------------|------|
-| `bronze_user_reviews` | BigLake Object Table | ~5 sec | ~500+ reviews (via GCS) |
-| `gemini_sentiment_model` | Remote Model | ~5 sec | N/A (model reference) |
-| `silver_review_sentiment` | Incremental Table | ~30-60 sec | ~500+ reviews |
-
-**Note:** First run of `silver_review_sentiment` calls Gemini API for each review. Subsequent runs are incremental (only new reviews).
-
-### Propensity Modeling Domain
-
-| Object | Type | Build Time | Rows |
-|--------|------|------------|------|
-| `events_*` | External Declaration | ~1 sec | N/A (reference only) |
-| `silver_events_flattened` | View | ~5 sec | ~5.7M events |
-| `silver_user_sessions` | View | ~5 sec | ~100K sessions |
-| `gold_training_features` | Table | ~60-90 sec | ~18K training rows |
-| `gold_user_retention_model` | BQML Model | ~5-10 min | N/A (trained model) |
-
-**Total execution time:** ~10-15 minutes (first run)
+**First run takes ~10-15 minutes** (model training). Subsequent runs are faster due to incremental processing.
 
 ---
 
-## Step 7: Verify the Deployment
+## Step 6: Verify Deployment
 
-### Check BigQuery Datasets
-
-```bash
-bq ls --project_id=your-project-id
-```
-
-Expected output:
-```
-  datasetId
- ----------------------
-  ga4_source
-  propensity_modeling
-  sentiment_analysis
-```
-
-### Check GCS Bucket
-
-```bash
-gsutil ls gs://your-project-multimodal-data/user-reviews/play-store/flood-it/
-```
-
-Expected output:
-```
-gs://your-project-multimodal-data/user-reviews/play-store/flood-it/review_abc123.json
-gs://your-project-multimodal-data/user-reviews/play-store/flood-it/review_def456.json
-...
-```
-
-### Test a Simple Query
+In **BigQuery Console**, run:
 
 ```sql
--- Check bronze layer
-SELECT COUNT(*) AS review_count
-FROM `your-project-id.sentiment_analysis.bronze_user_reviews`;
-
--- Check silver layer
-SELECT
-  sentiment,
-  COUNT(*) AS count
-FROM `your-project-id.sentiment_analysis.silver_review_sentiment`
+-- Check sentiment analysis
+SELECT sentiment, COUNT(*) AS count
+FROM `sentiment_analysis.silver_review_sentiment`
 GROUP BY sentiment;
 
--- Check gold layer
+-- Check propensity modeling
 SELECT COUNT(*) AS training_rows
-FROM `your-project-id.propensity_modeling.gold_training_features`;
+FROM `propensity_modeling.gold_training_features`;
+
+-- Check model exists
+SELECT * FROM ML.EVALUATE(MODEL `propensity_modeling.gold_user_retention_model`);
 ```
 
-### Verify Model in Vertex AI
+In **Vertex AI Console** → **Model Registry**, verify `gold_user_retention_model` is registered.
 
-1. Open **Google Cloud Console** → **Vertex AI** → **Model Registry**
-2. Look for `gold_user_retention_model`
-3. Click on it to see version, metrics, and deployment options
+---
+
+## Optional: Collect Fresh Reviews
+
+The GCS bucket includes pre-scraped reviews (~500+). To scrape fresh data:
+
+```bash
+cd scripts
+python -m venv .venv
+source .venv/bin/activate
+pip install -r requirements.txt
+python scrape_play_store_reviews.py
+```
+
+The scraper uses credentials auto-generated by Terraform (`.env` and `service-account-key.json`).
 
 ---
 
 ## Troubleshooting
 
-### Issue: Terraform fails with "API not enabled"
-
-**Solution:** Enable required APIs manually:
-```bash
-gcloud services enable bigquery.googleapis.com bigqueryconnection.googleapis.com
-```
-
-Then re-run `terraform apply`.
-
----
-
-### Issue: Dataform compilation fails with "undefined variable"
-
-**Solution:** Check that `workflow_settings.yaml` exists and has the correct project ID:
-```yaml
-defaultProject: your-project-id  # Must match your actual project
-```
-
----
-
-### Issue: `silver_review_sentiment` fails with "Not found: Connection"
-
-**Solution:** The Vertex AI connection wasn't created properly. Check:
-
-```bash
-bq show --connection --location=US --project_id=your-project-id vertex-ai-connection
-```
-
-If missing, re-run `terraform apply`.
-
----
-
-### Issue: Python scraper fails with "403 Forbidden" when uploading to GCS
-
-**Solution:** Check that the service account key exists and has permissions:
-
-```bash
-# Check key file exists
-ls -la scripts/service-account-key.json
-
-# Test GCS access
-gsutil ls gs://your-project-multimodal-data/
-```
-
-If the key is missing, re-run `terraform apply` to regenerate it.
-
----
-
-### Issue: Gemini API calls fail with "Permission denied"
-
-**Solution:** Ensure the BigQuery connection has Vertex AI User permissions:
-
-```bash
-# Get connection service account
-bq show --connection --location=US vertex-ai-connection
-
-# Grant Vertex AI User role (Terraform should do this, but verify)
-gcloud projects add-iam-policy-binding your-project-id \
-  --member="serviceAccount:CONNECTION_SERVICE_ACCOUNT" \
-  --role="roles/aiplatform.user"
-```
-
----
-
-### Issue: BQML model training fails with "Insufficient data"
-
-**Cause:** Training data has too few rows or class imbalance.
-
-**Solution:** Check training data row count and class distribution:
-
-```sql
-SELECT
-  will_return,
-  COUNT(*) AS count
-FROM `your-project-id.propensity_modeling.gold_training_features`
-GROUP BY will_return;
-```
-
-Expected: At least ~5K rows with reasonable class balance (e.g., 30-70% split).
-
-If low, adjust date range in `gold_training_features.sqlx`:
-```sql
--- Increase date range for more training data
-FROM UNNEST(GENERATE_DATE_ARRAY('2018-06-20', '2018-09-30', INTERVAL 7 DAY))
-```
-
----
-
-## Next Steps
-
-Now that your infrastructure is deployed, proceed to:
-
-- **[Demo Walkthrough](demo-walkthrough.md)** - Step-by-step demonstration of key features
-- **[Demo Walkthrough](demo-walkthrough.md)** - Step-by-step demonstration with SQL examples
-- **[Architecture Guide](architecture.md)** - Understand the technical design
-- **[README.md](../README.md)** - Project overview
+| Issue | Solution |
+|-------|----------|
+| Dataform compilation fails with "undefined variable" | Check `workflow_settings.yaml` has correct `defaultProject` |
+| `silver_review_sentiment` fails with "Connection not found" | Re-run `terraform apply` to recreate the Vertex AI connection |
+| Model training fails with "Insufficient data" | Verify `gold_training_features` has 5K+ rows with balanced classes |
+| Gemini API calls fail with "Permission denied" | Re-run `terraform apply` — IAM bindings may not have propagated |
 
 ---
 
 ## Cleanup
 
-To remove all deployed resources and avoid charges:
+To remove all resources:
 
 ```bash
 cd infra
 terraform destroy
 ```
 
-Type `yes` when prompted.
-
-**Note:** This preserves the GCS bucket by default (`force_destroy = false`). To delete it:
-
-```bash
-# Delete bucket contents first
-gsutil -m rm -r gs://your-project-multimodal-data/**
-
-# Then remove bucket
-gsutil rb gs://your-project-multimodal-data
-```
-
-**Warning:** This deletes all scraped review data permanently.
+**Note:** GCS bucket is preserved by default. Delete manually in Cloud Console if needed.
 
 ---
 
-## Security Checklist
+## Next Steps
 
-Before deploying to production:
-
-- [ ] Enable VPC Service Controls for sensitive data
-- [ ] Set up Cloud Audit Logs for compliance
-- [ ] Use customer-managed encryption keys (CMEK) for BigQuery
-- [ ] Restrict IAM permissions to least privilege
-- [ ] Enable Binary Authorization for container deployments
-- [ ] Set up Cloud Armor for DDoS protection (if using endpoints)
-- [ ] Rotate service account keys regularly
-- [ ] Enable Secret Manager automatic rotation for GitHub token
-
----
-
-## Support
-
-For issues or questions:
-
-- **GitHub Issues:** [Report a bug](https://github.com/your-org/Data-Cloud/issues)
-- **Google Cloud Support:** [Contact support](https://cloud.google.com/support)
-- **Dataform Docs:** [Official documentation](https://cloud.google.com/dataform/docs)
+- **[Demo Guides](demos/README.md)** — Run the demonstrations
+- **[Architecture](reference/architecture.md)** — Technical deep dive
