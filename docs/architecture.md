@@ -6,6 +6,8 @@ This document explains the technical architecture, design decisions, and data fl
 
 ## Architecture Overview
 
+### Sentiment Analysis & Propensity Modeling
+
 ```mermaid
 graph TB
     subgraph "Bronze Layer - Raw Data"
@@ -56,6 +58,66 @@ graph TB
     class GOLD_FEAT,GOLD_MODEL gold
     class GEMINI,REGISTRY external
 ```
+
+### Campaign Intelligence
+
+```mermaid
+graph TB
+    subgraph "Bronze Layer - Public Datasets"
+        THELOOK[theLook eCommerce<br/>users • events • orders]
+        CENSUS_GEO[Census Tracts<br/>Geographic Boundaries]
+        CENSUS_ACS[Census ACS<br/>Housing & Income]
+    end
+
+    subgraph "BigQuery + Dataform"
+        subgraph "Silver Layer - Spatial Joins"
+            SILVER_USERS[silver_users_with_census<br/>ST_CONTAINS Join]
+            SILVER_ENGAGE[silver_engagement_signals<br/>User Aggregates]
+            SILVER_DEMO[silver_tract_demographics<br/>Housing Features]
+        end
+
+        subgraph "Gold Layer - Campaign Ready"
+            GOLD_TRACT[gold_tract_campaign_features<br/>Tract Scoring]
+            GOLD_SEG[gold_user_segments<br/>User Segments]
+            GOLD_REC[gold_campaign_recommendations<br/>AI Recommendations]
+        end
+    end
+
+    subgraph "Vertex AI"
+        GEMINI_AGENT[Gemini 2.0 Flash<br/>Campaign Agent]
+    end
+
+    THELOOK --> SILVER_USERS
+    THELOOK --> SILVER_ENGAGE
+    CENSUS_GEO --> SILVER_USERS
+    CENSUS_ACS --> SILVER_DEMO
+
+    SILVER_USERS --> GOLD_TRACT
+    SILVER_ENGAGE --> GOLD_TRACT
+    SILVER_DEMO --> GOLD_TRACT
+
+    SILVER_USERS --> GOLD_SEG
+    SILVER_ENGAGE --> GOLD_SEG
+    GOLD_TRACT --> GOLD_SEG
+
+    GOLD_TRACT --> GOLD_REC
+    GEMINI_AGENT -.-> |ML.GENERATE_TEXT| GOLD_REC
+
+    classDef bronze fill:#cd7f32,stroke:#333,color:#fff
+    classDef silver fill:#c0c0c0,stroke:#333,color:#000
+    classDef gold fill:#ffd700,stroke:#333,color:#000
+    classDef external fill:#4285f4,stroke:#333,color:#fff
+
+    class THELOOK,CENSUS_GEO,CENSUS_ACS bronze
+    class SILVER_USERS,SILVER_ENGAGE,SILVER_DEMO silver
+    class GOLD_TRACT,GOLD_SEG,GOLD_REC gold
+    class GEMINI_AGENT external
+```
+
+**Campaign Intelligence Pipeline:**
+- **Bronze** - Declarations for 3 public datasets (theLook eCommerce, Census tracts, Census ACS)
+- **Silver** - Spatial joins (ST_CONTAINS), engagement aggregation, demographic features
+- **Gold** - Campaign scoring by census tract, user segmentation, Gemini-generated recommendations
 
 ---
 
