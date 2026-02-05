@@ -456,29 +456,6 @@ gsutil rb gs://your-project-multimodal-data
 
 ---
 
-## Cost Estimation
-
-Approximate monthly costs for this demo (assuming light usage):
-
-| Service | Usage | Estimated Cost |
-|---------|-------|----------------|
-| **BigQuery Storage** | ~5 GB (GA4 + features + model) | ~$0.10/month |
-| **BigQuery Queries** | ~50 GB processed/month | ~$0.25/month |
-| **Gemini API** | ~500 reviews × $0.00025 per 1K chars | ~$0.10 (one-time) |
-| **BQML Training** | 1 model training on ~18K rows | ~$0.05 (one-time) |
-| **GCS Storage** | ~10 MB (review JSON files) | <$0.01/month |
-| **Dataform** | Included in BigQuery | $0 |
-| **Secret Manager** | 1 secret, <1000 accesses | <$0.10/month |
-
-**Total:** ~$0.50 - $1.00/month for light usage
-
-**Note:** Costs increase with:
-- More frequent Gemini API calls (re-processing reviews)
-- Larger query scans
-- Deployed Vertex AI endpoints (adds compute costs)
-
----
-
 ## Security Checklist
 
 Before deploying to production:

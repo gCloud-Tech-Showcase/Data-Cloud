@@ -62,7 +62,6 @@ graph LR
 - GitHub personal access token
 
 **Estimated setup time:** 15 minutes
-**Estimated cost:** ~$1/month for light usage
 
 ---
 
@@ -268,23 +267,6 @@ sequenceDiagram
 - **Source:** Firebase public dataset (`firebase-public-project.analytics_153293282.events_*`)
 - **Period:** June 12 - October 3, 2018
 - **Volume:** ~5.7M events, ~15K users, ~18K training rows
-
----
-
-## Cost Estimate
-
-Light usage (development/demo):
-
-- BigQuery storage: ~$0.10/month
-- BigQuery queries: ~$0.25/month
-- Gemini API calls: ~$0.10 (one-time for 500 reviews)
-- GCS storage: <$0.01/month
-- **Total: ~$0.50/month**
-
-Production costs depend on:
-- Query frequency and data scanned
-- Gemini API usage (incremental table minimizes reprocessing)
-- Vertex AI endpoint deployment (adds compute costs)
 
 ---
 
