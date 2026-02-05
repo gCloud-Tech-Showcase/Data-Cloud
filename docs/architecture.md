@@ -387,9 +387,10 @@ WHERE JSON_EXTRACT_SCALAR(data_string, '$.review_id') NOT IN (
 │           └── model_evaluation.sqlx             # Model evaluation queries
 │
 ├── docs/                               # Documentation
-│   ├── setup.md                        # Installation and configuration
+│   ├── getting-started.md              # Installation and configuration
+│   ├── demo-walkthrough.md             # Step-by-step demonstration
 │   ├── architecture.md                 # This file
-│   └── usage.md                        # Query examples and usage
+│   └── examples.md                     # Query examples and SQL cookbook
 │
 ├── package.json                        # Dataform dependencies
 ├── workflow_settings.yaml              # Dataform project config
@@ -574,7 +575,8 @@ WHERE sentiment NOT IN ('positive', 'neutral', 'negative')
 
 ## Related Documentation
 
-- [Setup Guide](setup.md) - Installation and configuration
-- [Usage Guide](usage.md) - Query examples and how-to guides
+- [Getting Started](getting-started.md) - Installation and configuration
+- [Demo Walkthrough](demo-walkthrough.md) - Step-by-step demonstration
+- [SQL Examples](examples.md) - Query cookbook and how-to guides
 - [CLAUDE.md](../CLAUDE.md) - Development guide for AI assistants
 - [GEMINI.md](../GEMINI.md) - Project context for AI assistants

@@ -425,7 +425,8 @@ FROM UNNEST(GENERATE_DATE_ARRAY('2018-06-20', '2018-09-30', INTERVAL 7 DAY))
 
 Now that your infrastructure is deployed, proceed to:
 
-- **[Usage Guide](usage.md)** - Learn how to query and analyze the data
+- **[Demo Walkthrough](demo-walkthrough.md)** - Step-by-step demonstration of key features
+- **[SQL Examples](examples.md)** - Learn how to query and analyze the data
 - **[Architecture Guide](architecture.md)** - Understand the technical design
 - **[README.md](../README.md)** - Project overview
 

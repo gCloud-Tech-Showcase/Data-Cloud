@@ -725,10 +725,10 @@ WHERE RAND() < 0.5  -- 50% sample
 
 ## Next Steps
 
-- **[Setup Guide](setup.md)** - Installation and configuration
+- **[Getting Started](getting-started.md)** - Installation and configuration
+- **[Demo Walkthrough](demo-walkthrough.md)** - Step-by-step demonstration
 - **[Architecture Guide](architecture.md)** - Technical design deep dive
 - **[README.md](../README.md)** - Project overview
-- **[CLAUDE.md](../CLAUDE.md)** - Development guide
 
 ---
 
