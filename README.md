@@ -153,13 +153,20 @@ cd infra && terraform apply
 
 ```
 Data-Cloud/
-├── definitions/                # Dataform SQL pipelines
-│   ├── sentiment_analysis/     # Gemini-powered review analysis
-│   ├── propensity_modeling/    # BQML churn prediction
-│   └── campaign_intelligence/  # Census + eCommerce campaign targeting
-├── infra/                      # Terraform GCP resources
-├── scripts/                    # Python Play Store scraper
-└── docs/                       # Documentation
+├── definitions/                  # Dataform SQL pipelines
+│   ├── propensity_modeling/      #   Churn prediction (BQML)
+│   ├── sentiment_analysis/       #   Review analysis (Gemini)
+│   └── campaign_intelligence/    #   Campaign targeting (WIP)
+├── infra/                        # Terraform IaC
+├── scripts/                      # Review scraper
+└── docs/
+    ├── getting-started.md
+    ├── architecture.md
+    └── demos/                    # Use case guides
+        ├── churn-prediction/
+        ├── sentiment-analysis/
+        ├── multimodal-insights/
+        └── campaign-intelligence/
 ```
 
 ---
