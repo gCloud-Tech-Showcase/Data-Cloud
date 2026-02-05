@@ -1,365 +1,146 @@
-# Google Cloud Tech Showcase: Multimodal Analytics with BigQuery, Gemini & Vertex AI
+# Data-Cloud: Multimodal Analytics on Google Cloud
 
-This demo showcases Google Cloud's **open lakehouse architecture** for multimodal analytics, combining structured GA4 data with unstructured Play Store reviews using BigQuery, Gemini AI, and Vertex AI.
+> **Showcase:** Bronze/Silver/Gold medallion architecture for multimodal analytics with BigQuery, Gemini AI, and Vertex AI
 
-**What you'll build:**
-
-- **Bronze/Silver/Gold medallion architecture** on BigQuery's open lakehouse
-- **Sentiment analysis pipeline** using Gemini AI and BigLake Object Tables
-- **User retention ML model** with BigQuery ML and Vertex AI
-- **Domain-driven data mesh** with two use cases: sentiment analysis + propensity modeling
-
-**Business context:** Predict which users are likely to churn AND understand why through sentiment analysis of their reviews, enabling targeted retention campaigns with context.
+Combine structured GA4 data with unstructured Play Store reviews using Google Cloud's open lakehouse platform. Predict user churn **and** understand why through AI-powered sentiment analysis.
 
 ---
 
-## Architecture Overview
+## What You'll Build
 
-```
-┌─────────────────────────────────────────────────────────────────────────────┐
-│                     Google Cloud Open Lakehouse                             │
-├─────────────────────────────────────────────────────────────────────────────┤
-│                                                                             │
-│  BRONZE LAYER (Raw, Immutable)                                             │
-│  ┌───────────────────┐           ┌─────────────────────────────────┐      │
-│  │  Firebase GA4     │           │  Cloud Storage (GCS)            │      │
-│  │  Public Dataset   │           │  ┌──────────────────────────┐   │      │
-│  │  (Structured)     │           │  │ Play Store Reviews       │   │      │
-│  └─────────┬─────────┘           │  │ (JSON - Multimodal)      │   │      │
-│            │                      │  └──────────┬───────────────┘   │      │
-│            │                      └─────────────┼───────────────────┘      │
-│            ▼                                    ▼                          │
-│  ┌────────────────────────────────────────────────────────────┐           │
-│  │              BigQuery + BigLake + Dataform                  │           │
-│  ├────────────────────────────────────────────────────────────┤           │
-│  │                                                             │           │
-│  │  SILVER LAYER (Cleansed, Enriched)                         │           │
-│  │  ┌──────────────────────┐  ┌─────────────────────────┐    │           │
-│  │  │ silver_events_       │  │ silver_review_          │    │           │
-│  │  │   flattened          │  │   sentiment             │◀───Gemini AI   │
-│  │  │ (GA4 unnested)       │  │ (Gemini enriched)       │    │           │
-│  │  └──────────────────────┘  └─────────────────────────┘    │           │
-│  │                                                             │           │
-│  │  GOLD LAYER (Feature-Engineered, ML-Ready)                 │           │
-│  │  ┌──────────────────────┐  ┌─────────────────────────┐    │           │
-│  │  │ gold_training_       │  │ gold_user_              │    │           │
-│  │  │   features           │  │   retention_model       │    │           │
-│  │  │ (7-day windows)      │  │ (BQML Logistic Reg)     │    │           │
-│  │  └──────────────────────┘  └──────────┬──────────────┘    │           │
-│  │                                       │                    │           │
-│  └───────────────────────────────────────┼────────────────────┘           │
-│                                          │                                │
-│  ┌───────────────────────────────────────▼─────────────────────────────┐ │
-│  │                     Vertex AI Platform                               │ │
-│  │  ┌──────────────────────┐         ┌─────────────────────────────┐   │ │
-│  │  │  Model Registry      │         │  Gemini Models              │   │ │
-│  │  │  (Versioning)        │         │  (gemini-2.0-flash-001)     │   │ │
-│  │  └──────────────────────┘         └─────────────────────────────┘   │ │
-│  └──────────────────────────────────────────────────────────────────────┘ │
-└─────────────────────────────────────────────────────────────────────────────┘
+```mermaid
+graph LR
+    subgraph "Bronze - Raw Data"
+        GCS[GCS JSON Files]
+        GA4[Firebase GA4 Dataset]
+    end
+
+    subgraph "Silver - Cleansed & Enriched"
+        SILVER_REV[silver_review_sentiment<br/>Gemini AI Enrichment]
+        SILVER_EVT[silver_events_flattened<br/>Unnested GA4]
+    end
+
+    subgraph "Gold - ML Ready"
+        GOLD_FEAT[gold_training_features<br/>Feature Engineering]
+        GOLD_MODEL[gold_user_retention_model<br/>BQML]
+    end
+
+    GCS --> SILVER_REV
+    GA4 --> SILVER_EVT
+    SILVER_EVT --> GOLD_FEAT
+    GOLD_FEAT --> GOLD_MODEL
+
+    classDef bronze fill:#cd7f32,stroke:#333,color:#fff
+    classDef silver fill:#c0c0c0,stroke:#333,color:#000
+    classDef gold fill:#ffd700,stroke:#333,color:#000
+
+    class GCS,GA4 bronze
+    class SILVER_REV,SILVER_EVT silver
+    class GOLD_FEAT,GOLD_MODEL gold
 ```
 
-**Data Mesh Domains:**
-- `sentiment_analysis/` - Multimodal review analysis with Gemini
-- `propensity_modeling/` - User retention prediction with BQML
-- `analytics/` (future) - Cross-domain user 360° insights
+**Two data domains:**
+- 🧠 **Sentiment Analysis** - Gemini 2.0 Flash analyzes Play Store reviews (multimodal data)
+- 📊 **Propensity Modeling** - BigQuery ML predicts user retention from GA4 events
+
+**Key technologies:**
+- **BigLake Object Tables** - Query GCS JSON files without ETL
+- **Gemini 2.0 Flash** - AI-powered sentiment analysis via SQL
+- **BigQuery ML** - In-database logistic regression
+- **Dataform** - Git-native SQL transformation
+- **Vertex AI** - Model registry and deployment
 
 ---
 
-## Prerequisites
+## Quick Start
 
-Before starting, ensure you have:
+### Prerequisites
 
-- [ ] Google Cloud Project with billing enabled
-- [ ] `gcloud` CLI installed and authenticated (`gcloud auth login`)
-- [ ] Terraform >= 1.6.0 installed
-- [ ] GitHub personal access token (for Dataform)
-- [ ] Python 3.9+ (for optional review scraping)
+- Google Cloud Project with billing enabled
+- `gcloud` CLI authenticated
+- Terraform >= 1.6.0
+- GitHub personal access token
+
+**Estimated setup time:** 15 minutes
+**Estimated cost:** ~$1/month for light usage
 
 ---
 
-## Step 1: Configure Your Project
+### 1. Configure Your Project
 
-Before deploying, configure your project ID in two places:
+```bash
+# Clone repository
+git clone https://github.com/your-org/Data-Cloud.git
+cd Data-Cloud
 
-### A. Terraform Configuration
+# Configure Terraform
+cd infra
+cp terraform.tfvars.example terraform.tfvars
+# Edit terraform.tfvars with your project_id and github_token
+
+# Configure Dataform
+cd ..
+cp workflow_settings.yaml.example workflow_settings.yaml
+# Edit workflow_settings.yaml with your project_id
+```
+
+**📖 Detailed guide:** [Setup Documentation](docs/setup.md)
+
+---
+
+### 2. Deploy Infrastructure
 
 ```bash
 cd infra
-cp terraform.tfvars.example terraform.tfvars
-```
-
-Edit `terraform.tfvars` with your values:
-
-```hcl
-project_id   = "your-project-id"
-github_token = "ghp_your_token_here"
-```
-
-### B. Dataform Configuration
-
-```bash
-cd ..  # Back to project root
-cp workflow_settings.yaml.example workflow_settings.yaml
-```
-
-Edit `workflow_settings.yaml`:
-
-```yaml
-defaultProject: your-project-id  # ← Change this to match your GCP project
-defaultLocation: US
-defaultDataset: propensity_modeling
-
-vars:
-  region: US
-```
-
----
-
-## Step 2: Deploy the Infrastructure
-
-Terraform provisions all GCP resources following Google Cloud best practices.
-
-```bash
-cd infra  # If not already there
-```
-
-Deploy:
-
-```bash
 terraform init
-terraform plan    # Review what will be created
-terraform apply   # Type 'yes' to confirm
+terraform apply
 ```
 
 **What gets created:**
+- BigQuery datasets (`sentiment_analysis`, `propensity_modeling`, `ga4_source`)
+- GCS bucket for review JSON files
+- BigQuery connection for Gemini/BigLake access
+- Dataform repository linked to GitHub
+- IAM bindings and Secret Manager configuration
 
-| Resource | Purpose |
-|----------|---------|
-| **BigQuery datasets** | `sentiment_analysis`, `propensity_modeling`, `ga4_source` |
-| **GCS bucket** | `{project}-multimodal-data` for review JSON files |
-| **BigQuery connection** | `vertex-ai-connection` (US multi-region) for Gemini access |
-| **Dataform repository** | Connected to this GitHub repo |
-| **IAM bindings** | Service account permissions for BigLake, Vertex AI, GCS |
-| **Secret Manager** | Secure GitHub token storage |
+**⏱ Time:** ~3-5 minutes
 
 ---
 
-## Step 2A: Collect Play Store Reviews (Optional)
-
-If you want fresh review data, run the Python scraper:
-
-```bash
-cd scripts
-pip install -r requirements.txt
-python scrape_play_store_reviews.py
-```
-
-**What it does:**
-- Scrapes Google Play Store reviews for "Flood It!" game
-- Uploads each review as a JSON file to GCS: `gs://{project}-multimodal-data/user-reviews/play-store/flood-it/`
-- Checkpoint/resume capability for long-running scrapes
-- Preserves Unicode (emojis) in review text
-
-**Sample review JSON:**
-```json
-{
-  "platform": "play-store",
-  "review_id": "abc123",
-  "user_name": "John Doe",
-  "review_text": "🎮 Love this game!",
-  "rating": 5,
-  "review_date": "2018-06-20",
-  "app_version": "2.98",
-  "thumbs_up_count": 12,
-  "scraped_at": "2026-02-04T21:41:05Z"
-}
-```
-
-**Note:** Pre-scraped reviews are already in GCS if you skip this step.
-
----
-
-## Step 2B: Run the Data Pipeline
-
-The Dataform pipeline builds the medallion architecture (bronze → silver → gold).
+### 3. Run the Data Pipeline
 
 1. Open **Google Cloud Console → Dataform**
-2. Select the `data-cloud` repository
-3. Create a **Development Workspace** (name must match branch: `claude/gemini-bigquery-unstructured-data-OuNWR`)
-4. Click **Start Compilation** → **Create**
-5. Click **Start Execution** → Select workflow by tags:
-   - Run `sentiment_analysis` tag for sentiment pipeline
-   - Run `propensity_modeling` tag for retention model
-   - Or run all
+2. Select `data-cloud` repository
+3. Create a development workspace (name must match your branch)
+4. Click **Start Compilation** → **Start Execution**
 
 **What gets built:**
 
-### Sentiment Analysis Domain
+| Domain | Objects | Key Outputs |
+|--------|---------|-------------|
+| **Sentiment** | BigLake Object Table → Gemini enrichment | `silver_review_sentiment` (500+ reviews) |
+| **Propensity** | GA4 events → Features → BQML model | `gold_user_retention_model` (registered in Vertex AI) |
 
-| Object | Layer | Type | Description |
-|--------|-------|------|-------------|
-| `bronze_user_reviews` | Bronze | BigLake Object Table | Raw review JSON from GCS |
-| `gemini_sentiment_model` | - | Remote Model | Gemini 2.0 Flash endpoint |
-| `silver_review_sentiment` | Silver | Incremental Table | Gemini-enriched sentiment analysis |
-
-### Propensity Modeling Domain
-
-| Object | Layer | Type | Description |
-|--------|-------|------|-------------|
-| `events_*` (external) | Bronze | Declaration | Firebase GA4 public dataset |
-| `silver_events_flattened` | Silver | View | Unnested GA4 event parameters |
-| `silver_user_sessions` | Silver | View | Session-level aggregations |
-| `gold_training_features` | Gold | Table | 7-day rolling window features (~18K rows) |
-| `gold_user_retention_model` | Gold | BQML Model | Logistic regression, registered in Vertex AI |
+**⏱ Time:** ~10-15 minutes (includes BQML training)
 
 ---
 
-## Step 3: Explore Sentiment Analysis
+### 4. Explore the Data
 
-### Query the Bronze Layer (Raw Reviews)
-
+**Sentiment analysis:**
 ```sql
-SELECT
-  uri,
-  SAFE_CONVERT_BYTES_TO_STRING(data) AS review_json
-FROM `sentiment_analysis.bronze_user_reviews`
-LIMIT 5;
-```
-
-### Query the Silver Layer (Gemini-Enriched)
-
-```sql
-SELECT
-  review_date,
-  rating,
-  review_text,
-  sentiment,        -- positive/neutral/negative
-  category,         -- performance/ads/difficulty/bugs/praise/other
-  sentiment_score   -- -1 to +1
+SELECT sentiment, category, review_text, sentiment_score
 FROM `sentiment_analysis.silver_review_sentiment`
 WHERE sentiment = 'negative'
 ORDER BY sentiment_score ASC
 LIMIT 10;
 ```
 
-**Sentiment distribution:**
-
-```sql
-SELECT
-  sentiment,
-  COUNT(*) AS review_count,
-  ROUND(AVG(rating), 2) AS avg_rating,
-  ROUND(AVG(sentiment_score), 3) AS avg_sentiment_score
-FROM `sentiment_analysis.silver_review_sentiment`
-GROUP BY sentiment
-ORDER BY avg_sentiment_score DESC;
-```
-
-**Category breakdown:**
-
-```sql
-SELECT
-  category,
-  sentiment,
-  COUNT(*) AS count
-FROM `sentiment_analysis.silver_review_sentiment`
-GROUP BY category, sentiment
-ORDER BY category, count DESC;
-```
-
----
-
-## Step 4: Explore Propensity Modeling
-
-### Query the Gold Training Features
-
+**Churn prediction:**
 ```sql
 SELECT
   user_pseudo_id,
-  observation_date,
-  days_active,
-  total_events,
-  level_completion_rate,
-  will_return  -- Label: did user return in next 7 days?
-FROM `propensity_modeling.gold_training_features`
-LIMIT 10;
-```
-
-### Check Class Balance
-
-```sql
-SELECT
-  will_return,
-  COUNT(*) AS count,
-  ROUND(COUNT(*) * 100.0 / SUM(COUNT(*)) OVER(), 1) AS percentage
-FROM `propensity_modeling.gold_training_features`
-GROUP BY will_return;
-```
-
-### Feature Engineering Approach
-
-The model uses **rolling 7-day windows**:
-- **Features**: User behavior from 7 days prior to observation_date
-- **Label**: Did user return in 7 days after observation_date?
-- **Result**: Multiple training rows per user (weekly snapshots)
-
-| Category | Features |
-|----------|----------|
-| **Activity** | `days_active`, `total_events`, `events_per_day` |
-| **Engagement** | `total_engagement_minutes`, `engagement_minutes_per_day`, `days_since_last_activity` |
-| **Gameplay** | `levels_started`, `levels_completed`, `level_completion_rate` |
-| **Scoring** | `max_score`, `avg_score` |
-| **Device** | `device_category`, `operating_system`, `country` |
-
----
-
-## Step 5: Analyze the Retention Model
-
-### Model Evaluation Metrics
-
-```sql
-SELECT *
-FROM ML.EVALUATE(MODEL `propensity_modeling.gold_user_retention_model`);
-```
-
-Key metrics:
-- **Precision**: Of predicted churners, what % actually churned?
-- **Recall**: Of actual churners, what % did we identify?
-- **AUC-ROC**: Model discrimination ability (0.5 = random, 1.0 = perfect)
-
-### Feature Importance
-
-```sql
-SELECT *
-FROM ML.GLOBAL_EXPLAIN(MODEL `propensity_modeling.gold_user_retention_model`)
-ORDER BY attribution DESC
-LIMIT 10;
-```
-
-### Confusion Matrix
-
-```sql
-SELECT *
-FROM ML.CONFUSION_MATRIX(MODEL `propensity_modeling.gold_user_retention_model`);
-```
-
----
-
-## Step 6: Run Predictions
-
-### Batch Predictions with Risk Segmentation
-
-```sql
-SELECT
-  user_pseudo_id,
-  predicted_will_return,
-  (SELECT prob FROM UNNEST(predicted_will_return_probs) WHERE label = 1) AS return_probability,
-  CASE
-    WHEN (SELECT prob FROM UNNEST(predicted_will_return_probs) WHERE label = 1) < 0.3 THEN 'HIGH CHURN RISK'
-    WHEN (SELECT prob FROM UNNEST(predicted_will_return_probs) WHERE label = 1) < 0.6 THEN 'MEDIUM RISK'
-    ELSE 'LOW RISK'
-  END AS risk_category
+  ROUND((SELECT prob FROM UNNEST(predicted_will_return_probs) WHERE label = 1), 3) AS return_probability
 FROM ML.PREDICT(
   MODEL `propensity_modeling.gold_user_retention_model`,
   (SELECT * FROM `propensity_modeling.gold_training_features` LIMIT 100)
@@ -367,236 +148,191 @@ FROM ML.PREDICT(
 ORDER BY return_probability ASC;
 ```
 
-### Score a New User (Simulated)
-
-```sql
-SELECT
-  predicted_will_return,
-  predicted_will_return_probs
-FROM ML.PREDICT(
-  MODEL `propensity_modeling.gold_user_retention_model`,
-  (SELECT
-    7 AS days_in_window,
-    3 AS days_active,
-    45 AS total_events,
-    6.4 AS events_per_day,
-    2.5 AS engagement_minutes_per_day,
-    5 AS levels_started,
-    3 AS levels_completed,
-    0 AS levels_failed,
-    0.6 AS level_completion_rate,
-    17.5 AS total_engagement_minutes,
-    150 AS max_score,
-    75.0 AS avg_score,
-    15.0 AS events_per_active_day,
-    2 AS days_since_last_activity,
-    'mobile' AS device_category,
-    'Android' AS operating_system,
-    'United States' AS country
-  )
-);
-```
+**📖 More examples:** [Usage Documentation](docs/usage.md)
 
 ---
 
-## Step 7: Cross-Domain Analytics (Future)
+## Documentation
 
-**Combine sentiment + propensity for user 360°:**
-
-```sql
--- Future: Join sentiment aggregates with churn predictions
-SELECT
-  p.user_pseudo_id,
-  p.return_probability,
-  p.risk_category,
-  s.avg_sentiment_score,
-  s.negative_review_count,
-  s.last_review_date
-FROM propensity_predictions p
-LEFT JOIN user_sentiment_summary s
-  ON p.user_pseudo_id = s.user_pseudo_id
-WHERE p.risk_category = 'HIGH CHURN RISK'
-  AND s.avg_sentiment_score < -0.5
-ORDER BY p.return_probability ASC;
-```
-
-**Insight:** Target high-risk churners with recent negative sentiment for personalized retention campaigns.
+| Guide | Description |
+|-------|-------------|
+| **[Setup Guide](docs/setup.md)** | Prerequisites, installation, configuration, troubleshooting |
+| **[Architecture Guide](docs/architecture.md)** | Medallion layers, design decisions, data flows, diagrams |
+| **[Usage Guide](docs/usage.md)** | SQL query examples, predictions, model evaluation |
+| **[CLAUDE.md](CLAUDE.md)** | Development guide for AI assistants |
 
 ---
 
-## Step 8: (Optional) Deploy to Vertex AI Endpoint
+## Key Features
 
-For real-time inference:
-
-1. Go to **Vertex AI → Model Registry**
-2. Find `gold_user_retention_model` (auto-registered)
-3. Click **Deploy to Endpoint**
-4. Configure machine type and deploy
-
-**Call the endpoint:**
-
-```bash
-curl -X POST \
-  -H "Authorization: Bearer $(gcloud auth print-access-token)" \
-  -H "Content-Type: application/json" \
-  "https://us-central1-aiplatform.googleapis.com/v1/projects/PROJECT/locations/us-central1/endpoints/ENDPOINT_ID:predict" \
-  -d '{
-    "instances": [{
-      "days_in_window": 7,
-      "days_active": 3,
-      "total_events": 45,
-      "events_per_day": 6.4,
-      ...
-    }]
-  }'
-```
-
----
-
-## Medallion Architecture Explained
-
-This project follows the **bronze/silver/gold pattern** popularized by modern lakehouses:
-
-### 🥉 Bronze Layer - Raw, Immutable
-- **Purpose**: Landing zone for raw data as-is
-- **Examples**: BigLake Object Tables, external declarations
-- **Naming**: `bronze_*` prefix
-- **Characteristics**: No transformations, append-only, full audit trail
-
-### 🥈 Silver Layer - Cleansed, Validated
-- **Purpose**: Business-ready data with quality checks
-- **Examples**: Flattened events, Gemini-enriched reviews
-- **Naming**: `silver_*` prefix
-- **Characteristics**: Type conversions, unnesting, enrichment, deduplication
-
-### 🥇 Gold Layer - Feature-Engineered, Analytics-Ready
-- **Purpose**: ML-ready features and business aggregations
-- **Examples**: Training datasets, BQML models, aggregated marts
-- **Naming**: `gold_*` prefix
-- **Characteristics**: Feature engineering, aggregations, ML models
-
-**Why medallion + data mesh?**
-- **Medallion**: Clear data quality layers (bronze → silver → gold)
-- **Data Mesh**: Domain ownership (sentiment_analysis, propensity_modeling)
-- **Result**: Scalable, governed, domain-driven lakehouse
+✅ **Bronze/Silver/Gold medallion architecture** on BigQuery
+✅ **Domain-driven data mesh** (sentiment_analysis, propensity_modeling)
+✅ **Multimodal analytics** - Structured (GA4) + Unstructured (reviews)
+✅ **BigLake Object Tables** - Query GCS JSON without data movement
+✅ **Gemini AI integration** - Sentiment analysis via SQL
+✅ **Incremental processing** - Cost-efficient, only process new data
+✅ **BigQuery ML** - In-database model training and prediction
+✅ **Vertex AI integration** - Model registry and deployment
+✅ **Tag-based workflows** - Selective pipeline execution
 
 ---
 
 ## Project Structure
 
 ```
-.
-├── infra/                              # Terraform IaC
-│   ├── main.tf                         # All GCP resources
-│   ├── variables.tf                    # Input variables
-│   └── terraform.tfvars.example        # Config template
-│
-├── scripts/                            # Data collection
-│   ├── scrape_play_store_reviews.py    # Review scraper with checkpointing
-│   └── requirements.txt                # Python dependencies
-│
-├── definitions/                        # Dataform SQL pipeline
-│   ├── sentiment_analysis/
-│   │   ├── sources/
-│   │   │   └── bronze_user_reviews.sqlx          # BigLake Object Table
-│   │   ├── models/
-│   │   │   └── gemini_sentiment_model.sqlx       # Remote Gemini model
-│   │   └── staging/
-│   │       └── silver_review_sentiment.sqlx      # Gemini-enriched (incremental)
-│   │
-│   └── propensity_modeling/
-│       ├── sources/
-│       │   └── ga4_events.sqlx                   # External GA4 declaration
-│       ├── staging/
-│       │   ├── silver_events_flattened.sqlx      # Unnested GA4 events
-│       │   └── silver_user_sessions.sqlx         # Session aggregations
-│       ├── marts/
-│       │   └── gold_training_features.sqlx       # 7-day rolling windows
-│       └── ml/
-│           ├── gold_user_retention_model.sqlx    # BQML logistic regression
-│           ├── predictions.sqlx                  # Example prediction queries
-│           └── model_evaluation.sqlx             # Model evaluation queries
-│
-├── package.json                        # Dataform dependencies
-├── workflow_settings.yaml              # Dataform project config
-├── CLAUDE.md                           # Project development guide
-└── README.md
+Data-Cloud/
+├── definitions/                      # Dataform SQL pipelines
+│   ├── sentiment_analysis/           # Domain 1: Review analysis
+│   │   ├── sources/                  # Bronze: BigLake Object Tables
+│   │   ├── models/                   # Gemini model references
+│   │   └── staging/                  # Silver: AI-enriched reviews
+│   └── propensity_modeling/          # Domain 2: User retention
+│       ├── sources/                  # Bronze: GA4 declarations
+│       ├── staging/                  # Silver: Flattened events
+│       ├── marts/                    # Gold: Training features
+│       └── ml/                       # Gold: BQML models
+├── infra/                            # Terraform IaC
+├── scripts/                          # Python review scraper
+├── docs/                             # Detailed documentation
+└── README.md                         # This file
 ```
+
+---
+
+## Architecture Highlights
+
+### Medallion Layers
+
+- 🥉 **Bronze** - Raw, immutable (BigLake Object Tables, external declarations)
+- 🥈 **Silver** - Cleansed, enriched (Gemini sentiment, unnested GA4 events)
+- 🥇 **Gold** - Feature-engineered, ML-ready (training data, models)
+
+### Data Flow: Sentiment Analysis
+
+```mermaid
+sequenceDiagram
+    participant Scraper as Python Scraper
+    participant GCS as Cloud Storage
+    participant BQ as BigQuery
+    participant Gemini as Gemini 2.0 Flash
+
+    Scraper->>GCS: Upload review JSON
+    GCS->>BQ: BigLake Object Table<br/>(no data movement)
+    BQ->>Gemini: ML.GENERATE_TEXT()<br/>"Analyze sentiment..."
+    Gemini->>BQ: Return JSON<br/>{sentiment, category, score}
+    BQ->>BQ: Incremental INSERT<br/>silver_review_sentiment
+```
+
+### Data Flow: Propensity Modeling
+
+```mermaid
+sequenceDiagram
+    participant GA4 as Firebase GA4
+    participant Silver as silver_events_flattened
+    participant Gold as gold_training_features
+    participant BQML as BQML Model
+    participant VA as Vertex AI
+
+    GA4->>Silver: Unnest event_params
+    Silver->>Gold: Rolling 7-day windows<br/>Feature engineering
+    Gold->>BQML: CREATE MODEL<br/>Logistic regression
+    BQML->>VA: Register model<br/>Enable explainability
+```
+
+**📖 Deep dive:** [Architecture Documentation](docs/architecture.md)
 
 ---
 
 ## Technology Stack
 
-| Component | Technology | Purpose |
-|-----------|------------|---------|
-| **Infrastructure** | Terraform 1.6+ | One-click deployment of GCP resources |
-| **Data Warehouse** | BigQuery | Storage, transformation, SQL analytics |
-| **Multimodal Data** | BigLake Object Tables | Unstructured data in GCS queryable via SQL |
-| **AI/ML** | Gemini 2.0 Flash | Multimodal sentiment analysis |
-| **ML Training** | BigQuery ML | In-database logistic regression |
-| **Model Management** | Vertex AI | Model registry, versioning, deployment |
-| **Data Transformation** | Dataform 3.0 | SQL-based ETL with Git integration |
-| **Orchestration** | Dataform Workflows | Scheduled execution with tags |
-| **Secrets** | Secret Manager | Secure GitHub token storage |
-| **Review Collection** | Python + google-play-scraper | Automated review scraping |
+| Layer | Technology | Purpose |
+|-------|------------|---------|
+| **Infrastructure** | Terraform | Declarative GCP provisioning |
+| **Storage** | BigQuery, GCS | Data warehouse + object storage |
+| **Transformation** | Dataform | Git-native SQL pipelines |
+| **AI/ML** | Gemini 2.0 Flash, BigQuery ML | Sentiment analysis + retention modeling |
+| **Model Management** | Vertex AI | Registry, versioning, deployment |
+| **Orchestration** | Dataform Workflows | Tag-based execution |
 
 ---
 
 ## Source Data
 
 ### Sentiment Analysis
-- **Source**: Google Play Store (Flood It! game)
-- **Collection**: Python scraper with checkpoint/resume
-- **Format**: JSON files in GCS (one per review)
-- **Date Range**: Configurable (defaults to all available)
-- **Volume**: ~500+ reviews with emojis and Unicode preserved
+- **Source:** Google Play Store (Flood It! game)
+- **Format:** JSON files in GCS (one per review)
+- **Collection:** Python scraper with checkpoint/resume
+- **Volume:** ~500+ reviews with emojis preserved
 
 ### Propensity Modeling
-- **Source**: `firebase-public-project.analytics_153293282.events_*`
-- **Date Range**: June 12, 2018 – October 3, 2018
-- **Events**: ~5.7M raw GA4 events
-- **Users**: ~15K unique users
+- **Source:** Firebase public dataset (`firebase-public-project.analytics_153293282.events_*`)
+- **Period:** June 12 - October 3, 2018
+- **Volume:** ~5.7M events, ~15K users, ~18K training rows
 
 ---
 
-## Key Features
+## Cost Estimate
 
-✅ **Medallion architecture** with bronze/silver/gold layers
-✅ **Domain-driven data mesh** with clear ownership
-✅ **Multimodal analytics** - structured + unstructured data
-✅ **Gemini AI integration** via BigQuery remote models
-✅ **BigLake Object Tables** for GCS data without movement
-✅ **Incremental pipelines** to minimize cost and reprocessing
-✅ **Feature engineering** with rolling time windows
-✅ **BigQuery ML** with Vertex AI model registry
-✅ **Tag-based workflows** for selective execution
-✅ **Google Cloud native** - follows official best practices
+Light usage (development/demo):
+
+- BigQuery storage: ~$0.10/month
+- BigQuery queries: ~$0.25/month
+- Gemini API calls: ~$0.10 (one-time for 500 reviews)
+- GCS storage: <$0.01/month
+- **Total: ~$0.50/month**
+
+Production costs depend on:
+- Query frequency and data scanned
+- Gemini API usage (incremental table minimizes reprocessing)
+- Vertex AI endpoint deployment (adds compute costs)
 
 ---
 
 ## Cleanup
 
-To remove all deployed resources:
+Remove all resources:
 
 ```bash
 cd infra
 terraform destroy
 ```
 
-**Note:** This preserves GCS data (multimodal bucket has `force_destroy = false`). Delete manually if needed.
+**Note:** GCS bucket is preserved by default. Delete manually if needed.
 
 ---
 
 ## Next Steps
 
-1. **Build gold-layer aggregations**: Create `sentiment_analysis/marts/gold_user_sentiment_summary.sqlx`
-2. **Cross-domain joins**: Join sentiment with propensity predictions
-3. **Vertex AI Feature Store**: Register gold tables as online features
-4. **Looker Studio dashboard**: Visualize sentiment trends + churn risk
-5. **Productionize**: Add data quality assertions, monitoring, alerting
+1. **Cross-domain analytics:** Join sentiment with churn predictions
+2. **Vertex AI Feature Store:** Register gold tables as online features
+3. **Deploy endpoint:** Real-time predictions via REST API
+4. **Looker Studio dashboard:** Visualize sentiment trends + churn risk
+5. **Production hardening:** Add data quality assertions, monitoring, alerting
+
+**📖 Full roadmap:** [Architecture Documentation](docs/architecture.md#future-enhancements)
+
+---
+
+## Contributing
+
+This project demonstrates Google Cloud capabilities. For production use:
+
+1. Review security best practices in [Setup Guide](docs/setup.md#security-checklist)
+2. Add data quality assertions in Dataform
+3. Set up Cloud Monitoring alerts
+4. Enable VPC Service Controls for sensitive data
+5. Use customer-managed encryption keys (CMEK)
 
 ---
 
 ## License
 
 This project is provided for educational and demonstration purposes.
+
+---
+
+## Resources
+
+- **Google Cloud Documentation:** [BigQuery](https://cloud.google.com/bigquery) | [Gemini](https://cloud.google.com/vertex-ai/docs/generative-ai) | [Dataform](https://cloud.google.com/dataform)
+- **Medallion Architecture:** [Databricks Guide](https://www.databricks.com/glossary/medallion-architecture)
+- **Data Mesh:** [Thoughtworks Overview](https://www.thoughtworks.com/what-we-do/data-and-ai/data-mesh)
