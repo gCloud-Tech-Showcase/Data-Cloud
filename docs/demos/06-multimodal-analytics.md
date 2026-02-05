@@ -8,7 +8,7 @@
 - Cross-domain analytics (behavioral + sentiment)
 - Targeted interventions based on both WHO and WHY
 - Vertex AI model registry integration
-- Incremental processing for cost optimization
+- Incremental processing (only new data is processed)
 - **The payoff:** Complete multimodal analytics solution
 
 ---
@@ -98,20 +98,17 @@ user_pseudo_id  | return_probability | risk_category   | avg_sentiment_score | n
 
 With both datasets combined, we can create precise interventions.
 
-| Churn Risk | Complaint Category | Intervention | Expected Conversion |
-|------------|-------------------|--------------|---------------------|
-| **HIGH** | Ads | Offer 7-day premium ad-free trial | 70% |
-| **HIGH** | Bugs | Priority support + update notification | 50% |
-| **HIGH** | Difficulty | Suggest easier levels + tutorial | 60% |
-| **HIGH** | No complaints | Generic engagement email | 30% |
-| **MEDIUM** | Ads | Show fewer ads for 30 days | 55% |
-| **MEDIUM** | Any | Monitor, light engagement | 40% |
-| **LOW** | Any | Standard communication | 85% (baseline) |
+| Churn Risk | Complaint Category | Intervention |
+|------------|-------------------|--------------|
+| **HIGH** | Ads | Offer 7-day premium ad-free trial |
+| **HIGH** | Bugs | Priority support + update notification |
+| **HIGH** | Difficulty | Suggest easier levels + tutorial |
+| **HIGH** | No complaints | Generic engagement email |
+| **MEDIUM** | Ads | Show fewer ads for 30 days |
+| **MEDIUM** | Any | Monitor, light engagement |
+| **LOW** | Any | Standard communication |
 
-**Business impact:**
-- **Before multimodal:** Send generic discount to all 3,872 high-risk users → 30% conversion = 1,162 retained
-- **After multimodal:** Targeted interventions → 60% avg conversion = 2,323 retained
-- **Result:** 2x retention efficiency, lower cost per retention
+**Key insight:** Targeted interventions based on complaint category convert better than generic campaigns.
 
 ---
 
@@ -134,14 +131,7 @@ ORDER BY return_probability ASC
 LIMIT 100;
 ```
 
-**Action:** Email with subject "Enjoy [Game] ad-free for 7 days" + 50% off premium upgrade
-
-**Expected ROI:**
-- Target: 100 users
-- Conversion to premium: 70 users @ $2.99/mo
-- Revenue: $209/mo recurring
-- Cost: Email campaign (~$0) + 7-day trial loss (~$20)
-- **Net: $189/mo recurring from 100 users**
+**Action:** Email with subject "Enjoy [Game] ad-free for 7 days" + offer for premium upgrade
 
 ---
 
@@ -165,14 +155,6 @@ ORDER BY return_probability ASC;
 1. Prioritize their specific crash in next update
 2. Email: "We fixed the bug you reported! Try again now"
 3. Offer in-app currency as apology
-
-**Expected ROI:**
-- Target: 50 users
-- Conversion back to active: 25 users
-- Lifetime value per user: ~$15
-- Revenue retained: $375
-- Cost: Engineering time (already allocated) + in-app currency (~$25)
-- **Net: $350 value retained**
 
 ---
 
@@ -214,43 +196,7 @@ gcloud ai models list \
 
 ---
 
-## Step 6: Review Cost Optimization
-
-Incremental processing ensures we only pay for new data.
-
-### Sentiment Processing Costs
-
-**First run (all reviews):**
-- Reviews processed: 523
-- Gemini API calls: 523
-- Cost: ~$0.13 (at $0.00025 per 1K characters)
-
-**Subsequent runs (no new data):**
-- Reviews processed: 0
-- Gemini API calls: 0
-- Cost: $0
-
-**New reviews added (50):**
-- Reviews processed: 50
-- Gemini API calls: 50
-- Cost: ~$0.01
-
-### Feature Engineering Costs
-
-**Each Dataform run:**
-- BigQuery queries: Free (processing is minimal)
-- Storage: ~$0.02/month for training data
-
-**Total monthly cost (assuming weekly updates):**
-- Initial setup: ~$0.15 (one-time)
-- Ongoing (50 new reviews/week): ~$0.04/week = ~$0.16/month
-- **Grand total: <$0.20/month**
-
-**Key Point:** Incremental processing keeps costs minimal. Contrast with re-processing all data on each run.
-
----
-
-## Step 7: Production Deployment Path
+## Step 6: Production Deployment Path
 
 ### Option A: Scheduled BigQuery Jobs
 
@@ -316,10 +262,10 @@ curl -X POST \
 | Capability | Technology Stack | Business Value |
 |------------|------------------|----------------|
 | **Multimodal analytics** | BigQuery + BigLake + Gemini + BQML | Contextualized insights (WHO + WHY) |
-| **No data movement** | BigLake Object Tables | Lower cost, faster time-to-insight |
+| **No data movement** | BigLake Object Tables | Faster time-to-insight, simpler architecture |
 | **Unified platform** | Everything in BigQuery | No tool sprawl, easier maintenance |
 | **Production-ready** | Vertex AI integration | Deploy to real-time endpoints |
-| **Cost-efficient** | Incremental processing | Pay only for new data |
+| **Incremental processing** | Dataform incremental tables | Process only new data |
 | **SQL-first** | No Python required | Accessible to SQL analysts |
 
 ---
@@ -343,7 +289,7 @@ curl -X POST \
 **Part 3: Multimodal Analytics**
 - Combined both datasets
 - Created targeted intervention matrix
-- Demonstrated 2x improvement in retention efficiency
+- Demonstrated improved retention efficiency through targeting
 - Showed production deployment paths
 
 ---
@@ -353,19 +299,14 @@ curl -X POST \
 **Before multimodal analytics:**
 - Know WHO will churn
 - Send generic campaigns
-- 30-40% conversion rate
-- High cost per retention
+- Low conversion rates
+- Wasted spend on wrong interventions
 
 **After multimodal analytics:**
 - Know WHO will churn AND WHY
 - Send targeted interventions
-- 60-70% conversion rate
-- 2x more efficient spend
-
-**ROI example:**
-- 100 ad-frustrated users → 70 convert to premium @ $2.99/mo = $209/mo recurring
-- 50 bug-affected users → 25 retained @ $15 LTV each = $375 value retained
-- Total incremental value: ~$2,900/year from 150 users
+- Higher conversion rates
+- More efficient retention spend
 
 ---
 
@@ -377,7 +318,7 @@ What makes this possible on Google Cloud:
 2. **Gemini in BigQuery:** AI enrichment via SQL, no external APIs
 3. **BigQuery ML:** Train models where data lives
 4. **Vertex AI:** Production model registry and deployment
-5. **Dataform:** Incremental processing for cost optimization
+5. **Dataform:** Incremental processing, only new data is processed
 6. **Unified platform:** No tool sprawl, everything in BigQuery
 
 **Traditional approach would require:**
@@ -395,7 +336,7 @@ What makes this possible on Google Cloud:
 
 ---
 
-## Next Steps for Prospects
+## Next Steps
 
 1. **Try it yourself:** Deploy via [Getting Started Guide](../getting-started.md)
 2. **Customize:** Add your own review sources (App Store, support tickets)

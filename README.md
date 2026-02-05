@@ -131,7 +131,7 @@ cd infra && terraform apply
 | **[Getting Started](docs/getting-started.md)** | Deploy infrastructure and run your first pipeline |
 | **[Demo Walkthrough](docs/demo-walkthrough.md)** | Step-by-step demonstration of key features |
 | **[Architecture Deep Dive](docs/architecture.md)** | Medallion layers, design decisions, technical details |
-| **[SQL Examples](docs/examples.md)** | Query cookbook for sentiment analysis and predictions |
+| **[Demo Walkthrough](docs/demo-walkthrough.md)** | Step-by-step demonstration with SQL examples |
 
 ---
 
@@ -165,7 +165,7 @@ Data-Cloud/
 ## Next Steps
 
 1. **Deploy:** Follow [Getting Started](docs/getting-started.md)
-2. **Explore:** Run queries from [SQL Examples](docs/examples.md)
+2. **Explore:** Run queries from [Demo Walkthrough](docs/demo-walkthrough.md)
 3. **Extend:** Add new features to the ML model
 4. **Productionize:** Deploy to Vertex AI endpoint for real-time scoring
 

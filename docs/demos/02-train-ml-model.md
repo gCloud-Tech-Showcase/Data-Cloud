@@ -198,7 +198,7 @@ threshold | precision | recall | f1_score | true_positives | false_positives
 - But 81% of predictions are correct (high precision)
 - Use case: Expensive intervention (personal outreach)
 
-**Key Point:** The threshold depends on the cost of intervention vs. cost of losing a customer.
+**Key Point:** The threshold depends on the trade-off between catching more churners vs. intervention efficiency.
 
 ---
 

@@ -201,7 +201,7 @@ definitions/
 
 The propensity model uses **rolling 7-day windows** instead of static "first 7 days":
 
-### Traditional Approach (❌)
+### Traditional Approach (Not Recommended)
 ```
 User A: Days 1-7 → Will they return on Day 8?
 (Single training row per user)
@@ -261,7 +261,7 @@ GCS JSON (stays in place) → BigQuery queries directly → Transform in SQL
 
 **Benefits:**
 1. **No data movement**: Query GCS files directly via SQL
-2. **Cost efficiency**: Pay only for data scanned, not storage duplication
+2. **Efficiency**: Query data in place, no storage duplication
 3. **Simplicity**: No ETL pipelines to maintain
 4. **Freshness**: Changes in GCS reflected automatically (metadata cache)
 
@@ -317,7 +317,7 @@ FROM ML.GENERATE_TEXT(
 - **Structured output**: `flatten_json_output=TRUE` parses JSON responses
 - **Low temperature**: `0.2` for consistent, deterministic results
 - **Incremental processing**: Only processes new reviews (via uniqueKey)
-- **Cost control**: Processes reviews once, stores results
+- **Efficiency**: Processes reviews once, stores results
 
 ---
 
@@ -345,7 +345,7 @@ WHERE JSON_EXTRACT_SCALAR(data_string, '$.review_id') NOT IN (
 ```
 
 **Benefits:**
-- Cost savings (Gemini API calls only for new data)
+- Efficiency (Gemini API calls only for new data)
 - Faster execution (skip already-processed reviews)
 - Idempotency (safe to re-run)
 
@@ -390,7 +390,7 @@ WHERE JSON_EXTRACT_SCALAR(data_string, '$.review_id') NOT IN (
 │   ├── getting-started.md              # Installation and configuration
 │   ├── demo-walkthrough.md             # Step-by-step demonstration
 │   ├── architecture.md                 # This file
-│   └── examples.md                     # Query examples and SQL cookbook
+│   └── demo-walkthrough.md             # Step-by-step demo with SQL examples
 │
 ├── package.json                        # Dataform dependencies
 ├── workflow_settings.yaml              # Dataform project config
@@ -492,7 +492,7 @@ WHERE JSON_EXTRACT_SCALAR(data_string, '$.review_id') NOT IN (
 ### Why Gemini 2.0 Flash instead of other models?
 
 1. **Multimodal**: Can analyze text, images, video in future expansions
-2. **Cost-effective**: Flash variant optimized for speed/cost
+2. **Fast**: Flash variant optimized for speed and throughput
 3. **BigQuery integration**: No external API orchestration needed
 4. **Structured output**: Native JSON parsing with `flatten_json_output`
 5. **Google Cloud native**: Managed through Vertex AI
@@ -577,6 +577,6 @@ WHERE sentiment NOT IN ('positive', 'neutral', 'negative')
 
 - [Getting Started](getting-started.md) - Installation and configuration
 - [Demo Walkthrough](demo-walkthrough.md) - Step-by-step demonstration
-- [SQL Examples](examples.md) - Query cookbook and how-to guides
+- [Demo Walkthrough](demo-walkthrough.md) - Step-by-step demonstration with SQL examples
 - [CLAUDE.md](../CLAUDE.md) - Development guide for AI assistants
 - [GEMINI.md](../GEMINI.md) - Project context for AI assistants

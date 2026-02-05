@@ -66,7 +66,7 @@ Combine both domains for contextualized interventions.
 - Target high-risk users with specific complaints
 - **Business value:** "User X has 18% return probability AND complains about ads" → Offer premium ad-free trial
 - Verify Vertex AI model registry integration
-- Review incremental processing for cost optimization
+- Review incremental processing approach
 
 ---
 
@@ -76,11 +76,11 @@ This demo highlights Google Cloud capabilities that set it apart:
 
 | Capability | Technology | Business Value |
 |------------|------------|----------------|
-| Query unstructured data without ETL | BigLake Object Tables | Faster time-to-insight, lower cost |
+| Query unstructured data without ETL | BigLake Object Tables | Faster time-to-insight, simpler architecture |
 | AI enrichment via SQL | Gemini 2.0 Flash | No external API orchestration |
 | In-database ML training | BigQuery ML | Train where data lives, no data movement |
 | Model explainability | Vertex AI | Regulatory compliance, trust |
-| Cost-efficient pipelines | Dataform incremental processing | Only process new data |
+| Incremental pipelines | Dataform incremental processing | Only process new data |
 | Multimodal analytics | BigQuery + BigLake + Gemini | Contextualized insights, not just predictions |
 
 ---
@@ -100,7 +100,7 @@ This demo highlights Google Cloud capabilities that set it apart:
 ### For Business Stakeholders
 - Start with Guide 3 (churn predictions) to show the limitation
 - Jump to Guide 6 (multimodal analytics) for the business value
-- Emphasize ROI: targeted interventions vs. generic campaigns
+- Emphasize value: targeted interventions vs. generic campaigns
 
 ---
 

@@ -11,7 +11,7 @@ SELECT
     ) AS churn_probability
 FROM
     ml.predict(
-        model `propensity_modeling.user_retention_model`,
+        model `propensity_modeling.gold_user_retention_model`,
         (
             SELECT
                 7 AS days_in_window,
@@ -46,7 +46,7 @@ SELECT
     ) AS churn_probability
 FROM
     ml.predict(
-        model `propensity_modeling.user_retention_model`,
+        model `propensity_modeling.gold_user_retention_model`,
         (
             SELECT
                 days_in_window,
@@ -65,7 +65,7 @@ FROM
                 operating_system,
                 country
             FROM
-                `propensity_modeling.training_data`
+                `propensity_modeling.gold_training_features`
         )
     )
 ORDER BY

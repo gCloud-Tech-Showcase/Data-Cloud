@@ -8,7 +8,7 @@
 - Query JSON files in Cloud Storage without ETL (BigLake)
 - Enrich reviews with Gemini AI via SQL (no external APIs)
 - Process 500+ reviews with sentiment, category, and scores
-- Incremental processing for cost optimization
+- Incremental processing (only new data is processed)
 
 ---
 
@@ -189,7 +189,7 @@ unprocessed_reviews
 **How incremental processing works:**
 1. First Dataform run: Process all 523 reviews → Calls Gemini API 523 times
 2. Second run (no new data): Process 0 reviews → Calls Gemini API 0 times
-3. New reviews added to GCS: Process only new reviews → Cost-efficient
+3. New reviews added to GCS: Process only new reviews → Efficient
 
 **Configuration:**
 ```javascript
@@ -199,7 +199,7 @@ config {
 }
 ```
 
-**Key Point:** This approach minimizes Gemini API costs. Only new data is processed on each run.
+**Key Point:** Only new data is processed on each run, avoiding redundant API calls.
 
 ---
 
@@ -278,7 +278,7 @@ negative  | 1      | Levels are impossible, super frustrating                  |
 - Multiple tools and platforms
 - Data duplication
 - Complex pipeline maintenance
-- API rate limits and costs
+- API rate limits and quotas
 - Latency (hours to days)
 
 ### Google Cloud Approach
@@ -292,7 +292,7 @@ negative  | 1      | Levels are impossible, super frustrating                  |
 - Single platform (BigQuery)
 - No data movement
 - SQL-based (accessible to analysts)
-- Incremental processing (cost-efficient)
+- Incremental processing (efficient)
 - Real-time enrichment capability
 
 ---
@@ -304,7 +304,7 @@ negative  | 1      | Levels are impossible, super frustrating                  |
 | **Query unstructured data** | BigLake Object Tables | No ETL, no data duplication |
 | **AI enrichment via SQL** | Gemini 2.0 Flash + ML.GENERATE_TEXT() | No external APIs, unified platform |
 | **Structured output** | flatten_json_output=TRUE | Easy to query sentiment results |
-| **Incremental processing** | Dataform incremental tables | Cost optimization |
+| **Incremental processing** | Dataform incremental tables | Process only new data |
 | **Multimodal capabilities** | Gemini 2.0 Flash | Future-proof (images, video) |
 
 ---

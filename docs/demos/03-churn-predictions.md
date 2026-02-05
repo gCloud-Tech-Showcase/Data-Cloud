@@ -229,17 +229,14 @@ Result: 30-40% success rate on retention campaigns
 **Desired state:**
 ```
 Behavioral data + Sentiment data → Contextualized intervention
-Result: 60-70% success rate on retention campaigns
+Result: Higher success rate on retention campaigns
 ```
 
 **Example:**
 - **Behavioral only:** "User X is at risk" → Send generic discount
 - **Behavioral + Sentiment:** "User X is at risk AND complained about ads" → Offer premium ad-free trial
 
-**ROI calculation:**
-- If generic campaign converts 30%, you waste 70% of spend
-- If targeted campaign converts 65%, you waste only 35% of spend
-- That's a 2x improvement in campaign efficiency
+Targeted interventions based on the specific complaint convert better than generic campaigns.
 
 ---
 

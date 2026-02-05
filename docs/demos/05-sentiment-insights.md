@@ -282,7 +282,7 @@ other        | 50    | 4.5
 
 | Finding | Evidence | Business Action |
 |---------|----------|-----------------|
-| **Ads are the #1 complaint** | 42 negative reviews, avg score -0.81 | Offer premium ad-free tier at $2.99/mo |
+| **Ads are the #1 complaint** | 42 negative reviews, avg score -0.81 | Offer premium ad-free tier |
 | **Crash issues frustrating users** | 32 negative reviews, avg score -0.87 | Prioritize stability fixes, add crash analytics |
 | **Users love the core gameplay** | 187 positive reviews mentioning "addictive" | Double down on level design, add content |
 | **Negative sentiment increasing** | 18 → 25 → 32 over 3 months | Investigate recent updates for regressions |

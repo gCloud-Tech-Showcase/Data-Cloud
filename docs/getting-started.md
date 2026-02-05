@@ -183,9 +183,9 @@ App: Flood It! (com.labpixies.flood)
 Target: 2000 reviews
 
 Progress: 50/2000 reviews scraped (2.5%)
-  ✓ Review gp:AOqpTOH... uploaded to GCS
+  [OK] Review gp:AOqpTOH... uploaded to GCS
 Progress: 100/2000 reviews scraped (5.0%)
-  ✓ Review gp:AOqpTOI... uploaded to GCS
+  [OK] Review gp:AOqpTOI... uploaded to GCS
 ...
 Checkpoint saved: scraper_checkpoint.json
 ```
@@ -426,7 +426,7 @@ FROM UNNEST(GENERATE_DATE_ARRAY('2018-06-20', '2018-09-30', INTERVAL 7 DAY))
 Now that your infrastructure is deployed, proceed to:
 
 - **[Demo Walkthrough](demo-walkthrough.md)** - Step-by-step demonstration of key features
-- **[SQL Examples](examples.md)** - Learn how to query and analyze the data
+- **[Demo Walkthrough](demo-walkthrough.md)** - Step-by-step demonstration with SQL examples
 - **[Architecture Guide](architecture.md)** - Understand the technical design
 - **[README.md](../README.md)** - Project overview
 
