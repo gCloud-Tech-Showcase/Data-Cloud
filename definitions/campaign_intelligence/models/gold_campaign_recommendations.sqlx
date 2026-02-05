@@ -76,7 +76,7 @@ campaign_prompts AS (
       'Average Digital Engagement: ', CAST(ROUND(avg_digital_engagement, 1) AS STRING), '\n',
       CASE campaign_type
         WHEN 'first_time_buyer' THEN CONCAT(
-          'Audience Profile: High renter populations, young adults (25-34), middle income neighborhoods, ',
+          'Audience Profile: High renter populations, working age adults, middle income neighborhoods, ',
           'digitally active users showing purchase intent signals.'
         )
         WHEN 'refinance' THEN CONCAT(
@@ -84,7 +84,7 @@ campaign_prompts AS (
           'significant home equity, rate-sensitive buyers tracking market conditions.'
         )
         WHEN 'home_equity' THEN CONCAT(
-          'Audience Profile: Long-term homeowners (45+), substantial equity built up, ',
+          'Audience Profile: Long-term homeowners, substantial equity built up, ',
           'stable employment, interested in home improvement or debt consolidation.'
         )
       END
@@ -94,29 +94,28 @@ campaign_prompts AS (
 )
 
 SELECT
-  cp.campaign_type,
-  cp.target_tracts,
-  cp.total_target_users,
-  cp.avg_score,
-  cp.avg_digital_engagement,
-  r.ml_generate_text_llm_result AS gemini_recommendation,
+  campaign_type,
+  target_tracts,
+  total_target_users,
+  avg_score,
+  avg_digital_engagement,
+  ml_generate_text_llm_result AS gemini_recommendation,
 
   -- Parse JSON response fields
-  JSON_EXTRACT_SCALAR(r.ml_generate_text_llm_result, '$.predictions[0].content.campaign_name') AS campaign_name,
-  JSON_EXTRACT_SCALAR(r.ml_generate_text_llm_result, '$.predictions[0].content.target_audience') AS target_audience,
-  JSON_EXTRACT_SCALAR(r.ml_generate_text_llm_result, '$.predictions[0].content.key_messaging') AS key_messaging,
-  JSON_EXTRACT_SCALAR(r.ml_generate_text_llm_result, '$.predictions[0].content.channels') AS channels,
-  JSON_EXTRACT_SCALAR(r.ml_generate_text_llm_result, '$.predictions[0].content.estimated_reach') AS estimated_reach,
-  JSON_EXTRACT_SCALAR(r.ml_generate_text_llm_result, '$.predictions[0].content.priority') AS priority
+  JSON_EXTRACT_SCALAR(ml_generate_text_llm_result, '$.campaign_name') AS campaign_name,
+  JSON_EXTRACT_SCALAR(ml_generate_text_llm_result, '$.target_audience') AS target_audience,
+  JSON_EXTRACT_SCALAR(ml_generate_text_llm_result, '$.key_messaging') AS key_messaging,
+  JSON_EXTRACT_SCALAR(ml_generate_text_llm_result, '$.channels') AS channels,
+  JSON_EXTRACT_SCALAR(ml_generate_text_llm_result, '$.estimated_reach') AS estimated_reach,
+  JSON_EXTRACT_SCALAR(ml_generate_text_llm_result, '$.priority') AS priority
 
-FROM campaign_prompts cp
-CROSS JOIN
+FROM
   ML.GENERATE_TEXT(
     MODEL ${ref("gemini_campaign_agent")},
-    (SELECT cp.prompt AS prompt),
+    (SELECT * FROM campaign_prompts),
     STRUCT(
       0.3 AS temperature,
       2048 AS max_output_tokens,
       TRUE AS flatten_json_output
     )
-  ) r
+  )
