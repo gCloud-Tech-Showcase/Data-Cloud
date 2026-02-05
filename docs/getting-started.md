@@ -171,4 +171,4 @@ terraform destroy
 ## Next Steps
 
 - **[Demo Guides](demos/README.md)** — Run the demonstrations
-- **[Architecture](reference/architecture.md)** — Technical deep dive
+- **[Architecture](reference/)** — Technical deep dive

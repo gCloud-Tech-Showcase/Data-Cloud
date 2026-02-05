@@ -130,7 +130,7 @@ cd infra && terraform apply
 |-------|-------------|
 | **[Getting Started](docs/getting-started.md)** | Deploy infrastructure and run your first pipeline |
 | **[Guides](docs/demos/README.md)** | Step-by-step walkthroughs with SQL examples |
-| **[Architecture Deep Dive](docs/reference/architecture.md)** | Medallion layers, design decisions, technical details |
+| **[Architecture Deep Dive](docs/reference/)** | Medallion layers, design decisions, technical details |
 
 ---
 

@@ -15,4 +15,4 @@ Explore GCP Data Cloud capabilities through these use cases:
 
 ## Reference
 
-- [Architecture](reference/architecture.md) — Medallion layers, design decisions, technical details
+- [Architecture](reference/) — Medallion layers, design decisions, technical details
