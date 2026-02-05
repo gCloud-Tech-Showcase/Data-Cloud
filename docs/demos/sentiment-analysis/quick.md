@@ -151,6 +151,6 @@ month      | sentiment | review_count
 
 ## Navigation
 
-- [Overview](overview.md)
+- [Overview](./)
 - [Full Guides](01-enrichment.md)
 - [Back to Demos](../README.md)

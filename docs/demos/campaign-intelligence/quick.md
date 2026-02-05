@@ -127,6 +127,6 @@ FROM `campaign_intelligence.gold_campaign_recommendations`;
 
 ## Navigation
 
-- [Overview](overview.md)
+- [Overview](./)
 - [Full Guide](guide.md)
 - [Back to Demos](../README.md)

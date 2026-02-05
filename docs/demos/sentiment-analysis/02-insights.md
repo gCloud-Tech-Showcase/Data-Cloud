@@ -173,10 +173,10 @@ We now understand:
 
 ## What's Next
 
-Continue to [Multimodal Insights](../multimodal-insights/overview.md) to combine WHO will churn with WHY they're unhappy.
+Continue to [Multimodal Insights](../multimodal-insights/) to combine WHO will churn with WHY they're unhappy.
 
 ---
 
 ## Navigation
 
-[← Enrichment](01-enrichment.md) | [Multimodal Insights →](../multimodal-insights/overview.md) | [Quick Reference](quick.md)
+[← Enrichment](01-enrichment.md) | [Multimodal Insights →](../multimodal-insights/) | [Quick Reference](quick.md)

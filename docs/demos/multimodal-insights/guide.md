@@ -190,4 +190,4 @@ gcloud ai endpoints deploy-model ENDPOINT_ID \
 
 ## Navigation
 
-[← Sentiment Insights](../sentiment-analysis/02-insights.md) | [Campaign Intelligence →](../campaign-intelligence/overview.md) | [Quick Reference](quick.md)
+[← Sentiment Insights](../sentiment-analysis/02-insights.md) | [Campaign Intelligence →](../campaign-intelligence/) | [Quick Reference](quick.md)

@@ -32,4 +32,4 @@ Use Gemini 2.0 Flash to analyze reviews directly in BigQuery:
 
 ## What's Next
 
-This tells you WHY users are unhappy. Continue to [Multimodal Insights](../multimodal-insights/overview.md) to combine WHO + WHY.
+This tells you WHY users are unhappy. Continue to [Multimodal Insights](../multimodal-insights/) to combine WHO + WHY.

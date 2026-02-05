@@ -126,4 +126,4 @@ WITH date_spine AS (
 
 ## Navigation
 
-[Next: Model Training →](02-training.md) | [Quick Reference](quick.md) | [Overview](overview.md)
+[Next: Model Training →](02-training.md) | [Quick Reference](quick.md) | [Overview](./)

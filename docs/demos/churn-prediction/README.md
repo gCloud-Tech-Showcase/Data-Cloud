@@ -32,4 +32,4 @@ Train a machine learning model entirely in SQL:
 
 ## What's Next
 
-This tells you WHO will churn, but not WHY. Continue to [Sentiment Analysis](../sentiment-analysis/overview.md) to understand root causes.
+This tells you WHO will churn, but not WHY. Continue to [Sentiment Analysis](../sentiment-analysis/) to understand root causes.

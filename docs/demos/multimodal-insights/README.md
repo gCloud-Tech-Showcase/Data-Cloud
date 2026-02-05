@@ -29,4 +29,4 @@ Join behavioral predictions with sentiment data:
 
 ## Prerequisites
 
-Complete [Churn Prediction](../churn-prediction/overview.md) and [Sentiment Analysis](../sentiment-analysis/overview.md) first.
+Complete [Churn Prediction](../churn-prediction/) and [Sentiment Analysis](../sentiment-analysis/) first.

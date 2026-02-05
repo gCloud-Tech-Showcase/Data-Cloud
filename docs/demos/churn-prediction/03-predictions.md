@@ -131,10 +131,10 @@ To understand WHY users churn, we need to analyze unstructured data:
 - Support tickets
 - In-app feedback
 
-Continue to [Sentiment Analysis](../sentiment-analysis/overview.md) to add this dimension.
+Continue to [Sentiment Analysis](../sentiment-analysis/) to add this dimension.
 
 ---
 
 ## Navigation
 
-[← Training](02-training.md) | [Sentiment Analysis →](../sentiment-analysis/overview.md) | [Quick Reference](quick.md)
+[← Training](02-training.md) | [Sentiment Analysis →](../sentiment-analysis/) | [Quick Reference](quick.md)

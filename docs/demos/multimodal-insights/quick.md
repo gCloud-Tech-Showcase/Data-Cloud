@@ -92,6 +92,6 @@ FROM ML.PREDICT(
 
 ## Navigation
 
-- [Overview](overview.md)
+- [Overview](./)
 - [Full Guide](guide.md)
 - [Back to Demos](../README.md)

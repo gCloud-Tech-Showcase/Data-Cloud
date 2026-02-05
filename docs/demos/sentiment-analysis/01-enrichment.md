@@ -163,4 +163,4 @@ LIMIT 5;
 
 ## Navigation
 
-[← Overview](overview.md) | [Next: Insights →](02-insights.md) | [Quick Reference](quick.md)
+[← Overview](./) | [Next: Insights →](02-insights.md) | [Quick Reference](quick.md)
