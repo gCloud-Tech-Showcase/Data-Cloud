@@ -108,6 +108,20 @@ resource "google_bigquery_dataset" "sentiment_analysis" {
   depends_on = [google_project_service.bigquery]
 }
 
+resource "google_bigquery_dataset" "campaign_intelligence" {
+  dataset_id  = "campaign_intelligence"
+  location    = var.dataset_location
+  description = "Campaign intelligence combining public housing/census data with digital engagement signals"
+
+  labels = {
+    project = "data-cloud"
+    purpose = "showcase"
+    domain  = "campaign-intelligence"
+  }
+
+  depends_on = [google_project_service.bigquery]
+}
+
 # -----------------------------------------------------------------------------
 # Cloud Storage Buckets
 # -----------------------------------------------------------------------------

@@ -1,0 +1,153 @@
+config {
+  type: "table",
+  schema: "campaign_intelligence",
+  description: "GOLD: User segments with campaign propensity scores for targeting",
+  tags: ["campaign_intelligence", "gold", "marts"]
+}
+
+-- Assign users to campaign segments based on demographics and engagement
+-- Includes individual propensity scores
+
+WITH user_with_features AS (
+  SELECT
+    u.user_id,
+    u.age,
+    u.gender,
+    u.city,
+    u.state,
+    u.census_tract_id,
+    u.traffic_source,
+    u.created_at AS user_created_at,
+
+    -- Engagement signals
+    e.total_events,
+    e.days_active,
+    e.total_orders,
+    e.engagement_score,
+    e.cart_rate,
+    e.checkout_rate,
+    e.days_since_last_event,
+    e.days_since_last_order,
+
+    -- Tract demographics
+    t.homeownership_rate,
+    t.renter_rate,
+    t.median_income,
+    t.income_category,
+    t.young_adult_ratio,
+    t.first_time_buyer_score AS tract_ftb_score,
+    t.refinance_score AS tract_refi_score,
+    t.home_equity_score AS tract_heloc_score
+
+  FROM ${ref("silver_users_with_census")} u
+  LEFT JOIN ${ref("silver_engagement_signals")} e
+    ON u.user_id = e.user_id
+  LEFT JOIN ${ref("gold_tract_campaign_features")} t
+    ON u.census_tract_id = t.census_tract_id
+),
+
+user_scores AS (
+  SELECT
+    *,
+
+    -- First-time buyer propensity (user-level)
+    LEAST(100, (
+      -- Age factor (25-35 ideal)
+      CASE
+        WHEN age BETWEEN 25 AND 35 THEN 30
+        WHEN age BETWEEN 22 AND 40 THEN 20
+        ELSE 10
+      END +
+      -- Tract demographics
+      COALESCE(tract_ftb_score, 0) * 0.4 +
+      -- Engagement factor
+      LEAST(20, COALESCE(engagement_score, 0) / 5) +
+      -- Recency bonus
+      CASE
+        WHEN days_since_last_event <= 7 THEN 10
+        WHEN days_since_last_event <= 30 THEN 5
+        ELSE 0
+      END
+    )) AS first_time_buyer_propensity,
+
+    -- Refinance propensity (user-level)
+    LEAST(100, (
+      -- Age factor (35-55 ideal for refinance)
+      CASE
+        WHEN age BETWEEN 35 AND 55 THEN 25
+        WHEN age BETWEEN 30 AND 60 THEN 15
+        ELSE 5
+      END +
+      -- Tract demographics
+      COALESCE(tract_refi_score, 0) * 0.5 +
+      -- Engagement factor
+      LEAST(15, COALESCE(engagement_score, 0) / 5) +
+      -- Purchase history (financial sophistication)
+      LEAST(10, COALESCE(total_orders, 0))
+    )) AS refinance_propensity,
+
+    -- Home equity propensity (user-level)
+    LEAST(100, (
+      -- Age factor (40+ for HELOC)
+      CASE
+        WHEN age >= 45 THEN 30
+        WHEN age >= 35 THEN 20
+        ELSE 5
+      END +
+      -- Tract demographics
+      COALESCE(tract_heloc_score, 0) * 0.5 +
+      -- Engagement factor
+      LEAST(10, COALESCE(engagement_score, 0) / 5) +
+      -- Tenure (long-term customers)
+      LEAST(10, COALESCE(days_active, 0) / 10)
+    )) AS home_equity_propensity
+
+  FROM user_with_features
+)
+
+SELECT
+  user_id,
+  age,
+  gender,
+  city,
+  state,
+  census_tract_id,
+  traffic_source,
+  user_created_at,
+
+  -- Engagement
+  total_events,
+  days_active,
+  total_orders,
+  engagement_score,
+  days_since_last_event,
+
+  -- Tract context
+  income_category,
+  homeownership_rate,
+  renter_rate,
+
+  -- Propensity scores
+  first_time_buyer_propensity,
+  refinance_propensity,
+  home_equity_propensity,
+
+  -- Primary segment assignment (highest propensity)
+  CASE
+    WHEN first_time_buyer_propensity >= refinance_propensity
+     AND first_time_buyer_propensity >= home_equity_propensity
+    THEN 'first_time_buyer_prospect'
+    WHEN refinance_propensity >= home_equity_propensity
+    THEN 'refinance_prospect'
+    ELSE 'home_equity_prospect'
+  END AS primary_segment,
+
+  -- Segment tier based on highest score
+  CASE
+    WHEN GREATEST(first_time_buyer_propensity, refinance_propensity, home_equity_propensity) >= 70 THEN 'high'
+    WHEN GREATEST(first_time_buyer_propensity, refinance_propensity, home_equity_propensity) >= 50 THEN 'medium'
+    ELSE 'low'
+  END AS segment_tier
+
+FROM user_scores
+WHERE engagement_score > 0  -- Only include users with some engagement

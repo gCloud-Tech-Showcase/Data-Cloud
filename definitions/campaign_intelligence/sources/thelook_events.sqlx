@@ -1,0 +1,7 @@
+config {
+  type: "declaration",
+  database: "bigquery-public-data",
+  schema: "thelook_ecommerce",
+  name: "events",
+  description: "BRONZE: theLook eCommerce web events (page views, cart actions, purchases)"
+}

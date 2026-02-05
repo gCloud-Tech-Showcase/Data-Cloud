@@ -1,0 +1,63 @@
+config {
+  type: "table",
+  schema: "campaign_intelligence",
+  description: "SILVER: theLook users joined to census tracts via spatial ST_CONTAINS join",
+  tags: ["campaign_intelligence", "silver", "staging"]
+}
+
+-- Join theLook eCommerce users to census tracts using spatial geography functions
+-- Filters to US users with valid coordinates
+
+WITH us_users AS (
+  SELECT
+    id AS user_id,
+    first_name,
+    last_name,
+    email,
+    age,
+    gender,
+    city,
+    state,
+    postal_code,
+    country,
+    latitude,
+    longitude,
+    traffic_source,
+    created_at
+  FROM ${ref("thelook_users")}
+  WHERE country = 'United States'
+    AND latitude IS NOT NULL
+    AND longitude IS NOT NULL
+    AND latitude BETWEEN 24 AND 50  -- Continental US bounds
+    AND longitude BETWEEN -125 AND -66
+),
+
+user_locations AS (
+  SELECT
+    u.*,
+    ST_GEOGPOINT(u.longitude, u.latitude) AS user_point
+  FROM us_users u
+)
+
+SELECT
+  ul.user_id,
+  ul.first_name,
+  ul.last_name,
+  ul.email,
+  ul.age,
+  ul.gender,
+  ul.city,
+  ul.state,
+  ul.postal_code,
+  ul.country,
+  ul.latitude,
+  ul.longitude,
+  ul.traffic_source,
+  ul.created_at,
+  ct.geo_id AS census_tract_id,
+  ct.state_fips_code,
+  ct.county_fips_code,
+  ct.tract_ce
+FROM user_locations ul
+LEFT JOIN ${ref("census_tracts")} ct
+  ON ST_CONTAINS(ct.tract_geom, ul.user_point)

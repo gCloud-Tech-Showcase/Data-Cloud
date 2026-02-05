@@ -1,0 +1,90 @@
+config {
+  type: "table",
+  schema: "campaign_intelligence",
+  description: "SILVER: Aggregated digital engagement signals by user from theLook events and orders",
+  tags: ["campaign_intelligence", "silver", "staging"]
+}
+
+-- Aggregate user engagement from web events and orders
+-- Pattern follows silver_user_sessions.sqlx from propensity_modeling
+
+WITH user_events AS (
+  SELECT
+    user_id,
+    COUNT(*) AS total_events,
+    COUNT(DISTINCT DATE(created_at)) AS days_active,
+    COUNTIF(event_type = 'purchase') AS purchase_events,
+    COUNTIF(event_type = 'cart') AS cart_events,
+    COUNTIF(event_type = 'product') AS product_view_events,
+    COUNTIF(event_type = 'department') AS department_view_events,
+    COUNTIF(event_type = 'home') AS home_page_events,
+    MIN(created_at) AS first_event_at,
+    MAX(created_at) AS last_event_at,
+    COUNT(DISTINCT session_id) AS total_sessions
+  FROM ${ref("thelook_events")}
+  WHERE user_id IS NOT NULL
+  GROUP BY user_id
+),
+
+user_orders AS (
+  SELECT
+    user_id,
+    COUNT(*) AS total_orders,
+    SUM(num_of_item) AS total_items_purchased,
+    MIN(created_at) AS first_order_at,
+    MAX(created_at) AS last_order_at,
+    COUNTIF(status = 'Complete') AS completed_orders,
+    COUNTIF(status = 'Returned') AS returned_orders
+  FROM ${ref("thelook_orders")}
+  WHERE user_id IS NOT NULL
+  GROUP BY user_id
+)
+
+SELECT
+  COALESCE(e.user_id, o.user_id) AS user_id,
+
+  -- Event engagement metrics
+  COALESCE(e.total_events, 0) AS total_events,
+  COALESCE(e.days_active, 0) AS days_active,
+  COALESCE(e.total_sessions, 0) AS total_sessions,
+  SAFE_DIVIDE(e.total_events, NULLIF(e.days_active, 0)) AS events_per_active_day,
+  SAFE_DIVIDE(e.total_events, NULLIF(e.total_sessions, 0)) AS events_per_session,
+
+  -- Funnel metrics
+  COALESCE(e.home_page_events, 0) AS home_page_events,
+  COALESCE(e.department_view_events, 0) AS department_view_events,
+  COALESCE(e.product_view_events, 0) AS product_view_events,
+  COALESCE(e.cart_events, 0) AS cart_events,
+  COALESCE(e.purchase_events, 0) AS purchase_events,
+
+  -- Conversion signals
+  SAFE_DIVIDE(e.cart_events, NULLIF(e.product_view_events, 0)) AS cart_rate,
+  SAFE_DIVIDE(e.purchase_events, NULLIF(e.cart_events, 0)) AS checkout_rate,
+
+  -- Purchase behavior
+  COALESCE(o.total_orders, 0) AS total_orders,
+  COALESCE(o.total_items_purchased, 0) AS total_items_purchased,
+  COALESCE(o.completed_orders, 0) AS completed_orders,
+  COALESCE(o.returned_orders, 0) AS returned_orders,
+  SAFE_DIVIDE(o.returned_orders, NULLIF(o.total_orders, 0)) AS return_rate,
+
+  -- Recency
+  e.first_event_at,
+  e.last_event_at,
+  o.first_order_at,
+  o.last_order_at,
+  DATE_DIFF(CURRENT_DATE(), DATE(e.last_event_at), DAY) AS days_since_last_event,
+  DATE_DIFF(CURRENT_DATE(), DATE(o.last_order_at), DAY) AS days_since_last_order,
+
+  -- Engagement score (composite)
+  (
+    COALESCE(e.days_active, 0) * 2 +
+    COALESCE(o.total_orders, 0) * 10 +
+    COALESCE(e.purchase_events, 0) * 5 +
+    COALESCE(e.cart_events, 0) * 2 +
+    COALESCE(e.product_view_events, 0) * 1
+  ) AS engagement_score
+
+FROM user_events e
+FULL OUTER JOIN user_orders o
+  ON e.user_id = o.user_id
