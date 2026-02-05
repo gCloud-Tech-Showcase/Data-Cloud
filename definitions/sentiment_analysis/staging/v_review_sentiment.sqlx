@@ -46,4 +46,4 @@ FROM
       1024 AS max_output_tokens,
       TRUE AS flatten_json_output
     )
-  );
+  )

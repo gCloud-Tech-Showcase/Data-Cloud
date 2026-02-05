@@ -9,4 +9,4 @@ CREATE OR REPLACE MODEL ${self()}
 REMOTE WITH CONNECTION `US.vertex-ai-connection`
 OPTIONS (
   ENDPOINT = 'gemini-1.5-flash'
-);
+)

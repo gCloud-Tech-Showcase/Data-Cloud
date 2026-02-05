@@ -12,4 +12,4 @@ OPTIONS (
   uris = ['gs://gcloud-tech-showcase-multimodal-data/user-reviews/play-store/flood-it/*.json'],
   max_staleness = INTERVAL 1 HOUR,
   metadata_cache_mode = 'AUTOMATIC'
-);
+)
