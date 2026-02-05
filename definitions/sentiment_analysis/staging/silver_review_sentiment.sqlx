@@ -1,8 +1,8 @@
 config {
   type: "incremental",
   schema: "sentiment_analysis",
-  description: "Extract sentiment, category, and score from reviews using Gemini",
-  tags: ["sentiment_analysis", "staging"],
+  description: "SILVER: Gemini-enriched review sentiment analysis with cleansing and validation",
+  tags: ["sentiment_analysis", "silver", "staging"],
   uniqueKey: ["review_id"]
 }
 
@@ -41,7 +41,7 @@ FROM
           'Review text: ',
           JSON_EXTRACT_SCALAR(SAFE_CONVERT_BYTES_TO_STRING(data), '$.review_text')
         ) AS prompt
-      FROM ${ref("user_reviews")}
+      FROM ${ref("bronze_user_reviews")}
       ${when(incremental(), `WHERE JSON_EXTRACT_SCALAR(SAFE_CONVERT_BYTES_TO_STRING(data), '$.review_id') NOT IN (SELECT review_id FROM ${self()})`)}
     ),
     STRUCT(

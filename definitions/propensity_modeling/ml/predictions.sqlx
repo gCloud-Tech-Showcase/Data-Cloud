@@ -24,8 +24,8 @@ SELECT
     ELSE 'LOW RISK'
   END AS risk_category
 FROM ML.PREDICT(
-  MODEL `gcloud-tech-showcase.propensity_modeling.user_retention_model`,
-  (SELECT * FROM `gcloud-tech-showcase.propensity_modeling.training_data` LIMIT 100)
+  MODEL `gcloud-tech-showcase.propensity_modeling.gold_user_retention_model`,
+  (SELECT * FROM `gcloud-tech-showcase.propensity_modeling.gold_training_features` LIMIT 100)
 )
 ORDER BY return_probability ASC;
 
@@ -43,8 +43,8 @@ WITH predictions AS (
     max_score,
     days_since_last_activity
   FROM ML.PREDICT(
-    MODEL `gcloud-tech-showcase.propensity_modeling.user_retention_model`,
-    (SELECT * FROM `gcloud-tech-showcase.propensity_modeling.training_data`)
+    MODEL `gcloud-tech-showcase.propensity_modeling.gold_user_retention_model`,
+    (SELECT * FROM `gcloud-tech-showcase.propensity_modeling.gold_training_features`)
   )
 )
 SELECT
@@ -62,8 +62,8 @@ ORDER BY high_risk_percentage DESC;
 -- Query 3: Explain Individual Predictions
 SELECT *
 FROM ML.EXPLAIN_PREDICT(
-  MODEL `gcloud-tech-showcase.propensity_modeling.user_retention_model`,
-  (SELECT * FROM `gcloud-tech-showcase.propensity_modeling.training_data` LIMIT 5),
+  MODEL `gcloud-tech-showcase.propensity_modeling.gold_user_retention_model`,
+  (SELECT * FROM `gcloud-tech-showcase.propensity_modeling.gold_training_features` LIMIT 5),
   STRUCT(3 AS top_k_features)
 );
 
@@ -73,7 +73,7 @@ SELECT
   predicted_will_return,
   predicted_will_return_probs
 FROM ML.PREDICT(
-  MODEL `gcloud-tech-showcase.propensity_modeling.user_retention_model`,
+  MODEL `gcloud-tech-showcase.propensity_modeling.gold_user_retention_model`,
   (
     SELECT
       'new_user_demo' AS user_pseudo_id,

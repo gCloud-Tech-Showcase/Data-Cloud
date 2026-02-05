@@ -1,8 +1,8 @@
 config {
   type: "view",
   schema: "ga4_source",
-  description: "Flattened GA4 events with unnested parameters for easier querying",
-  tags: ["propensity_modeling", "staging"]
+  description: "SILVER: Flattened and cleansed GA4 events with unnested parameters",
+  tags: ["propensity_modeling", "silver", "staging"]
 }
 
 SELECT

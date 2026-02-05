@@ -2,8 +2,8 @@ config {
   type: "operations",
   schema: "sentiment_analysis",
   hasOutput: true,
-  description: "Object table referencing user review JSON files in GCS",
-  tags: ["sentiment_analysis", "sources"]
+  description: "BRONZE: Raw user review JSON files from GCS via BigLake Object Table",
+  tags: ["sentiment_analysis", "bronze", "sources"]
 }
 
 CREATE OR REPLACE EXTERNAL TABLE ${self()}

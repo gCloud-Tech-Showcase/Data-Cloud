@@ -1,8 +1,8 @@
 config {
   type: "view",
   schema: "ga4_source",
-  description: "User sessions aggregated from flattened events",
-  tags: ["propensity_modeling", "staging"]
+  description: "SILVER: Session-level aggregations from cleansed GA4 events",
+  tags: ["propensity_modeling", "silver", "staging"]
 }
 
 SELECT
@@ -21,6 +21,6 @@ SELECT
   MAX(operating_system) AS operating_system,
   MAX(country) AS country
 
-FROM ${ref("v_events_flattened")}
+FROM ${ref("silver_events_flattened")}
 WHERE session_id IS NOT NULL
 GROUP BY user_pseudo_id, session_id

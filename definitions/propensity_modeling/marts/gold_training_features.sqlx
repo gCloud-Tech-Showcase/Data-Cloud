@@ -1,8 +1,8 @@
 config {
   type: "table",
   schema: "propensity_modeling",
-  description: "Training data for user retention model using rolling 7-day windows - predicts if user will return in next 7 days",
-  tags: ["propensity_modeling", "marts"]
+  description: "GOLD: Feature-engineered training data for user retention ML model using rolling 7-day windows",
+  tags: ["propensity_modeling", "gold", "marts"]
 }
 
 -- Rolling window approach:
@@ -22,7 +22,7 @@ user_activity_range AS (
     user_pseudo_id,
     MIN(event_date) AS first_activity_date,
     MAX(event_date) AS last_activity_date
-  FROM ${ref("v_events_flattened")}
+  FROM ${ref("silver_events_flattened")}
   GROUP BY user_pseudo_id
 ),
 
@@ -90,7 +90,7 @@ user_training_features AS (
     DATE_DIFF(uo.observation_date, MAX(e.event_date), DAY) AS days_since_last_activity
 
   FROM user_observations uo
-  LEFT JOIN ${ref("v_events_flattened")} e
+  LEFT JOIN ${ref("silver_events_flattened")} e
     ON uo.user_pseudo_id = e.user_pseudo_id
    AND e.event_date BETWEEN DATE_SUB(uo.observation_date, INTERVAL 6 DAY)
                         AND uo.observation_date
@@ -105,7 +105,7 @@ user_labels AS (
     uo.observation_date,
     1 AS returned_flag
   FROM user_observations uo
-  JOIN ${ref("v_events_flattened")} e
+  JOIN ${ref("silver_events_flattened")} e
     ON uo.user_pseudo_id = e.user_pseudo_id
    AND e.event_date BETWEEN DATE_ADD(uo.observation_date, INTERVAL 1 DAY)
                         AND DATE_ADD(uo.observation_date, INTERVAL 7 DAY)
