@@ -114,13 +114,15 @@ cd infra && terraform apply
 
 ## What You'll Build
 
-| Domain | Input | Output | Google Cloud Services |
-|--------|-------|--------|---------------------|
-| **Sentiment Analysis** | 500+ Play Store reviews (JSON) | Sentiment-enriched reviews | BigLake, Gemini 2.0 Flash, Dataform |
-| **Propensity Modeling** | 5.7M GA4 events, 15K users | Churn predictions (0-100%) | BigQuery ML, Vertex AI |
-| **Campaign Intelligence** | Census ACS + theLook eCommerce | AI-generated campaign recommendations | BigQuery Geography, Gemini 2.0 Flash |
+| Use Case | Input | Output | Services |
+|----------|-------|--------|----------|
+| **Churn Prediction** | 5.7M GA4 events | Risk scores (0-100%) | BigQuery ML, Vertex AI |
+| **Sentiment Analysis** | 500+ Play Store reviews | Sentiment + category | BigLake, Gemini 2.0 Flash |
+| **Multimodal Insights** | Churn + Sentiment | Targeted interventions | BigQuery joins |
 
-**Cross-domain insight:** Join sentiment with churn risk to identify users who are *both* high-risk *and* frustrated. Use public Census data to target mortgage campaigns without accessing internal customer records.
+**Cross-domain insight:** Join sentiment with churn risk to identify users who are *both* high-risk *and* frustrated.
+
+*Also includes [Campaign Intelligence](docs/demos/campaign-intelligence/) (WIP) — target campaigns using public Census data without customer PII.*
 
 ---
 
