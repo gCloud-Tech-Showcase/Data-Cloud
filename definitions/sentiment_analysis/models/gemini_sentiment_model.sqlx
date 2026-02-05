@@ -1,0 +1,13 @@
+config {
+  type: "operations",
+  schema: "sentiment_analysis",
+  hasOutput: true,
+  description: "Remote Gemini model for sentiment analysis and text understanding",
+  tags: ["sentiment_analysis", "models"]
+}
+
+CREATE OR REPLACE MODEL ${self()}
+REMOTE WITH CONNECTION `US.vertex-ai-connection`
+OPTIONS (
+  ENDPOINT = 'gemini-2.0-flash-001'
+)

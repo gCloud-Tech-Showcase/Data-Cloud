@@ -1,11 +1,3 @@
-config {
-  type: "operations",
-  schema: "propensity_modeling",
-  hasOutput: false,
-  description: "Prediction queries - run these to generate predictions",
-  disabled: true
-}
-
 -- =============================================================================
 -- Prediction Queries
 -- Run these individually in BigQuery console
@@ -23,8 +15,8 @@ SELECT
     ELSE 'LOW RISK'
   END AS risk_category
 FROM ML.PREDICT(
-  MODEL `data-cloud-485915.propensity_modeling.user_retention_model`,
-  (SELECT * FROM `data-cloud-485915.propensity_modeling.training_data` LIMIT 100)
+  MODEL `propensity_modeling.gold_user_retention_model`,
+  (SELECT * FROM `propensity_modeling.gold_training_features` LIMIT 100)
 )
 ORDER BY return_probability ASC;
 
@@ -38,12 +30,12 @@ WITH predictions AS (
     device_category,
     operating_system,
     country,
-    total_sessions,
+    total_events,
     max_score,
     days_since_last_activity
   FROM ML.PREDICT(
-    MODEL `data-cloud-485915.propensity_modeling.user_retention_model`,
-    (SELECT * FROM `data-cloud-485915.propensity_modeling.training_data`)
+    MODEL `propensity_modeling.gold_user_retention_model`,
+    (SELECT * FROM `propensity_modeling.gold_training_features`)
   )
 )
 SELECT
@@ -61,8 +53,8 @@ ORDER BY high_risk_percentage DESC;
 -- Query 3: Explain Individual Predictions
 SELECT *
 FROM ML.EXPLAIN_PREDICT(
-  MODEL `data-cloud-485915.propensity_modeling.user_retention_model`,
-  (SELECT * FROM `data-cloud-485915.propensity_modeling.training_data` LIMIT 5),
+  MODEL `propensity_modeling.gold_user_retention_model`,
+  (SELECT * FROM `propensity_modeling.gold_training_features` LIMIT 5),
   STRUCT(3 AS top_k_features)
 );
 
@@ -72,12 +64,12 @@ SELECT
   predicted_will_return,
   predicted_will_return_probs
 FROM ML.PREDICT(
-  MODEL `data-cloud-485915.propensity_modeling.user_retention_model`,
+  MODEL `propensity_modeling.gold_user_retention_model`,
   (
     SELECT
       'new_user_demo' AS user_pseudo_id,
+      7 AS days_in_window,
       3 AS days_active,
-      5 AS total_sessions,
       45 AS total_events,
       10 AS levels_started,
       6 AS levels_completed,
@@ -87,8 +79,10 @@ FROM ML.PREDICT(
       150.0 AS avg_score,
       0.6 AS level_completion_rate,
       5.0 AS avg_engagement_seconds_per_event,
-      1.67 AS sessions_per_active_day,
+      15.0 AS events_per_active_day,
       2 AS days_since_last_activity,
+      6.4 AS events_per_day,
+      3.6 AS engagement_minutes_per_day,
       'mobile' AS device_category,
       'Android' AS operating_system,
       'United States' AS country

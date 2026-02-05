@@ -1,0 +1,61 @@
+config {
+  type: "table",
+  schema: "propensity_modeling",
+  description: "GOLD: Model evaluation metrics for user retention model. Runs after model training to capture performance.",
+  tags: ["propensity_modeling", "gold", "ml"],
+  dependencies: ["gold_user_retention_model"]
+}
+
+-- Combine key evaluation metrics into a single table
+-- This runs automatically after model training
+
+WITH evaluation_metrics AS (
+  SELECT
+    'gold_user_retention_model' AS model_name,
+    CURRENT_TIMESTAMP() AS evaluation_timestamp,
+    precision,
+    recall,
+    accuracy,
+    f1_score,
+    log_loss,
+    roc_auc
+  FROM ML.EVALUATE(MODEL ${ref("gold_user_retention_model")})
+),
+
+training_info AS (
+  SELECT
+    MAX(iteration) AS total_iterations,
+    MIN(loss) AS final_loss,
+    MAX(duration_ms) AS training_duration_ms
+  FROM ML.TRAINING_INFO(MODEL ${ref("gold_user_retention_model")})
+),
+
+feature_importance AS (
+  SELECT
+    STRING_AGG(feature || ':' || CAST(ROUND(attribution, 3) AS STRING), ', ' ORDER BY attribution DESC LIMIT 5) AS top_5_features
+  FROM ML.GLOBAL_EXPLAIN(MODEL ${ref("gold_user_retention_model")})
+)
+
+SELECT
+  e.model_name,
+  e.evaluation_timestamp,
+
+  -- Classification Metrics
+  ROUND(e.roc_auc, 4) AS roc_auc,
+  ROUND(e.accuracy, 4) AS accuracy,
+  ROUND(e.precision, 4) AS precision,
+  ROUND(e.recall, 4) AS recall,
+  ROUND(e.f1_score, 4) AS f1_score,
+  ROUND(e.log_loss, 4) AS log_loss,
+
+  -- Training Info
+  t.total_iterations,
+  ROUND(t.final_loss, 4) AS final_loss,
+  t.training_duration_ms,
+
+  -- Feature Importance (top 5)
+  f.top_5_features
+
+FROM evaluation_metrics e
+CROSS JOIN training_info t
+CROSS JOIN feature_importance f

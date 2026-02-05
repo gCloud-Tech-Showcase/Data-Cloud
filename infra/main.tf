@@ -22,6 +22,11 @@ resource "google_project_service" "dataform" {
   disable_on_destroy = false
 }
 
+resource "google_project_service" "storage" {
+  service            = "storage.googleapis.com"
+  disable_on_destroy = false
+}
+
 # Explicitly create the Dataform service identity (service account)
 resource "google_project_service_identity" "dataform" {
   provider = google-beta
@@ -87,6 +92,96 @@ resource "google_bigquery_dataset" "ga4_source" {
   }
 
   depends_on = [google_project_service.bigquery]
+}
+
+resource "google_bigquery_dataset" "sentiment_analysis" {
+  dataset_id = "sentiment_analysis"
+  location   = var.dataset_location  # Use US multi-region to match other datasets
+
+  description = "Gemini-powered sentiment analysis of user reviews"
+
+  labels = {
+    project = "data-cloud"
+    purpose = "showcase"
+  }
+
+  depends_on = [google_project_service.bigquery]
+}
+
+# -----------------------------------------------------------------------------
+# Cloud Storage Buckets
+# -----------------------------------------------------------------------------
+
+resource "google_storage_bucket" "multimodal_data" {
+  name          = "${var.project_id}-multimodal-data"
+  location      = var.region
+  force_destroy = false # Protect scraped data from accidental deletion
+
+  uniform_bucket_level_access = true
+
+  versioning {
+    enabled = true
+  }
+
+  # Lifecycle rule disabled to prevent automatic data deletion
+  # Uncomment if you want automatic cleanup of old data
+  # lifecycle_rule {
+  #   action {
+  #     type = "Delete"
+  #   }
+  #   condition {
+  #     age = 730 # Delete after 2 years
+  #   }
+  # }
+
+  labels = {
+    project = "data-cloud"
+    purpose = "unstructured-data"
+  }
+
+  depends_on = [google_project_service.storage]
+}
+
+# -----------------------------------------------------------------------------
+# BigQuery Connection for Vertex AI (Gemini Models)
+# -----------------------------------------------------------------------------
+
+resource "google_bigquery_connection" "vertex_ai" {
+  connection_id = "vertex-ai-connection"
+  location      = var.dataset_location  # Use US multi-region to match datasets
+  friendly_name = "Vertex AI Connection for Gemini"
+  description   = "Connection for accessing Gemini models from BigQuery"
+
+  cloud_resource {}
+
+  depends_on = [
+    google_project_service.bigquery,
+    google_project_service.vertex_ai
+  ]
+}
+
+# Grant Vertex AI User permissions to the connection's service account
+resource "google_project_iam_member" "bq_connection_vertex_ai_user" {
+  project = var.project_id
+  role    = "roles/aiplatform.user"
+  member  = "serviceAccount:${google_bigquery_connection.vertex_ai.cloud_resource[0].service_account_id}"
+
+  depends_on = [
+    google_bigquery_connection.vertex_ai,
+    google_project_service.vertex_ai
+  ]
+}
+
+# Grant read access to GCS bucket for BigQuery ObjectRef tables
+resource "google_storage_bucket_iam_member" "bq_connection_gcs_reader" {
+  bucket = google_storage_bucket.multimodal_data.name
+  role   = "roles/storage.objectViewer"
+  member = "serviceAccount:${google_bigquery_connection.vertex_ai.cloud_resource[0].service_account_id}"
+
+  depends_on = [
+    google_bigquery_connection.vertex_ai,
+    google_storage_bucket.multimodal_data
+  ]
 }
 
 # -----------------------------------------------------------------------------
@@ -230,4 +325,20 @@ resource "google_vertex_ai_endpoint" "retention_endpoint" {
   location     = var.region
 
   depends_on = [google_project_service.vertex_ai]
+}
+
+# -----------------------------------------------------------------------------
+# Python Scripts Configuration
+# Generate .env file for data collection scripts
+# -----------------------------------------------------------------------------
+
+resource "local_file" "python_env" {
+  content = <<-EOT
+    GCP_PROJECT_ID=${var.project_id}
+    GCP_REGION=${var.region}
+  EOT
+
+  filename = "${path.module}/../scripts/.env"
+
+  file_permission = "0600" # Protect sensitive config
 }

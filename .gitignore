@@ -28,3 +28,16 @@ Thumbs.db
 
 # Node.js (Dataform)
 node_modules/
+.df/
+workflow_settings.yaml
+!workflow_settings.yaml.example
+
+# Python scripts
+scripts/.venv/
+scripts/venv/
+scripts/__pycache__/
+scripts/*.pyc
+scripts/checkpoint.json
+scripts/*.log
+scripts/.env
+scripts/service-account-key.json

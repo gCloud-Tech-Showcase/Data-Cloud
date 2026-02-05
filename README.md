@@ -1,404 +1,173 @@
-# Google Cloud Tech Showcase: Propensity Modeling with BQML and Vertex AI
+# Multimodal Analytics on Google Cloud
 
-This walkthrough demonstrates how to build an end-to-end **user retention prediction** pipeline using Google Cloud's data and AI tools. You'll deploy infrastructure, transform data, train a machine learning model, and run predictions—all using SQL.
+> Predict **which** customers will churn and understand **why** — all in one platform.
 
-**What you'll build:**
+Traditional analytics silos behavioral data (structured) from feedback data (unstructured). This showcase demonstrates Google Cloud's open lakehouse architecture for **multimodal analytics**: combining BigQuery ML for churn prediction with Gemini AI for sentiment analysis.
 
-- A data pipeline that transforms raw GA4 events into ML-ready features
-- A logistic regression model trained directly in BigQuery
-- Batch and real-time inference capabilities
-
-**Business context:** Predict which users are likely to churn so you can target them with retention campaigns before they leave.
+**Result:** Identify high-risk users with negative sentiment for targeted retention campaigns.
 
 ---
 
-## Architecture Overview
+## Architecture
 
+```mermaid
+graph TB
+    subgraph "Bronze - Raw Data"
+        GCS[Play Store Reviews<br/>JSON in GCS]
+        GA4[Firebase GA4 Events<br/>Public Dataset]
+    end
+
+    subgraph "Silver - AI-Enriched"
+        GEMINI[Gemini 2.0 Flash<br/>Sentiment Analysis]
+        SILVER_REV[silver_review_sentiment<br/>category • sentiment • score]
+        SILVER_EVT[silver_events_flattened<br/>Unnested GA4 params]
+
+        GCS --> GEMINI
+        GEMINI --> SILVER_REV
+        GA4 --> SILVER_EVT
+    end
+
+    subgraph "Gold - ML-Ready"
+        GOLD_FEAT[gold_training_features<br/>Rolling 7-day windows]
+        GOLD_MODEL[gold_user_retention_model<br/>BQML Logistic Regression]
+        VERTEX[Vertex AI Model Registry]
+
+        SILVER_EVT --> GOLD_FEAT
+        GOLD_FEAT --> GOLD_MODEL
+        GOLD_MODEL --> VERTEX
+    end
+
+    classDef bronze fill:#cd7f32,stroke:#333,color:#fff
+    classDef silver fill:#c0c0c0,stroke:#333,color:#000
+    classDef gold fill:#ffd700,stroke:#333,color:#000
+    classDef gcp fill:#4285f4,stroke:#333,color:#fff
+
+    class GCS,GA4 bronze
+    class SILVER_REV,SILVER_EVT silver
+    class GOLD_FEAT,GOLD_MODEL gold
+    class GEMINI,VERTEX gcp
 ```
-┌───────────────────────────────────────────────────────────────────────┐
-│                       Google Cloud Platform                           │
-├───────────────────────────────────────────────────────────────────────┤
-│                                                                       │
-│  ┌──────────────┐    ┌──────────────┐    ┌────────────────────────┐  │
-│  │   Firebase   │    │   Dataform   │    │       BigQuery         │  │
-│  │  Public Data │───▶│  (SQL ETL)   │───▶│  ┌────────────────┐   │  │
-│  │  (GA4 Events)│    │              │    │  │  training_data │   │  │
-│  └──────────────┘    └──────────────┘    │  └───────┬────────┘   │  │
-│                                          │          │             │  │
-│                                          │          ▼             │  │
-│                                          │  ┌────────────────┐   │  │
-│                                          │  │   BQML Model   │   │  │
-│                                          │  │ (Logistic Reg) │   │  │
-│                                          │  └───────┬────────┘   │  │
-│                                          └──────────┼────────────┘  │
-│                                                     │               │
-│                            ┌────────────────────────┼─────────────┐ │
-│                            │                        ▼             │ │
-│                            │  ┌────────────────────────────────┐ │ │
-│                            │  │   Vertex AI Model Registry     │ │ │
-│                            │  │   (Versioning & Governance)    │ │ │
-│                            │  └───────────────┬────────────────┘ │ │
-│                            │                  │                   │ │
-│                            │                  ▼                   │ │
-│                            │  ┌────────────────────────────────┐ │ │
-│                            │  │     Vertex AI Endpoint         │ │ │
-│                            │  │   (Real-time Predictions)      │ │ │
-│                            │  └────────────────────────────────┘ │ │
-│                            └─────────────────────────────────────┘ │
-└───────────────────────────────────────────────────────────────────────┘
+
+**Medallion architecture on Google Cloud's open lakehouse:**
+- **Bronze** - Raw data in place (BigLake Object Tables, external declarations)
+- **Silver** - AI-enriched with Gemini, cleansed for analysis
+- **Gold** - ML-ready features and trained models
+
+---
+
+## Key Capabilities
+
+### Query Unstructured Data Without ETL
+**BigLake Object Tables** let you query JSON files in Cloud Storage using SQL — no data movement required.
+
+```sql
+-- Query raw reviews directly from GCS
+SELECT SAFE_CONVERT_BYTES_TO_STRING(data) AS review_json
+FROM `sentiment_analysis.bronze_user_reviews`
+LIMIT 5;
 ```
 
+### AI Enrichment in SQL
+**Gemini 2.0 Flash** analyzes sentiment via SQL using `ML.GENERATE_TEXT()` — no external API orchestration.
+
+```sql
+-- Gemini extracts sentiment, category, and score
+SELECT review_text, sentiment, category, sentiment_score
+FROM `sentiment_analysis.silver_review_sentiment`
+WHERE sentiment = 'negative'
+ORDER BY sentiment_score ASC;
+```
+
+### Train ML Models Where Data Lives
+**BigQuery ML** trains models on billions of rows without moving data — from SQL to production-ready model in minutes.
+
+```sql
+-- Logistic regression trained on 18K rows
+CREATE MODEL gold_user_retention_model
+OPTIONS(model_type='LOGISTIC_REG', model_registry='vertex_ai')
+AS SELECT * FROM gold_training_features;
+```
+
+### Deploy in 15 Minutes
+**Terraform + Dataform** provision infrastructure and build pipelines with one command each.
+
 ---
 
-## Prerequisites
+## Try It Yourself
 
-Before starting, ensure you have:
-
-- [ ] Google Cloud Project with billing enabled
-- [ ] `gcloud` CLI installed and authenticated (`gcloud auth login`)
-- [ ] Terraform >= 1.6.0 installed
-- [ ] GitHub personal access token (for Dataform to sync this repo)
-
----
-
-## Step 1: Deploy the Infrastructure
-
-Terraform provisions all the GCP resources: BigQuery datasets, Dataform repository, IAM permissions, and networking.
-
+### Quick Deploy
 ```bash
-cd infra
-cp terraform.tfvars.example terraform.tfvars
+# 1. Configure
+cp infra/terraform.tfvars.example infra/terraform.tfvars
+# Edit with your project_id and github_token
+
+# 2. Deploy infrastructure
+cd infra && terraform apply
+
+# 3. Run pipeline (via Dataform UI)
+# Google Cloud Console → Dataform → Start Execution
 ```
 
-Edit `terraform.tfvars` with your values:
-
-```hcl
-project_id   = "your-project-id"
-github_token = "ghp_your_token_here"
-```
-
-Deploy:
-
-```bash
-terraform init
-terraform plan    # Review what will be created
-terraform apply   # Type 'yes' to confirm
-```
-
-**What gets created:**
-| Resource | Purpose |
-|----------|---------|
-| BigQuery datasets | `propensity_modeling`, `ga4_source` |
-| Dataform repository | Connected to this GitHub repo |
-| Secret Manager secret | Stores your GitHub token securely |
-| IAM bindings | Dataform service account permissions |
-| VPC network | Private networking for GCP services |
+**Step-by-step guide:** [Getting Started](docs/getting-started.md)
+**See it in action:** [Demo Walkthrough](docs/demo-walkthrough.md)
 
 ---
 
-## Step 2: Run the Data Pipeline
+## What You'll Build
 
-The Dataform pipeline transforms raw GA4 events into ML-ready training data.
+| Domain | Input | Output | Google Cloud Services |
+|--------|-------|--------|---------------------|
+| **Sentiment Analysis** | 500+ Play Store reviews (JSON) | Sentiment-enriched reviews | BigLake, Gemini 2.0 Flash, Dataform |
+| **Propensity Modeling** | 5.7M GA4 events, 15K users | Churn predictions (0-100%) | BigQuery ML, Vertex AI |
 
-1. Open **Google Cloud Console → Dataform**
-2. Select the `data-cloud` repository
-3. Click **Start Compilation** → **Create** (fetches latest code from GitHub)
-4. Click **Start Execution** → **Start** (runs the full workflow)
-
-**What gets built:**
-
-| Object                                     | Type  | Description                          |
-| ------------------------------------------ | ----- | ------------------------------------ |
-| `ga4_source.v_events_flattened`            | View  | Flattens nested GA4 event parameters |
-| `propensity_modeling.training_data`        | Table | ~18K rows of engineered features     |
-| `propensity_modeling.user_retention_model` | Model | Trained BQML logistic regression     |
+**Cross-domain insight:** Join sentiment with churn risk to identify users who are *both* high-risk *and* frustrated.
 
 ---
 
-## Step 3: Explore the Training Data
+## Documentation
 
-Open **BigQuery Console** and run these queries to understand your data.
-
-**Preview the training data:**
-
-```sql
-SELECT *
-FROM `propensity_modeling.training_data`
-LIMIT 10;
-```
-
-**Check the class balance (churned vs. returned):**
-
-```sql
-SELECT
-  will_return,
-  COUNT(*) AS count,
-  ROUND(COUNT(*) * 100.0 / SUM(COUNT(*)) OVER(), 1) AS percentage
-FROM `propensity_modeling.training_data`
-GROUP BY will_return;
-```
-
-**How the features are engineered:**
-
-The model uses a **rolling 7-day window** approach:
-
-- **Features**: User behavior from the 7 days prior to each observation date
-- **Label**: Did the user return in the 7 days _after_ the observation date?
-- **Result**: Multiple training rows per user (one per weekly snapshot)
-
-| Category       | Features                                                                             |
-| -------------- | ------------------------------------------------------------------------------------ |
-| **Activity**   | `days_active`, `total_events`, `events_per_day`, `events_per_active_day`             |
-| **Engagement** | `total_engagement_minutes`, `engagement_minutes_per_day`, `days_since_last_activity` |
-| **Gameplay**   | `levels_started`, `levels_completed`, `levels_failed`, `level_completion_rate`       |
-| **Scoring**    | `max_score`, `avg_score`                                                             |
-| **Device**     | `device_category`, `operating_system`, `country`                                     |
+| Guide | Description |
+|-------|-------------|
+| **[Getting Started](docs/getting-started.md)** | Deploy infrastructure and run your first pipeline |
+| **[Demo Walkthrough](docs/demo-walkthrough.md)** | Step-by-step demonstration of key features |
+| **[Architecture Deep Dive](docs/architecture.md)** | Medallion layers, design decisions, technical details |
+| **[Demo Walkthrough](docs/demo-walkthrough.md)** | Step-by-step demonstration with SQL examples |
 
 ---
 
-## Step 4: Analyze the Model
+## Technologies
 
-**View model evaluation metrics:**
-
-```sql
-SELECT *
-FROM ML.EVALUATE(MODEL `propensity_modeling.user_retention_model`);
-```
-
-Key metrics to look for:
-
-- **Precision**: Of users predicted to return, what % actually did?
-- **Recall**: Of users who returned, what % did we identify?
-- **AUC-ROC**: Model's ability to distinguish churners from returners (0.5 = random, 1.0 = perfect)
-
-**View feature importance (what drives predictions):**
-
-```sql
-SELECT *
-FROM ML.GLOBAL_EXPLAIN(MODEL `propensity_modeling.user_retention_model`)
-ORDER BY attribution DESC;
-```
-
-**View training progress:**
-
-```sql
-SELECT *
-FROM ML.TRAINING_INFO(MODEL `propensity_modeling.user_retention_model`);
-```
-
-**View the confusion matrix:**
-
-```sql
-SELECT *
-FROM ML.CONFUSION_MATRIX(MODEL `propensity_modeling.user_retention_model`);
-```
-
----
-
-## Step 5: Run Batch Predictions
-
-Score all users in your training data:
-
-```sql
-SELECT
-  user_pseudo_id,
-  observation_date,
-  predicted_will_return,
-  ROUND(predicted_will_return_probs[OFFSET(1)].prob, 3) AS return_probability,
-  ROUND(predicted_will_return_probs[OFFSET(0)].prob, 3) AS churn_probability
-FROM ML.PREDICT(
-  MODEL `propensity_modeling.user_retention_model`,
-  (SELECT * FROM `propensity_modeling.training_data`)
-)
-ORDER BY churn_probability DESC
-LIMIT 20;
-```
-
-**Score a hypothetical new user:**
-
-```sql
-SELECT
-  predicted_will_return,
-  ROUND(predicted_will_return_probs[OFFSET(0)].prob, 3) AS churn_probability,
-  ROUND(predicted_will_return_probs[OFFSET(1)].prob, 3) AS return_probability
-FROM ML.PREDICT(
-  MODEL `propensity_modeling.user_retention_model`,
-  (SELECT
-    7 AS days_in_window,
-    3 AS days_active,
-    45 AS total_events,
-    6.4 AS events_per_day,
-    2.5 AS engagement_minutes_per_day,
-    5 AS levels_started,
-    3 AS levels_completed,
-    0 AS levels_failed,
-    0.6 AS level_completion_rate,
-    17.5 AS total_engagement_minutes,
-    150 AS max_score,
-    75.0 AS avg_score,
-    15.0 AS events_per_active_day,
-    2 AS days_since_last_activity,
-    'mobile' AS device_category,
-    'Android' AS operating_system,
-    'United States' AS country
-  )
-);
-```
-
----
-
-## Step 6: Tune the Classification Threshold
-
-The model outputs a probability (0-1). The **threshold** determines when to classify a user as "will return" vs "will churn."
-
-**Default threshold: 0.5**
-
-- Probability >= 0.5 → Predicted to return
-- Probability < 0.5 → Predicted to churn
-
-**In BigQuery Console:**
-
-1. Go to your model in the BigQuery explorer
-2. Click the **Evaluation** tab
-3. Use the **Positive class threshold** slider to see how precision/recall change
-
-**Threshold tradeoffs:**
-
-| Threshold        | Effect                                                             |
-| ---------------- | ------------------------------------------------------------------ |
-| **Lower (0.3)**  | Higher recall—catches more at-risk users, but more false positives |
-| **Higher (0.7)** | Higher precision—fewer but more confident predictions              |
-
-**View the ROC curve data:**
-
-```sql
-SELECT *
-FROM ML.ROC_CURVE(MODEL `propensity_modeling.user_retention_model`);
-```
-
----
-
-## Step 7: (Optional) Deploy for Real-time Predictions
-
-For real-time inference, deploy the model to a Vertex AI endpoint.
-
-1. Go to **Vertex AI → Model Registry**
-2. Find `user_retention_model` (auto-registered during training)
-3. Click **Deploy to Endpoint**
-4. Configure machine type and deploy
-
-**Call the endpoint via REST API:**
-
-```bash
-curl -X POST \
-  -H "Authorization: Bearer $(gcloud auth print-access-token)" \
-  -H "Content-Type: application/json" \
-  "https://REGION-aiplatform.googleapis.com/v1/projects/PROJECT/locations/REGION/endpoints/ENDPOINT_ID:predict" \
-  -d '{
-    "instances": [{
-      "days_in_window": 7,
-      "days_active": 3,
-      "total_events": 45,
-      "events_per_day": 6.4,
-      "engagement_minutes_per_day": 2.5,
-      "levels_started": 5,
-      "levels_completed": 3,
-      "levels_failed": 0,
-      "level_completion_rate": 0.6,
-      "total_engagement_minutes": 17.5,
-      "max_score": 150,
-      "avg_score": 75.0,
-      "events_per_active_day": 15.0,
-      "days_since_last_activity": 2,
-      "device_category": "mobile",
-      "operating_system": "Android",
-      "country": "United States"
-    }]
-  }'
-```
-
----
-
-## Step 8: Explain Individual Predictions
-
-Understand why the model made a specific prediction:
-
-```sql
-SELECT *
-FROM ML.EXPLAIN_PREDICT(
-  MODEL `propensity_modeling.user_retention_model`,
-  (SELECT * FROM `propensity_modeling.training_data` LIMIT 5)
-);
-```
-
-This shows the contribution of each feature to the prediction for each user.
-
----
-
-## Cleanup
-
-To remove all deployed resources:
-
-```bash
-cd infra
-terraform destroy
-```
+**Google Cloud native stack:**
+- **BigQuery** - Serverless data warehouse
+- **BigLake** - Query GCS data without ETL
+- **Gemini 2.0 Flash** - Multimodal AI via SQL
+- **BigQuery ML** - In-database ML training
+- **Vertex AI** - Model registry and deployment
+- **Dataform** - Git-native SQL transformation
+- **Terraform** - Infrastructure as Code
 
 ---
 
 ## Project Structure
 
 ```
-.
-├── infra/                              # Terraform Infrastructure as Code
-│   ├── main.tf                         # GCP resources (APIs, BigQuery, Dataform, IAM)
-│   ├── variables.tf                    # Input variables
-│   ├── outputs.tf                      # Deployment outputs
-│   ├── providers.tf                    # Google Cloud provider config
-│   ├── versions.tf                     # Version constraints
-│   └── terraform.tfvars.example        # Configuration template
-│
-├── definitions/                        # Dataform SQL pipeline
-│   └── propensity_modeling/
-│       ├── sources/
-│       │   └── ga4_events.sqlx         # Source declaration for Firebase data
-│       ├── staging/
-│       │   └── v_events_flattened.sqlx # Unnest GA4 nested params → flat columns
-│       ├── marts/
-│       │   └── training_data.sqlx      # Rolling 7-day window feature engineering
-│       └── ml/
-│           └── user_retention_model.sqlx   # BQML logistic regression model
-│
-├── package.json                        # Dataform dependencies
-├── workflow_settings.yaml              # Dataform project config
-└── README.md
+Data-Cloud/
+├── definitions/              # Dataform SQL pipelines
+│   ├── sentiment_analysis/   # Gemini-powered review analysis
+│   └── propensity_modeling/  # BQML churn prediction
+├── infra/                    # Terraform GCP resources
+├── scripts/                  # Python Play Store scraper
+└── docs/                     # Documentation
 ```
 
 ---
 
-## Source Data
+## Next Steps
 
-This demo uses a public Firebase gaming dataset:
-
-| Property   | Value                                                  |
-| ---------- | ------------------------------------------------------ |
-| Dataset    | `firebase-public-project.analytics_153293282.events_*` |
-| Date Range | June 12, 2018 – October 3, 2018                        |
-| Events     | ~5.7M raw events                                       |
-| Users      | ~15K unique users                                      |
-
----
-
-## Technology Stack
-
-| Component           | Technology           | Purpose                                   |
-| ------------------- | -------------------- | ----------------------------------------- |
-| Infrastructure      | Terraform (>= 1.6.0) | One-click deployment of all GCP resources |
-| Data Warehouse      | BigQuery             | Storage, transformation, and ML training  |
-| Data Transformation | Dataform (3.0.0)     | SQL-based ETL with dependency management  |
-| Machine Learning    | BigQuery ML          | In-database model training                |
-| Model Management    | Vertex AI            | Model registry, versioning, deployment    |
-| Secrets             | Secret Manager       | Secure storage of GitHub token            |
+1. **Deploy:** Follow [Getting Started](docs/getting-started.md)
+2. **Explore:** Run queries from [Demo Walkthrough](docs/demo-walkthrough.md)
+3. **Extend:** Add new features to the ML model
+4. **Productionize:** Deploy to Vertex AI endpoint for real-time scoring
 
 ---
 
