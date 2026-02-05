@@ -2,7 +2,8 @@ config {
   type: "operations",
   schema: "propensity_modeling",
   hasOutput: true,
-  description: "BQML logistic regression model for user retention prediction using rolling 7-day windows"
+  description: "BQML logistic regression model for user retention prediction using rolling 7-day windows",
+  tags: ["propensity_modeling", "ml"]
 }
 
 CREATE OR REPLACE MODEL ${self()}

@@ -1,7 +1,8 @@
 config {
   type: "view",
   schema: "ga4_source",
-  description: "User sessions aggregated from flattened events"
+  description: "User sessions aggregated from flattened events",
+  tags: ["propensity_modeling", "staging"]
 }
 
 SELECT

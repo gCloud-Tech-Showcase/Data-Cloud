@@ -1,7 +1,8 @@
 config {
   type: "table",
   schema: "propensity_modeling",
-  description: "Training data for user retention model using rolling 7-day windows - predicts if user will return in next 7 days"
+  description: "Training data for user retention model using rolling 7-day windows - predicts if user will return in next 7 days",
+  tags: ["propensity_modeling", "marts"]
 }
 
 -- Rolling window approach:

@@ -2,7 +2,8 @@ config {
   type: "operations",
   schema: "sentiment_analysis",
   hasOutput: true,
-  description: "Remote Gemini model for sentiment analysis and text understanding"
+  description: "Remote Gemini model for sentiment analysis and text understanding",
+  tags: ["sentiment_analysis", "models"]
 }
 
 CREATE OR REPLACE MODEL ${self()}

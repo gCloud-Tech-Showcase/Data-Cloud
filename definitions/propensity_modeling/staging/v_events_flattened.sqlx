@@ -1,7 +1,8 @@
 config {
   type: "view",
   schema: "ga4_source",
-  description: "Flattened GA4 events with unnested parameters for easier querying"
+  description: "Flattened GA4 events with unnested parameters for easier querying",
+  tags: ["propensity_modeling", "staging"]
 }
 
 SELECT

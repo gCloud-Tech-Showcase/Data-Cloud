@@ -3,7 +3,8 @@ config {
   schema: "propensity_modeling",
   hasOutput: false,
   description: "Prediction queries - run these to generate predictions",
-  disabled: true
+  disabled: true,
+  tags: ["propensity_modeling", "ml", "examples"]
 }
 
 -- =============================================================================
