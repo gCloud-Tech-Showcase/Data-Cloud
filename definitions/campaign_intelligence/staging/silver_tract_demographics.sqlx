@@ -7,6 +7,7 @@ config {
 
 -- Extract housing features from Census ACS 5-year estimates
 -- Calculate homeownership rate, renter rate, income category, young adult ratio
+-- Note: Using households as proxy for occupied housing units
 
 SELECT
   geo_id AS census_tract_id,
@@ -15,14 +16,14 @@ SELECT
   total_pop AS total_population,
   households AS total_households,
 
-  -- Housing tenure
+  -- Housing tenure (calculate renter-occupied from households minus owner-occupied)
   owner_occupied_housing_units,
-  renter_occupied_housing_units,
-  occupied_housing_units,
+  (households - owner_occupied_housing_units) AS renter_occupied_housing_units,
+  households AS occupied_housing_units,
 
   -- Housing tenure rates
-  SAFE_DIVIDE(owner_occupied_housing_units, NULLIF(occupied_housing_units, 0)) AS homeownership_rate,
-  SAFE_DIVIDE(renter_occupied_housing_units, NULLIF(occupied_housing_units, 0)) AS renter_rate,
+  SAFE_DIVIDE(owner_occupied_housing_units, NULLIF(households, 0)) AS homeownership_rate,
+  SAFE_DIVIDE((households - owner_occupied_housing_units), NULLIF(households, 0)) AS renter_rate,
 
   -- Income metrics
   median_income,
@@ -34,13 +35,13 @@ SELECT
   END AS income_category,
 
   -- Age demographics (for first-time buyer targeting)
-  pop_25_29 + pop_30_34 AS young_adult_pop_25_34,
-  SAFE_DIVIDE(pop_25_29 + pop_30_34, NULLIF(total_pop, 0)) AS young_adult_ratio,
+  COALESCE(pop_25_29, 0) + COALESCE(pop_30_34, 0) AS young_adult_pop_25_34,
+  SAFE_DIVIDE(COALESCE(pop_25_29, 0) + COALESCE(pop_30_34, 0), NULLIF(total_pop, 0)) AS young_adult_ratio,
 
   -- Education (proxy for income stability)
-  bachelors_degree + masters_degree + professional_school_degrees + doctorate_degree AS college_educated_pop,
+  COALESCE(bachelors_degree, 0) + COALESCE(masters_degree, 0) AS college_educated_pop,
   SAFE_DIVIDE(
-    bachelors_degree + masters_degree + professional_school_degrees + doctorate_degree,
+    COALESCE(bachelors_degree, 0) + COALESCE(masters_degree, 0),
     NULLIF(total_pop, 0)
   ) AS college_education_rate,
 
@@ -49,12 +50,7 @@ SELECT
   SAFE_DIVIDE(employed_pop, NULLIF(total_pop, 0)) AS employment_rate,
 
   -- Housing value (for refinance targeting)
-  median_value_owner_occupied AS median_home_value,
-
-  -- Mortgage status
-  owner_occupied_housing_units_lower_value_quartile,
-  owner_occupied_housing_units_median_value,
-  owner_occupied_housing_units_upper_value_quartile
+  owner_occupied_housing_units_median_value AS median_home_value
 
 FROM ${ref("censustract_2018_5yr")}
 WHERE geo_id IS NOT NULL
