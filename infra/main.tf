@@ -41,6 +41,11 @@ resource "google_project_service" "secretmanager" {
   disable_on_destroy = false
 }
 
+resource "google_project_service" "datalineage" {
+  service            = "datalineage.googleapis.com"
+  disable_on_destroy = false
+}
+
 # -----------------------------------------------------------------------------
 # VPC Network
 # -----------------------------------------------------------------------------
