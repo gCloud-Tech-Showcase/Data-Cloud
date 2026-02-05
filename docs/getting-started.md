@@ -85,34 +85,32 @@ Terraform automatically enables required APIs (BigQuery, Dataform, Vertex AI, et
 
 ---
 
-## Step 4: Create Dataform Workspace (Manual)
+## Step 4: Run the Pipeline
 
 1. Open **Google Cloud Console** → **Dataform**
 2. Click on the `data-cloud` repository
-3. Click **Create Development Workspace**
-4. Name it `main` (or your branch name)
+3. Go to **Releases & Scheduling** → **Create Release Configuration**
+4. Set **Git commitish** to `main` (or your branch)
 5. Click **Create**
+6. Click **Create Workflow** to run the release
 
----
-
-## Step 5: Run the Pipeline (Manual)
-
-### Compile
-
-1. In your Dataform workspace, click **Start Compilation**
-2. Wait for compilation to complete (~10 seconds)
-
-### Execute
-
-1. Click **Start Execution**
-2. Select **All actions** (or filter by tag: `sentiment_analysis`, `propensity_modeling`, `campaign_intelligence`)
-3. Click **Execute**
+Alternatively, trigger a manual compilation and execution:
+1. In Releases & Scheduling, click on your release configuration
+2. Click **Run** to execute all actions
 
 **First run takes ~10-15 minutes** (model training). Subsequent runs are faster due to incremental processing.
 
+### Optional: Development Workspace
+
+To iterate on the SQL or test changes before committing:
+
+1. In the Dataform repository, click **Create Development Workspace**
+2. Name it after your branch (e.g., `main`)
+3. Use **Start Compilation** and **Start Execution** to test changes interactively
+
 ---
 
-## Step 6: Verify Deployment
+## Step 5: Verify Deployment
 
 In **BigQuery Console**, run:
 
