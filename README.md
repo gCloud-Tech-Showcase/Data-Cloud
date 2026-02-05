@@ -12,12 +12,12 @@ Traditional analytics silos behavioral data (structured) from feedback data (uns
 
 ```mermaid
 graph TB
-    subgraph "🥉 Bronze - Raw Data"
+    subgraph "Bronze - Raw Data"
         GCS[Play Store Reviews<br/>JSON in GCS]
         GA4[Firebase GA4 Events<br/>Public Dataset]
     end
 
-    subgraph "🥈 Silver - AI-Enriched"
+    subgraph "Silver - AI-Enriched"
         GEMINI[Gemini 2.0 Flash<br/>Sentiment Analysis]
         SILVER_REV[silver_review_sentiment<br/>category • sentiment • score]
         SILVER_EVT[silver_events_flattened<br/>Unnested GA4 params]
@@ -27,7 +27,7 @@ graph TB
         GA4 --> SILVER_EVT
     end
 
-    subgraph "🥇 Gold - ML-Ready"
+    subgraph "Gold - ML-Ready"
         GOLD_FEAT[gold_training_features<br/>Rolling 7-day windows]
         GOLD_MODEL[gold_user_retention_model<br/>BQML Logistic Regression]
         VERTEX[Vertex AI Model Registry]
@@ -49,15 +49,15 @@ graph TB
 ```
 
 **Medallion architecture on Google Cloud's open lakehouse:**
-- 🥉 **Bronze** - Raw data in place (BigLake Object Tables, external declarations)
-- 🥈 **Silver** - AI-enriched with Gemini, cleansed for analysis
-- 🥇 **Gold** - ML-ready features and trained models
+- **Bronze** - Raw data in place (BigLake Object Tables, external declarations)
+- **Silver** - AI-enriched with Gemini, cleansed for analysis
+- **Gold** - ML-ready features and trained models
 
 ---
 
 ## Key Capabilities
 
-### 🔍 Query Unstructured Data Without ETL
+### Query Unstructured Data Without ETL
 **BigLake Object Tables** let you query JSON files in Cloud Storage using SQL — no data movement required.
 
 ```sql
@@ -67,7 +67,7 @@ FROM `sentiment_analysis.bronze_user_reviews`
 LIMIT 5;
 ```
 
-### 🤖 AI Enrichment in SQL
+### AI Enrichment in SQL
 **Gemini 2.0 Flash** analyzes sentiment via SQL using `ML.GENERATE_TEXT()` — no external API orchestration.
 
 ```sql
@@ -78,7 +78,7 @@ WHERE sentiment = 'negative'
 ORDER BY sentiment_score ASC;
 ```
 
-### 📊 Train ML Models Where Data Lives
+### Train ML Models Where Data Lives
 **BigQuery ML** trains models on billions of rows without moving data — from SQL to production-ready model in minutes.
 
 ```sql
@@ -88,7 +88,7 @@ OPTIONS(model_type='LOGISTIC_REG', model_registry='vertex_ai')
 AS SELECT * FROM gold_training_features;
 ```
 
-### ⚡ Deploy in 15 Minutes
+### Deploy in 15 Minutes
 **Terraform + Dataform** provision infrastructure and build pipelines with one command each.
 
 ---
@@ -108,8 +108,8 @@ cd infra && terraform apply
 # Google Cloud Console → Dataform → Start Execution
 ```
 
-**📖 Step-by-step guide:** [Getting Started](docs/getting-started.md)
-**🎬 See it in action:** [Demo Walkthrough](docs/demo-walkthrough.md)
+**Step-by-step guide:** [Getting Started](docs/getting-started.md)
+**See it in action:** [Demo Walkthrough](docs/demo-walkthrough.md)
 
 ---
 

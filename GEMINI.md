@@ -19,9 +19,9 @@ Propensity Modeling:
 
 **Medallion Architecture (Bronze → Silver → Gold):**
 
-- 🥉 **Bronze** - Raw, immutable data (BigLake Object Tables, external declarations)
-- 🥈 **Silver** - Cleansed, validated (flattened events, Gemini-enriched reviews)
-- 🥇 **Gold** - Feature-engineered (ML training datasets, models)
+- **Bronze** - Raw, immutable data (BigLake Object Tables, external declarations)
+- **Silver** - Cleansed, validated (flattened events, Gemini-enriched reviews)
+- **Gold** - Feature-engineered (ML training datasets, models)
 
 **Data Pipeline Layers:**
 

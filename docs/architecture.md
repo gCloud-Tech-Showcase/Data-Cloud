@@ -113,7 +113,7 @@ sequenceDiagram
 
 This project follows the **bronze/silver/gold pattern** popularized by modern data lakehouses.
 
-### 🥉 Bronze Layer - Raw, Immutable
+### Bronze Layer - Raw, Immutable
 
 **Purpose:** Landing zone for raw data exactly as-is
 
@@ -131,7 +131,7 @@ This project follows the **bronze/silver/gold pattern** popularized by modern da
 
 ---
 
-### 🥈 Silver Layer - Cleansed, Validated
+### Silver Layer - Cleansed, Validated
 
 **Purpose:** Business-ready data with quality checks and enrichment
 
@@ -151,7 +151,7 @@ This project follows the **bronze/silver/gold pattern** popularized by modern da
 
 ---
 
-### 🥇 Gold Layer - Feature-Engineered, Analytics-Ready
+### Gold Layer - Feature-Engineered, Analytics-Ready
 
 **Purpose:** ML-ready features and business aggregations
 
@@ -207,7 +207,7 @@ User A: Days 1-7 → Will they return on Day 8?
 (Single training row per user)
 ```
 
-### Our Approach (✅)
+### Our Approach
 ```
 User A, Week 1: Days 1-7   → Did they return Days 8-14?
 User A, Week 2: Days 8-14  → Did they return Days 15-21?

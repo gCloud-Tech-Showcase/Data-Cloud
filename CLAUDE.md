@@ -25,9 +25,9 @@ Propensity Modeling:
 ## WHY: Architecture Decisions
 
 **Medallion Architecture (Bronze/Silver/Gold)**: Industry-standard data lakehouse pattern for progressive refinement:
-- 🥉 **Bronze** - Raw, immutable data (BigLake Object Tables, external declarations)
-- 🥈 **Silver** - Cleansed, validated, business-ready (flattened events, Gemini-enriched reviews)
-- 🥇 **Gold** - Feature-engineered, analytics-ready (ML training datasets, models)
+- **Bronze** - Raw, immutable data (BigLake Object Tables, external declarations)
+- **Silver** - Cleansed, validated, business-ready (flattened events, Gemini-enriched reviews)
+- **Gold** - Feature-engineered, analytics-ready (ML training datasets, models)
 
 **Data Mesh with Domains**: Domain-driven organization for business alignment:
 - `sentiment_analysis/` - User review analysis with Gemini
