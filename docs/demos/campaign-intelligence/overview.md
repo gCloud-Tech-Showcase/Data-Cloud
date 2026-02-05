@@ -1,21 +1,17 @@
 # Campaign Intelligence
 
-Target mortgage campaigns using public Census data and digital signals — no customer data required.
+Target campaigns using public Census data and digital signals — no customer data required.
 
-## The Problem
+## What You'll Build
 
-Marketing wants to target mortgage campaigns, but can't access internal mortgage records due to data governance policies.
+Combine public Census housing data with digital engagement signals:
+1. **Census ACS** — Housing demographics by census tract (renter rates, income)
+2. **theLook eCommerce** — User engagement signals (events, orders)
+3. **Gemini AI** — Generate campaign recommendations
 
-## The Solution
+Users in high-renter, middle-income neighborhoods who are actively engaging are likely first-time buyer prospects — no internal customer data needed.
 
-Combine public Census housing data with digital engagement signals to identify campaign opportunities:
-1. **Census ACS** - Housing demographics by census tract (renter rates, income)
-2. **theLook eCommerce** - User engagement signals (events, orders)
-3. **Gemini AI** - Generate campaign recommendations
-
-**Key insight:** Users in high-renter, middle-income neighborhoods who are actively engaging are likely first-time buyer prospects — no customer mortgage data needed.
-
-## Technologies Used
+## Technologies
 
 | Service | Purpose |
 |---------|---------|
@@ -24,25 +20,16 @@ Combine public Census housing data with digital engagement signals to identify c
 | theLook eCommerce | User engagement signals |
 | Gemini 2.0 Flash | Campaign recommendations |
 
-## Key Results
+## Results
 
-- **Same-day insights** vs weeks of data access requests
-- **No PII required** - Marketing can self-serve
-- **AI-powered recommendations** - Campaign strategies generated automatically
+- **No PII required** — Uses only public datasets
+- **AI-powered recommendations** — Campaign strategies generated automatically
 
-## Choose Your Path
+## Guides
 
-| Path | Time | Description |
-|------|------|-------------|
-| [**Quick Reference**](quick.md) | 5 min | Just the SQL queries + outputs |
-| [**Full Guide**](guide.md) | 10 min | Complete walkthrough |
+- [Quick Reference](quick.md) — SQL queries with expected outputs
+- [Full Guide](guide.md) — Complete walkthrough
 
-## Standalone Demo
+## Standalone
 
-This demo is independent from the Churn Prediction → Sentiment Analysis narrative. It can be run on its own.
-
----
-
-## Navigation
-
-[← Multimodal Insights](../multimodal-insights/overview.md) | [Back to Demos](../README.md)
+This use case is independent from the Churn Prediction → Sentiment Analysis flow.

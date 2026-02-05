@@ -2,45 +2,31 @@
 
 Combine churn predictions with sentiment analysis for targeted interventions.
 
-## The Problem
+## What You'll Build
 
-Churn prediction tells you WHO will leave. Sentiment analysis tells you WHY users are unhappy. But these insights are in separate silos.
+Join behavioral predictions with sentiment data:
+1. **WHO** — Users at high churn risk (from BQML model)
+2. **WHY** — Their specific complaints (from Gemini sentiment)
+3. **WHAT** — Targeted action based on both signals
 
-## The Solution
-
-Combine behavioral predictions with sentiment data to enable targeted interventions:
-1. **WHO** - Users at high churn risk (from BQML model)
-2. **WHY** - Their specific complaints (from Gemini sentiment analysis)
-3. **WHAT** - Targeted action based on both signals
-
-## Technologies Used
+## Technologies
 
 | Service | Purpose |
 |---------|---------|
 | BigQuery ML | Churn predictions |
 | Gemini 2.0 Flash | Sentiment categorization |
 | Vertex AI | Model registry and deployment |
-| BigQuery | Unified analytics platform |
 
-## Key Results
+## Results
 
-- **60-70% conversion** vs 30-40% with generic campaigns
 - **Targeted interventions** based on complaint category
 - **Production-ready** deployment to Vertex AI
 
-## Choose Your Path
+## Guides
 
-| Path | Time | Description |
-|------|------|-------------|
-| [**Quick Reference**](quick.md) | 5 min | Just the SQL queries + outputs |
-| [**Full Guide**](guide.md) | 7 min | Complete walkthrough |
+- [Quick Reference](quick.md) — SQL queries with expected outputs
+- [Full Guide](guide.md) — Complete walkthrough
 
-## This Is The Capstone
+## Prerequisites
 
-This demo combines everything from Churn Prediction + Sentiment Analysis. Make sure you've completed those demos first.
-
----
-
-## Navigation
-
-[← Sentiment Analysis](../sentiment-analysis/overview.md) | [Campaign Intelligence →](../campaign-intelligence/overview.md) | [Back to Demos](../README.md)
+Complete [Churn Prediction](../churn-prediction/overview.md) and [Sentiment Analysis](../sentiment-analysis/overview.md) first.

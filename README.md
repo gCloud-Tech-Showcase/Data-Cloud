@@ -88,8 +88,8 @@ OPTIONS(model_type='LOGISTIC_REG', model_registry='vertex_ai')
 AS SELECT * FROM gold_training_features;
 ```
 
-### Deploy in 15 Minutes
-**Terraform + Dataform** provision infrastructure and build pipelines with one command each.
+### Infrastructure as Code
+**Terraform + Dataform** provision infrastructure and build pipelines declaratively.
 
 ---
 
@@ -109,7 +109,6 @@ cd infra && terraform apply
 ```
 
 **Step-by-step guide:** [Getting Started](docs/getting-started.md)
-**See it in action:** [Demo Walkthrough](docs/demo-walkthrough.md)
 
 ---
 
@@ -130,7 +129,7 @@ cd infra && terraform apply
 | Guide | Description |
 |-------|-------------|
 | **[Getting Started](docs/getting-started.md)** | Deploy infrastructure and run your first pipeline |
-| **[Demo Guides](docs/demos/README.md)** | Step-by-step demonstrations with SQL examples |
+| **[Guides](docs/demos/README.md)** | Step-by-step walkthroughs with SQL examples |
 | **[Architecture Deep Dive](docs/reference/architecture.md)** | Medallion layers, design decisions, technical details |
 
 ---
@@ -166,7 +165,7 @@ Data-Cloud/
 ## Next Steps
 
 1. **Deploy:** Follow [Getting Started](docs/getting-started.md)
-2. **Explore:** Run queries from [Demo Walkthrough](docs/demo-walkthrough.md)
+2. **Explore:** Run the [Guides](docs/demos/README.md)
 3. **Extend:** Add new features to the ML model
 4. **Productionize:** Deploy to Vertex AI endpoint for real-time scoring
 
