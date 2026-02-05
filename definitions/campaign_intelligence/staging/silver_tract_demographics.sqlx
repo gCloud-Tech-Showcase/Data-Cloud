@@ -56,6 +56,6 @@ SELECT
   owner_occupied_housing_units_median_value,
   owner_occupied_housing_units_upper_value_quartile
 
-FROM ${ref("census_acs_housing")}
+FROM ${ref("censustract_2018_5yr")}
 WHERE geo_id IS NOT NULL
   AND total_pop > 0

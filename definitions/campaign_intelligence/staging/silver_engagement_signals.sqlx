@@ -21,7 +21,7 @@ WITH user_events AS (
     MIN(created_at) AS first_event_at,
     MAX(created_at) AS last_event_at,
     COUNT(DISTINCT session_id) AS total_sessions
-  FROM ${ref("thelook_events")}
+  FROM ${ref("events")}
   WHERE user_id IS NOT NULL
   GROUP BY user_id
 ),
@@ -35,7 +35,7 @@ user_orders AS (
     MAX(created_at) AS last_order_at,
     COUNTIF(status = 'Complete') AS completed_orders,
     COUNTIF(status = 'Returned') AS returned_orders
-  FROM ${ref("thelook_orders")}
+  FROM ${ref("orders")}
   WHERE user_id IS NOT NULL
   GROUP BY user_id
 )
