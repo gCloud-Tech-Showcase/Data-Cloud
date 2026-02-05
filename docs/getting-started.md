@@ -28,6 +28,8 @@ Two files need your project ID:
 
 ### A. Terraform Configuration
 
+Create `terraform.tfvars` from the example:
+
 ```bash
 cp infra/terraform.tfvars.example infra/terraform.tfvars
 ```
@@ -43,21 +45,19 @@ github_token = "ghp_your_token_here"       # Required: GitHub personal access to
 # dataset_location = "US"
 ```
 
+This file is gitignored — never commit it.
+
 ### B. Dataform Configuration
 
-```bash
-cp workflow_settings.yaml.example workflow_settings.yaml
-```
-
-Edit `workflow_settings.yaml`:
+Edit `workflow_settings.yaml` (already exists in repo):
 
 ```yaml
-defaultProject: your-project-id    # Must match terraform.tfvars
+defaultProject: your-project-id    # Change from gcloud-tech-showcase to your project
 defaultLocation: US
 defaultDataset: propensity_modeling
 ```
 
-**Security note:** Both files are gitignored. Never commit them.
+This file is tracked in git. If you're working on a fork, commit your changes. For local testing, you can leave it modified without committing.
 
 ---
 
