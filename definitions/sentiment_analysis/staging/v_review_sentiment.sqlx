@@ -1,5 +1,5 @@
 config {
-  type: "view",
+  type: "table",
   schema: "sentiment_analysis",
   description: "Extract sentiment, category, and score from reviews using Gemini"
 }
