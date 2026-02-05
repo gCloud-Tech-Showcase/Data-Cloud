@@ -50,4 +50,4 @@ Campaign Intelligence can be explored independently:
 ## Navigation
 
 - [Getting Started](../getting-started.md)
-- [Architecture](../reference/)
+- [Architecture](../architecture.md)
