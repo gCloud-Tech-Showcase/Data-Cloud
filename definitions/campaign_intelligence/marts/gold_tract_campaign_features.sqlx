@@ -38,7 +38,7 @@ tract_features AS (
     d.renter_rate,
     d.median_income,
     d.income_category,
-    d.young_adult_ratio,
+    d.working_age_ratio,
     d.college_education_rate,
     d.employment_rate,
     d.median_home_value,
@@ -67,7 +67,7 @@ SELECT
   renter_rate,
   median_income,
   income_category,
-  young_adult_ratio,
+  working_age_ratio,
   college_education_rate,
   employment_rate,
   median_home_value,
@@ -88,7 +88,7 @@ SELECT
   -- High renter rate + young adults + middle income + digitally engaged
   LEAST(100, (
     COALESCE(renter_rate, 0) * 30 +
-    COALESCE(young_adult_ratio, 0) * 100 * 25 +
+    COALESCE(working_age_ratio, 0) * 100 * 25 +
     CASE income_category
       WHEN 'middle' THEN 25
       WHEN 'upper_middle' THEN 20

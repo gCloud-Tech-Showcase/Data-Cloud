@@ -34,7 +34,7 @@ WITH user_with_features AS (
     t.renter_rate,
     t.median_income,
     t.income_category,
-    t.young_adult_ratio,
+    t.working_age_ratio,
     t.first_time_buyer_score AS tract_ftb_score,
     t.refinance_score AS tract_refi_score,
     t.home_equity_score AS tract_heloc_score

@@ -34,9 +34,9 @@ SELECT
     ELSE 'high'
   END AS income_category,
 
-  -- Age demographics (for first-time buyer targeting)
-  COALESCE(pop_25_29, 0) + COALESCE(pop_30_34, 0) AS young_adult_pop_25_34,
-  SAFE_DIVIDE(COALESCE(pop_25_29, 0) + COALESCE(pop_30_34, 0), NULLIF(total_pop, 0)) AS young_adult_ratio,
+  -- Age demographics (working age population as proxy for first-time buyer targeting)
+  COALESCE(pop_25_64, 0) AS working_age_pop,
+  SAFE_DIVIDE(COALESCE(pop_25_64, 0), NULLIF(total_pop, 0)) AS working_age_ratio,
 
   -- Education (proxy for income stability)
   COALESCE(bachelors_degree, 0) + COALESCE(masters_degree, 0) AS college_educated_pop,

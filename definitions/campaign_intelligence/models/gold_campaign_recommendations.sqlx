@@ -16,7 +16,7 @@ WITH campaign_summaries AS (
     SUM(users_in_tract) AS total_target_users,
     AVG(first_time_buyer_score) AS avg_score,
     AVG(renter_rate) AS avg_renter_rate,
-    AVG(young_adult_ratio) AS avg_young_adult_ratio,
+    AVG(working_age_ratio) AS avg_working_age_ratio,
     AVG(median_income) AS avg_median_income,
     AVG(digital_engagement_score) AS avg_digital_engagement
   FROM ${ref("gold_tract_campaign_features")}
@@ -31,7 +31,7 @@ WITH campaign_summaries AS (
     SUM(users_in_tract) AS total_target_users,
     AVG(refinance_score) AS avg_score,
     AVG(homeownership_rate) AS avg_homeowner_rate,
-    AVG(young_adult_ratio) AS avg_young_adult_ratio,
+    AVG(working_age_ratio) AS avg_working_age_ratio,
     AVG(median_income) AS avg_median_income,
     AVG(digital_engagement_score) AS avg_digital_engagement
   FROM ${ref("gold_tract_campaign_features")}
@@ -46,7 +46,7 @@ WITH campaign_summaries AS (
     SUM(users_in_tract) AS total_target_users,
     AVG(home_equity_score) AS avg_score,
     AVG(homeownership_rate) AS avg_homeowner_rate,
-    AVG(young_adult_ratio) AS avg_young_adult_ratio,
+    AVG(working_age_ratio) AS avg_working_age_ratio,
     AVG(median_income) AS avg_median_income,
     AVG(digital_engagement_score) AS avg_digital_engagement
   FROM ${ref("gold_tract_campaign_features")}
