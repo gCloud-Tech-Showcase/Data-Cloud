@@ -305,7 +305,7 @@ negative  | 1      | Levels are impossible, super frustrating                  |
 | **AI enrichment via SQL** | Gemini 2.0 Flash + ML.GENERATE_TEXT() | No external APIs, unified platform |
 | **Structured output** | flatten_json_output=TRUE | Easy to query sentiment results |
 | **Incremental processing** | Dataform incremental tables | Process only new data |
-| **Multimodal capabilities** | Gemini 2.0 Flash | Future-proof (images, video) |
+| **Multimodal capabilities** | Gemini 2.0 Flash | Supports text, images, and video |
 
 ---
 

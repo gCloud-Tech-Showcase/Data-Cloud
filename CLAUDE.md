@@ -10,7 +10,7 @@ Google Cloud Tech Showcase demonstrating **multimodal analytics** with BigQuery,
 **Medallion Architecture (Bronze → Silver → Gold):**
 ```
 Sentiment Analysis:
-  GCS JSON files → bronze_user_reviews (BigLake) → silver_review_sentiment (Gemini) → gold_* (future)
+  GCS JSON files → bronze_user_reviews (BigLake) → silver_review_sentiment (Gemini)
 
 Propensity Modeling:
   GA4 events_* → silver_events_flattened → gold_training_features → gold_user_retention_model (BQML)

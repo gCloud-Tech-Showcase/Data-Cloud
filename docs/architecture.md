@@ -193,8 +193,6 @@ definitions/
 - Independent scaling and deployment
 - Cross-domain analytics via joins
 
-**Future domain:** `analytics/` for cross-domain insights (sentiment + propensity)
-
 ---
 
 ## Feature Engineering Strategy
@@ -491,7 +489,7 @@ WHERE JSON_EXTRACT_SCALAR(data_string, '$.review_id') NOT IN (
 
 ### Why Gemini 2.0 Flash instead of other models?
 
-1. **Multimodal**: Can analyze text, images, video in future expansions
+1. **Multimodal**: Can analyze text, images, and video
 2. **Fast**: Flash variant optimized for speed and throughput
 3. **BigQuery integration**: No external API orchestration needed
 4. **Structured output**: Native JSON parsing with `flatten_json_output`
@@ -506,77 +504,9 @@ WHERE JSON_EXTRACT_SCALAR(data_string, '$.review_id') NOT IN (
 
 ---
 
-## Future Enhancements
-
-### Cross-Domain Analytics
-Create `analytics/` domain to join sentiment and propensity:
-```sql
--- gold_user_360.sqlx
-SELECT
-  p.user_pseudo_id,
-  p.return_probability,
-  p.risk_category,
-  s.avg_sentiment_score,
-  s.negative_review_count
-FROM propensity_modeling.gold_predictions p
-LEFT JOIN sentiment_analysis.gold_user_sentiment_summary s
-  ON p.user_pseudo_id = s.user_pseudo_id;
-```
-
-### Vertex AI Feature Store
-Register gold tables as online features for low-latency serving:
-```python
-from google.cloud import aiplatform
-
-feature_store = aiplatform.FeatureStore.create(
-    featurestore_id="user_features",
-    online_store_fixed_node_count=1,
-)
-
-entity_type = feature_store.create_entity_type(
-    entity_type_id="user",
-    description="User entity with retention features",
-)
-
-entity_type.batch_create_features(
-    feature_configs={
-        "days_active": {"value_type": "INT64"},
-        "level_completion_rate": {"value_type": "DOUBLE"},
-        # ... more features
-    }
-)
-```
-
-### Real-Time Predictions
-Deploy model to Vertex AI Endpoint for REST API access:
-```bash
-gcloud ai endpoints deploy-model ENDPOINT_ID \
-  --region=us-central1 \
-  --model=gold_user_retention_model \
-  --display-name=user-retention-v1 \
-  --machine-type=n1-standard-2 \
-  --min-replica-count=1 \
-  --max-replica-count=3
-```
-
-### Data Quality Assertions
-Add assertions in Dataform to validate data quality:
-```javascript
-// assertions/silver_review_sentiment_tests.sqlx
-config { type: "assertion" }
-
-SELECT *
-FROM ${ref("silver_review_sentiment")}
-WHERE sentiment NOT IN ('positive', 'neutral', 'negative')
-  OR sentiment_score NOT BETWEEN -1 AND 1;
-```
-
----
-
 ## Related Documentation
 
 - [Getting Started](getting-started.md) - Installation and configuration
-- [Demo Walkthrough](demo-walkthrough.md) - Step-by-step demonstration
 - [Demo Walkthrough](demo-walkthrough.md) - Step-by-step demonstration with SQL examples
 - [CLAUDE.md](../CLAUDE.md) - Development guide for AI assistants
 - [GEMINI.md](../GEMINI.md) - Project context for AI assistants
