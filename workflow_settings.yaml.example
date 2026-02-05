@@ -1,0 +1,6 @@
+defaultProject: your-project-id
+defaultLocation: US
+defaultDataset: propensity_modeling
+
+vars:
+  region: US

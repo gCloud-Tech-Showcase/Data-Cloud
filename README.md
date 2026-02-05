@@ -78,9 +78,11 @@ Before starting, ensure you have:
 
 ---
 
-## Step 1: Deploy the Infrastructure
+## Step 1: Configure Your Project
 
-Terraform provisions all GCP resources following Google Cloud best practices.
+Before deploying, configure your project ID in two places:
+
+### A. Terraform Configuration
 
 ```bash
 cd infra
@@ -92,6 +94,34 @@ Edit `terraform.tfvars` with your values:
 ```hcl
 project_id   = "your-project-id"
 github_token = "ghp_your_token_here"
+```
+
+### B. Dataform Configuration
+
+```bash
+cd ..  # Back to project root
+cp workflow_settings.yaml.example workflow_settings.yaml
+```
+
+Edit `workflow_settings.yaml`:
+
+```yaml
+defaultProject: your-project-id  # ← Change this to match your GCP project
+defaultLocation: US
+defaultDataset: propensity_modeling
+
+vars:
+  region: US
+```
+
+---
+
+## Step 2: Deploy the Infrastructure
+
+Terraform provisions all GCP resources following Google Cloud best practices.
+
+```bash
+cd infra  # If not already there
 ```
 
 Deploy:
