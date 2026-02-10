@@ -1,0 +1,57 @@
+config {
+  type: "table",
+  schema: "campaign_intelligence",
+  description: "SILVER: Housing tenure and income demographics by census tract from ACS data",
+  tags: ["campaign_intelligence", "silver", "staging"]
+}
+
+-- Extract housing features from Census ACS 5-year estimates
+-- Calculate homeownership rate, renter rate, income category, young adult ratio
+-- Note: Using households as proxy for occupied housing units
+
+SELECT
+  geo_id AS census_tract_id,
+
+  -- Population totals
+  total_pop AS total_population,
+  households AS total_households,
+
+  -- Housing tenure (calculate renter-occupied from households minus owner-occupied)
+  owner_occupied_housing_units,
+  (households - owner_occupied_housing_units) AS renter_occupied_housing_units,
+  households AS occupied_housing_units,
+
+  -- Housing tenure rates
+  SAFE_DIVIDE(owner_occupied_housing_units, NULLIF(households, 0)) AS homeownership_rate,
+  SAFE_DIVIDE((households - owner_occupied_housing_units), NULLIF(households, 0)) AS renter_rate,
+
+  -- Income metrics
+  median_income,
+  CASE
+    WHEN median_income < 35000 THEN 'low'
+    WHEN median_income < 75000 THEN 'middle'
+    WHEN median_income < 150000 THEN 'upper_middle'
+    ELSE 'high'
+  END AS income_category,
+
+  -- Age demographics (working age population as proxy for first-time buyer targeting)
+  COALESCE(pop_25_64, 0) AS working_age_pop,
+  SAFE_DIVIDE(COALESCE(pop_25_64, 0), NULLIF(total_pop, 0)) AS working_age_ratio,
+
+  -- Education (proxy for income stability)
+  COALESCE(bachelors_degree, 0) + COALESCE(masters_degree, 0) AS college_educated_pop,
+  SAFE_DIVIDE(
+    COALESCE(bachelors_degree, 0) + COALESCE(masters_degree, 0),
+    NULLIF(total_pop, 0)
+  ) AS college_education_rate,
+
+  -- Employment
+  employed_pop,
+  SAFE_DIVIDE(employed_pop, NULLIF(total_pop, 0)) AS employment_rate,
+
+  -- Housing value (for refinance targeting)
+  owner_occupied_housing_units_median_value AS median_home_value
+
+FROM ${ref("censustract_2018_5yr")}
+WHERE geo_id IS NOT NULL
+  AND total_pop > 0

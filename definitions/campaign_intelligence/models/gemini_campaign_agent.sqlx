@@ -1,0 +1,13 @@
+config {
+  type: "operations",
+  schema: "campaign_intelligence",
+  hasOutput: true,
+  description: "Remote Gemini model for campaign recommendation agent",
+  tags: ["campaign_intelligence", "gold", "models"]
+}
+
+CREATE OR REPLACE MODEL ${self()}
+REMOTE WITH CONNECTION `US.vertex-ai-connection`
+OPTIONS (
+  ENDPOINT = 'gemini-2.0-flash-001'
+)

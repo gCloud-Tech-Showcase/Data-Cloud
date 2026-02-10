@@ -1,0 +1,134 @@
+config {
+  type: "table",
+  schema: "campaign_intelligence",
+  description: "GOLD: Campaign scoring features by census tract combining demographics with aggregated digital engagement",
+  tags: ["campaign_intelligence", "gold", "marts"]
+}
+
+-- Join tract demographics with aggregated user engagement
+-- Calculate campaign propensity scores for targeting
+
+WITH tract_engagement AS (
+  -- Aggregate engagement signals to census tract level
+  SELECT
+    u.census_tract_id,
+    COUNT(DISTINCT u.user_id) AS users_in_tract,
+    AVG(e.engagement_score) AS avg_engagement_score,
+    AVG(e.total_orders) AS avg_orders_per_user,
+    AVG(e.days_active) AS avg_days_active,
+    SUM(e.total_orders) AS total_orders_in_tract,
+    SUM(e.purchase_events) AS total_purchase_events,
+    AVG(e.cart_rate) AS avg_cart_rate,
+    AVG(e.checkout_rate) AS avg_checkout_rate
+  FROM ${ref("silver_users_with_census")} u
+  LEFT JOIN ${ref("silver_engagement_signals")} e
+    ON u.user_id = e.user_id
+  WHERE u.census_tract_id IS NOT NULL
+  GROUP BY u.census_tract_id
+),
+
+tract_features AS (
+  SELECT
+    d.census_tract_id,
+
+    -- Demographics
+    d.total_population,
+    d.total_households,
+    d.homeownership_rate,
+    d.renter_rate,
+    d.median_income,
+    d.income_category,
+    d.working_age_ratio,
+    d.college_education_rate,
+    d.employment_rate,
+    d.median_home_value,
+
+    -- Engagement aggregates
+    COALESCE(te.users_in_tract, 0) AS users_in_tract,
+    COALESCE(te.avg_engagement_score, 0) AS avg_engagement_score,
+    COALESCE(te.avg_orders_per_user, 0) AS avg_orders_per_user,
+    COALESCE(te.avg_days_active, 0) AS avg_days_active,
+    COALESCE(te.total_orders_in_tract, 0) AS total_orders_in_tract,
+    COALESCE(te.avg_cart_rate, 0) AS avg_cart_rate,
+    COALESCE(te.avg_checkout_rate, 0) AS avg_checkout_rate
+
+  FROM ${ref("silver_tract_demographics")} d
+  LEFT JOIN tract_engagement te
+    ON d.census_tract_id = te.census_tract_id
+)
+
+SELECT
+  census_tract_id,
+
+  -- Raw demographics
+  total_population,
+  total_households,
+  homeownership_rate,
+  renter_rate,
+  median_income,
+  income_category,
+  working_age_ratio,
+  college_education_rate,
+  employment_rate,
+  median_home_value,
+
+  -- Engagement metrics
+  users_in_tract,
+  avg_engagement_score,
+  avg_orders_per_user,
+  avg_days_active,
+  total_orders_in_tract,
+  avg_cart_rate,
+  avg_checkout_rate,
+
+  -- Digital engagement score (normalized 0-100)
+  LEAST(100, avg_engagement_score / 10) AS digital_engagement_score,
+
+  -- First-time buyer score (0-100)
+  -- High renter rate + young adults + middle income + digitally engaged
+  LEAST(100, (
+    COALESCE(renter_rate, 0) * 30 +
+    COALESCE(working_age_ratio, 0) * 100 * 25 +
+    CASE income_category
+      WHEN 'middle' THEN 25
+      WHEN 'upper_middle' THEN 20
+      WHEN 'low' THEN 10
+      ELSE 5
+    END +
+    LEAST(20, avg_engagement_score / 5)
+  )) AS first_time_buyer_score,
+
+  -- Refinance score (0-100)
+  -- High homeownership + high income + high home values + engaged
+  LEAST(100, (
+    COALESCE(homeownership_rate, 0) * 35 +
+    CASE income_category
+      WHEN 'high' THEN 25
+      WHEN 'upper_middle' THEN 20
+      WHEN 'middle' THEN 10
+      ELSE 5
+    END +
+    CASE
+      WHEN median_home_value > 500000 THEN 25
+      WHEN median_home_value > 300000 THEN 20
+      WHEN median_home_value > 200000 THEN 15
+      ELSE 10
+    END +
+    LEAST(15, avg_engagement_score / 5)
+  )) AS refinance_score,
+
+  -- Home equity score (0-100)
+  -- Established homeowners with high values
+  LEAST(100, (
+    COALESCE(homeownership_rate, 0) * 40 +
+    CASE
+      WHEN median_home_value > 400000 THEN 30
+      WHEN median_home_value > 250000 THEN 20
+      ELSE 10
+    END +
+    COALESCE(employment_rate, 0) * 20 +
+    LEAST(10, avg_engagement_score / 5)
+  )) AS home_equity_score
+
+FROM tract_features
+WHERE users_in_tract > 0  -- Only include tracts with digital presence

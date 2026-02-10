@@ -88,8 +88,8 @@ OPTIONS(model_type='LOGISTIC_REG', model_registry='vertex_ai')
 AS SELECT * FROM gold_training_features;
 ```
 
-### Deploy in 15 Minutes
-**Terraform + Dataform** provision infrastructure and build pipelines with one command each.
+### Infrastructure as Code
+**Terraform + Dataform** provision infrastructure and build pipelines declaratively.
 
 ---
 
@@ -109,18 +109,20 @@ cd infra && terraform apply
 ```
 
 **Step-by-step guide:** [Getting Started](docs/getting-started.md)
-**See it in action:** [Demo Walkthrough](docs/demo-walkthrough.md)
 
 ---
 
 ## What You'll Build
 
-| Domain | Input | Output | Google Cloud Services |
-|--------|-------|--------|---------------------|
-| **Sentiment Analysis** | 500+ Play Store reviews (JSON) | Sentiment-enriched reviews | BigLake, Gemini 2.0 Flash, Dataform |
-| **Propensity Modeling** | 5.7M GA4 events, 15K users | Churn predictions (0-100%) | BigQuery ML, Vertex AI |
+| Use Case | Input | Output | Services |
+|----------|-------|--------|----------|
+| **Churn Prediction** | 5.7M GA4 events | Risk scores (0-100%) | BigQuery ML, Vertex AI |
+| **Sentiment Analysis** | 500+ Play Store reviews | Sentiment + category | BigLake, Gemini 2.0 Flash |
+| **Multimodal Insights** | Churn + Sentiment | Targeted interventions | BigQuery joins |
 
 **Cross-domain insight:** Join sentiment with churn risk to identify users who are *both* high-risk *and* frustrated.
+
+*Also includes [Campaign Intelligence](docs/demos/campaign-intelligence/) (proof of concept) — target campaigns using public Census data without customer PII.*
 
 ---
 
@@ -129,9 +131,8 @@ cd infra && terraform apply
 | Guide | Description |
 |-------|-------------|
 | **[Getting Started](docs/getting-started.md)** | Deploy infrastructure and run your first pipeline |
-| **[Demo Walkthrough](docs/demo-walkthrough.md)** | Step-by-step demonstration of key features |
+| **[Guides](docs/demos/README.md)** | Step-by-step walkthroughs with SQL examples |
 | **[Architecture Deep Dive](docs/architecture.md)** | Medallion layers, design decisions, technical details |
-| **[Demo Walkthrough](docs/demo-walkthrough.md)** | Step-by-step demonstration with SQL examples |
 
 ---
 
@@ -152,12 +153,20 @@ cd infra && terraform apply
 
 ```
 Data-Cloud/
-├── definitions/              # Dataform SQL pipelines
-│   ├── sentiment_analysis/   # Gemini-powered review analysis
-│   └── propensity_modeling/  # BQML churn prediction
-├── infra/                    # Terraform GCP resources
-├── scripts/                  # Python Play Store scraper
-└── docs/                     # Documentation
+├── definitions/                  # Dataform SQL pipelines
+│   ├── propensity_modeling/      #   Churn prediction (BQML)
+│   ├── sentiment_analysis/       #   Review analysis (Gemini)
+│   └── campaign_intelligence/    #   Campaign targeting (proof of concept)
+├── infra/                        # Terraform IaC
+├── scripts/                      # Review scraper
+└── docs/
+    ├── getting-started.md
+    ├── architecture.md
+    └── demos/                    # Use case guides
+        ├── churn-prediction/
+        ├── sentiment-analysis/
+        ├── multimodal-insights/
+        └── campaign-intelligence/
 ```
 
 ---
@@ -165,7 +174,7 @@ Data-Cloud/
 ## Next Steps
 
 1. **Deploy:** Follow [Getting Started](docs/getting-started.md)
-2. **Explore:** Run queries from [Demo Walkthrough](docs/demo-walkthrough.md)
+2. **Explore:** Run the [Guides](docs/demos/README.md)
 3. **Extend:** Add new features to the ML model
 4. **Productionize:** Deploy to Vertex AI endpoint for real-time scoring
 

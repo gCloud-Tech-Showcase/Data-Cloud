@@ -1,0 +1,121 @@
+config {
+  type: "table",
+  schema: "campaign_intelligence",
+  description: "GOLD: AI-generated campaign recommendations from Gemini agent based on tract and segment analysis",
+  tags: ["campaign_intelligence", "gold", "models"]
+}
+
+-- Generate campaign recommendations using Gemini
+-- Aggregates top tracts by campaign type and generates targeted messaging
+
+WITH campaign_summaries AS (
+  -- First-time buyer campaign summary
+  SELECT
+    'first_time_buyer' AS campaign_type,
+    COUNT(*) AS target_tracts,
+    SUM(users_in_tract) AS total_target_users,
+    AVG(first_time_buyer_score) AS avg_score,
+    AVG(renter_rate) AS avg_renter_rate,
+    AVG(working_age_ratio) AS avg_working_age_ratio,
+    AVG(median_income) AS avg_median_income,
+    AVG(digital_engagement_score) AS avg_digital_engagement
+  FROM ${ref("gold_tract_campaign_features")}
+  WHERE first_time_buyer_score >= 60
+
+  UNION ALL
+
+  -- Refinance campaign summary
+  SELECT
+    'refinance' AS campaign_type,
+    COUNT(*) AS target_tracts,
+    SUM(users_in_tract) AS total_target_users,
+    AVG(refinance_score) AS avg_score,
+    AVG(homeownership_rate) AS avg_homeowner_rate,
+    AVG(working_age_ratio) AS avg_working_age_ratio,
+    AVG(median_income) AS avg_median_income,
+    AVG(digital_engagement_score) AS avg_digital_engagement
+  FROM ${ref("gold_tract_campaign_features")}
+  WHERE refinance_score >= 60
+
+  UNION ALL
+
+  -- Home equity campaign summary
+  SELECT
+    'home_equity' AS campaign_type,
+    COUNT(*) AS target_tracts,
+    SUM(users_in_tract) AS total_target_users,
+    AVG(home_equity_score) AS avg_score,
+    AVG(homeownership_rate) AS avg_homeowner_rate,
+    AVG(working_age_ratio) AS avg_working_age_ratio,
+    AVG(median_income) AS avg_median_income,
+    AVG(digital_engagement_score) AS avg_digital_engagement
+  FROM ${ref("gold_tract_campaign_features")}
+  WHERE home_equity_score >= 60
+),
+
+campaign_prompts AS (
+  SELECT
+    campaign_type,
+    target_tracts,
+    total_target_users,
+    avg_score,
+    avg_digital_engagement,
+    CONCAT(
+      'You are a marketing campaign strategist for a bank. Based on the following census tract and digital engagement analysis, ',
+      'generate a targeted mortgage campaign recommendation. Return ONLY a JSON object with these exact fields:\n',
+      '{"campaign_name": "<catchy campaign name>", ',
+      '"target_audience": "<specific demographic description>", ',
+      '"key_messaging": "<2-3 key value propositions>", ',
+      '"channels": ["<list of 3-4 marketing channels>"], ',
+      '"estimated_reach": "<number of households>", ',
+      '"priority": "high|medium|low"}\n\n',
+      'Campaign Type: ', campaign_type, '\n',
+      'Target Tracts: ', CAST(target_tracts AS STRING), '\n',
+      'Total Target Users: ', CAST(total_target_users AS STRING), '\n',
+      'Average Propensity Score: ', CAST(ROUND(avg_score, 1) AS STRING), '\n',
+      'Average Digital Engagement: ', CAST(ROUND(avg_digital_engagement, 1) AS STRING), '\n',
+      CASE campaign_type
+        WHEN 'first_time_buyer' THEN CONCAT(
+          'Audience Profile: High renter populations, working age adults, middle income neighborhoods, ',
+          'digitally active users showing purchase intent signals.'
+        )
+        WHEN 'refinance' THEN CONCAT(
+          'Audience Profile: Established homeowners, upper-middle to high income, ',
+          'significant home equity, rate-sensitive buyers tracking market conditions.'
+        )
+        WHEN 'home_equity' THEN CONCAT(
+          'Audience Profile: Long-term homeowners, substantial equity built up, ',
+          'stable employment, interested in home improvement or debt consolidation.'
+        )
+      END
+    ) AS prompt
+  FROM campaign_summaries
+  WHERE target_tracts > 0
+)
+
+SELECT
+  campaign_type,
+  target_tracts,
+  total_target_users,
+  avg_score,
+  avg_digital_engagement,
+  ml_generate_text_llm_result AS gemini_recommendation,
+
+  -- Parse JSON response fields
+  JSON_EXTRACT_SCALAR(ml_generate_text_llm_result, '$.campaign_name') AS campaign_name,
+  JSON_EXTRACT_SCALAR(ml_generate_text_llm_result, '$.target_audience') AS target_audience,
+  JSON_EXTRACT_SCALAR(ml_generate_text_llm_result, '$.key_messaging') AS key_messaging,
+  JSON_EXTRACT_SCALAR(ml_generate_text_llm_result, '$.channels') AS channels,
+  JSON_EXTRACT_SCALAR(ml_generate_text_llm_result, '$.estimated_reach') AS estimated_reach,
+  JSON_EXTRACT_SCALAR(ml_generate_text_llm_result, '$.priority') AS priority
+
+FROM
+  ML.GENERATE_TEXT(
+    MODEL ${ref("gemini_campaign_agent")},
+    (SELECT * FROM campaign_prompts),
+    STRUCT(
+      0.3 AS temperature,
+      2048 AS max_output_tokens,
+      TRUE AS flatten_json_output
+    )
+  )

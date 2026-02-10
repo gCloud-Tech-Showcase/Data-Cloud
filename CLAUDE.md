@@ -2,10 +2,11 @@
 
 ## WHAT: Project Overview
 
-Google Cloud Tech Showcase demonstrating **multimodal analytics** with BigQuery, Gemini AI, and Vertex AI. Two domains:
+Google Cloud Tech Showcase demonstrating **multimodal analytics** with BigQuery, Gemini AI, and Vertex AI. Three domains:
 
 1. **Sentiment Analysis** - Analyze user reviews using Gemini 2.0 Flash in BigQuery
 2. **Propensity Modeling** - Predict user retention (7-day return) using BigQuery ML
+3. **Campaign Intelligence** *(proof of concept)* - AI-powered campaign recommendations using public Census + theLook eCommerce data
 
 **Medallion Architecture (Bronze → Silver → Gold):**
 ```
@@ -14,11 +15,15 @@ Sentiment Analysis:
 
 Propensity Modeling:
   GA4 events_* → silver_events_flattened → gold_training_features → gold_user_retention_model (BQML)
+
+Campaign Intelligence:
+  theLook users + Census tracts → silver_users_with_census (ST_CONTAINS) → gold_tract_campaign_features → gold_campaign_recommendations (Gemini)
 ```
 
 **Key Directories:**
 - `definitions/sentiment_analysis/` - Review analysis with Gemini
 - `definitions/propensity_modeling/` - User retention ML pipeline
+- `definitions/campaign_intelligence/` - Campaign recommendations with Census + eCommerce data
 - `infra/` - Terraform IaC for GCP resources
 - `scripts/` - Python scraper for Play Store reviews
 
@@ -32,6 +37,7 @@ Propensity Modeling:
 **Data Mesh with Domains**: Domain-driven organization for business alignment:
 - `sentiment_analysis/` - User review analysis with Gemini
 - `propensity_modeling/` - User retention prediction with BQML
+- `campaign_intelligence/` - Campaign targeting using public Census housing data + theLook digital signals
 
 **Rolling 7-day windows**: Training data uses sliding observation windows, not just "first 7 days". This creates multiple training rows per user and enables continuous churn prediction.
 
@@ -46,6 +52,7 @@ Propensity Modeling:
 - `sentiment_analysis` - Bronze and Silver layers for review analysis
 - `ga4_source` - Silver layer for GA4 events
 - `propensity_modeling` - Gold layer for ML models and features
+- `campaign_intelligence` - All layers for campaign targeting (Census + theLook)
 
 ## HOW: Development Commands
 
@@ -77,9 +84,9 @@ Use `${ref("table_name")}` for dependencies. Use `${self()}` in model definition
 - Gold layer: `gold_*` prefix (e.g., `gold_training_features`, `gold_user_retention_model`)
 
 **Tags:**
-- Domain: `sentiment_analysis` or `propensity_modeling`
+- Domain: `sentiment_analysis`, `propensity_modeling`, or `campaign_intelligence`
 - Layer: `bronze`, `silver`, or `gold`
-- Category: `sources`, `staging`, `marts`, `ml`, `examples`
+- Category: `sources`, `staging`, `marts`, `ml`, `models`, `examples`
 
 ## SQL Patterns
 
@@ -132,6 +139,19 @@ Use `${ref("table_name")}` for dependencies. Use `${self()}` in model definition
 | `propensity_modeling/marts/gold_training_features.sqlx` | Rolling 7-day window feature engineering |
 | `propensity_modeling/ml/gold_user_retention_model.sqlx` | BQML logistic regression with Vertex AI |
 
+**Campaign Intelligence** *(proof of concept)*:
+| File | Purpose |
+|------|---------|
+| `campaign_intelligence/sources/thelook_*.sqlx` | theLook eCommerce public dataset declarations |
+| `campaign_intelligence/sources/census_*.sqlx` | Census tracts and ACS housing data declarations |
+| `campaign_intelligence/staging/silver_users_with_census.sqlx` | Users joined to census tracts via ST_CONTAINS |
+| `campaign_intelligence/staging/silver_engagement_signals.sqlx` | Aggregated digital engagement by user |
+| `campaign_intelligence/staging/silver_tract_demographics.sqlx` | Housing tenure and income by tract |
+| `campaign_intelligence/marts/gold_tract_campaign_features.sqlx` | Campaign scoring by census tract |
+| `campaign_intelligence/marts/gold_user_segments.sqlx` | User segments with propensity scores |
+| `campaign_intelligence/models/gemini_campaign_agent.sqlx` | Remote Gemini model for recommendations |
+| `campaign_intelligence/models/gold_campaign_recommendations.sqlx` | AI-generated campaign recommendations |
+
 **Infrastructure:**
 | File | Purpose |
 |------|---------|
@@ -149,6 +169,16 @@ Use `${ref("table_name")}` for dependencies. Use `${self()}` in model definition
 - Source: Google Play Store (scraped via Python)
 - Storage: GCS bucket `gs://gcloud-tech-showcase-multimodal-data/user-reviews/play-store/flood-it/`
 - Format: JSON files with review metadata and text
+
+**theLook eCommerce (Campaign Intelligence - proof of concept):**
+- Dataset: `bigquery-public-data.thelook_ecommerce`
+- Tables: `users`, `events`, `orders`
+- Contains: User demographics with lat/long, web events, purchase transactions
+
+**Census Data (Campaign Intelligence - proof of concept):**
+- Tracts: `bigquery-public-data.geo_census_tracts.us_census_tracts_national`
+- ACS: `bigquery-public-data.census_bureau_acs.censustract_2018_5yr`
+- Contains: Geographic boundaries, housing tenure, income demographics
 
 ## Security
 

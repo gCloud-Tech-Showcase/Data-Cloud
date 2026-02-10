@@ -1,0 +1,7 @@
+config {
+  type: "declaration",
+  database: "bigquery-public-data",
+  schema: "census_bureau_acs",
+  name: "censustract_2018_5yr",
+  description: "BRONZE: American Community Survey 5-year estimates with housing tenure and income data by census tract"
+}

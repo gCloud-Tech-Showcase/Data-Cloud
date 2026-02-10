@@ -41,6 +41,11 @@ resource "google_project_service" "secretmanager" {
   disable_on_destroy = false
 }
 
+resource "google_project_service" "datalineage" {
+  service            = "datalineage.googleapis.com"
+  disable_on_destroy = false
+}
+
 # -----------------------------------------------------------------------------
 # VPC Network
 # -----------------------------------------------------------------------------
@@ -103,6 +108,20 @@ resource "google_bigquery_dataset" "sentiment_analysis" {
   labels = {
     project = "data-cloud"
     purpose = "showcase"
+  }
+
+  depends_on = [google_project_service.bigquery]
+}
+
+resource "google_bigquery_dataset" "campaign_intelligence" {
+  dataset_id  = "campaign_intelligence"
+  location    = var.dataset_location
+  description = "Campaign intelligence combining public housing/census data with digital engagement signals"
+
+  labels = {
+    project = "data-cloud"
+    purpose = "showcase"
+    domain  = "campaign-intelligence"
   }
 
   depends_on = [google_project_service.bigquery]
