@@ -138,6 +138,7 @@ Use `${ref("table_name")}` for dependencies. Use `${self()}` in model definition
 | `propensity_modeling/staging/silver_events_flattened.sqlx` | Flattens nested GA4 event_params |
 | `propensity_modeling/marts/gold_training_features.sqlx` | Rolling 7-day window feature engineering |
 | `propensity_modeling/ml/gold_user_retention_model.sqlx` | BQML logistic regression with Vertex AI |
+| `propensity_modeling/ml/gold_user_retention_model_feature_importance.sqlx` | Model explainability via ML.GLOBAL_EXPLAIN |
 
 **Campaign Intelligence** *(proof of concept)*:
 | File | Purpose |
