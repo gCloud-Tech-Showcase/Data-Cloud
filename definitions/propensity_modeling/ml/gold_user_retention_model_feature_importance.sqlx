@@ -1,0 +1,13 @@
+config {
+  type: "table",
+  schema: "propensity_modeling",
+  description: "GOLD: Feature importance scores from the trained user retention model, used for model explainability and reporting",
+  tags: ["propensity_modeling", "gold", "ml"],
+  dependencies: ["gold_user_retention_model"]
+}
+
+SELECT
+  feature,
+  ROUND(attribution, 4) AS attribution
+FROM ML.GLOBAL_EXPLAIN(MODEL ${ref("gold_user_retention_model")})
+ORDER BY attribution DESC
