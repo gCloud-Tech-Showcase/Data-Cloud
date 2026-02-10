@@ -7,7 +7,7 @@ Explore GCP Data Cloud capabilities through these use cases.
 | [**Churn Prediction**](churn-prediction/) | Train a retention model with BigQuery ML |
 | [**Sentiment Analysis**](sentiment-analysis/) | Analyze reviews with Gemini AI |
 | [**Multimodal Insights**](multimodal-insights/) | Combine behavioral + sentiment data |
-| [**Campaign Intelligence**](campaign-intelligence/) | Target campaigns using public Census data |
+| [**Campaign Intelligence**](campaign-intelligence/) | Target campaigns using public Census data *(proof of concept)* |
 
 ---
 

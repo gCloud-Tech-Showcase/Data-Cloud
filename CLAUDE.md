@@ -6,7 +6,7 @@ Google Cloud Tech Showcase demonstrating **multimodal analytics** with BigQuery,
 
 1. **Sentiment Analysis** - Analyze user reviews using Gemini 2.0 Flash in BigQuery
 2. **Propensity Modeling** - Predict user retention (7-day return) using BigQuery ML
-3. **Campaign Intelligence** - AI-powered campaign recommendations using public Census + theLook eCommerce data
+3. **Campaign Intelligence** *(proof of concept)* - AI-powered campaign recommendations using public Census + theLook eCommerce data
 
 **Medallion Architecture (Bronze → Silver → Gold):**
 ```
@@ -139,7 +139,7 @@ Use `${ref("table_name")}` for dependencies. Use `${self()}` in model definition
 | `propensity_modeling/marts/gold_training_features.sqlx` | Rolling 7-day window feature engineering |
 | `propensity_modeling/ml/gold_user_retention_model.sqlx` | BQML logistic regression with Vertex AI |
 
-**Campaign Intelligence:**
+**Campaign Intelligence** *(proof of concept)*:
 | File | Purpose |
 |------|---------|
 | `campaign_intelligence/sources/thelook_*.sqlx` | theLook eCommerce public dataset declarations |
@@ -170,12 +170,12 @@ Use `${ref("table_name")}` for dependencies. Use `${self()}` in model definition
 - Storage: GCS bucket `gs://gcloud-tech-showcase-multimodal-data/user-reviews/play-store/flood-it/`
 - Format: JSON files with review metadata and text
 
-**theLook eCommerce (Campaign Intelligence):**
+**theLook eCommerce (Campaign Intelligence - proof of concept):**
 - Dataset: `bigquery-public-data.thelook_ecommerce`
 - Tables: `users`, `events`, `orders`
 - Contains: User demographics with lat/long, web events, purchase transactions
 
-**Census Data (Campaign Intelligence):**
+**Census Data (Campaign Intelligence - proof of concept):**
 - Tracts: `bigquery-public-data.geo_census_tracts.us_census_tracts_national`
 - ACS: `bigquery-public-data.census_bureau_acs.censustract_2018_5yr`
 - Contains: Geographic boundaries, housing tenure, income demographics

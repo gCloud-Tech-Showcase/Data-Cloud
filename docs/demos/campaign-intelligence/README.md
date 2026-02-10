@@ -1,4 +1,6 @@
-# Campaign Intelligence
+# Campaign Intelligence *(Proof of Concept)*
+
+> **Note:** This use case demonstrates the approach — spatial joins, public data enrichment, Gemini recommendations. Results may vary; some outputs need refinement.
 
 Target campaigns using public Census data and digital signals — no customer data required.
 

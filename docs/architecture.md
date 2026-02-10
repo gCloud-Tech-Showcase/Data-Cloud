@@ -59,7 +59,7 @@ graph TB
     class GEMINI,REGISTRY external
 ```
 
-### Campaign Intelligence
+### Campaign Intelligence *(Proof of Concept)*
 
 ```mermaid
 graph TB
@@ -171,7 +171,7 @@ sequenceDiagram
 
 ---
 
-## Data Flow: Campaign Intelligence Domain
+## Data Flow: Campaign Intelligence Domain *(Proof of Concept)*
 
 ```mermaid
 sequenceDiagram

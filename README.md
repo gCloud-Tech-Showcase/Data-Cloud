@@ -122,7 +122,7 @@ cd infra && terraform apply
 
 **Cross-domain insight:** Join sentiment with churn risk to identify users who are *both* high-risk *and* frustrated.
 
-*Also includes [Campaign Intelligence](docs/demos/campaign-intelligence/) (WIP) — target campaigns using public Census data without customer PII.*
+*Also includes [Campaign Intelligence](docs/demos/campaign-intelligence/) (proof of concept) — target campaigns using public Census data without customer PII.*
 
 ---
 
@@ -156,7 +156,7 @@ Data-Cloud/
 ├── definitions/                  # Dataform SQL pipelines
 │   ├── propensity_modeling/      #   Churn prediction (BQML)
 │   ├── sentiment_analysis/       #   Review analysis (Gemini)
-│   └── campaign_intelligence/    #   Campaign targeting (WIP)
+│   └── campaign_intelligence/    #   Campaign targeting (proof of concept)
 ├── infra/                        # Terraform IaC
 ├── scripts/                      # Review scraper
 └── docs/
