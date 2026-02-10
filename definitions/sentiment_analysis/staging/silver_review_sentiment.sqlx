@@ -21,10 +21,10 @@ SELECT
   JSON_EXTRACT_SCALAR(data_string, '$.review_text') AS review_text,
   JSON_EXTRACT_SCALAR(data_string, '$.developer_reply') AS developer_reply,
 
-  -- Gemini-extracted sentiment fields
-  JSON_EXTRACT_SCALAR(ml_generate_text_llm_result, '$.predictions[0].content.sentiment') AS sentiment,
-  JSON_EXTRACT_SCALAR(ml_generate_text_llm_result, '$.predictions[0].content.category') AS category,
-  SAFE_CAST(JSON_EXTRACT_SCALAR(ml_generate_text_llm_result, '$.predictions[0].content.score') AS FLOAT64) AS sentiment_score
+  -- Gemini-extracted sentiment fields (flatten_json_output=TRUE returns raw JSON)
+  JSON_EXTRACT_SCALAR(ml_generate_text_llm_result, '$.sentiment') AS sentiment,
+  JSON_EXTRACT_SCALAR(ml_generate_text_llm_result, '$.category') AS category,
+  SAFE_CAST(JSON_EXTRACT_SCALAR(ml_generate_text_llm_result, '$.score') AS FLOAT64) AS sentiment_score
 
 FROM
   ML.GENERATE_TEXT(
