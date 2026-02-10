@@ -62,7 +62,9 @@ campaign_prompts AS (
     avg_digital_engagement,
     CONCAT(
       'You are a marketing campaign strategist for a bank. Based on the following census tract and digital engagement analysis, ',
-      'generate a targeted mortgage campaign recommendation. Return ONLY a JSON object with these exact fields:\n',
+      'generate a targeted mortgage campaign recommendation.\n\n',
+      'IMPORTANT: Return ONLY a raw JSON object with no markdown formatting, no code fences, no explanation.\n',
+      'Return exactly this structure:\n',
       '{"campaign_name": "<catchy campaign name>", ',
       '"target_audience": "<specific demographic description>", ',
       '"key_messaging": "<2-3 key value propositions>", ',

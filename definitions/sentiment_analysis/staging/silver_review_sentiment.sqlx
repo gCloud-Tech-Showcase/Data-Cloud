@@ -21,10 +21,10 @@ SELECT
   JSON_EXTRACT_SCALAR(data_string, '$.review_text') AS review_text,
   JSON_EXTRACT_SCALAR(data_string, '$.developer_reply') AS developer_reply,
 
-  -- Gemini-extracted sentiment fields
-  JSON_EXTRACT_SCALAR(ml_generate_text_llm_result, '$.predictions[0].content.sentiment') AS sentiment,
-  JSON_EXTRACT_SCALAR(ml_generate_text_llm_result, '$.predictions[0].content.category') AS category,
-  SAFE_CAST(JSON_EXTRACT_SCALAR(ml_generate_text_llm_result, '$.predictions[0].content.score') AS FLOAT64) AS sentiment_score
+  -- Gemini-extracted sentiment fields (flatten_json_output=TRUE returns raw JSON)
+  JSON_EXTRACT_SCALAR(ml_generate_text_llm_result, '$.sentiment') AS sentiment,
+  JSON_EXTRACT_SCALAR(ml_generate_text_llm_result, '$.category') AS category,
+  SAFE_CAST(JSON_EXTRACT_SCALAR(ml_generate_text_llm_result, '$.score') AS FLOAT64) AS sentiment_score
 
 FROM
   ML.GENERATE_TEXT(
@@ -34,8 +34,8 @@ FROM
         uri,
         SAFE_CONVERT_BYTES_TO_STRING(data) AS data_string,
         CONCAT(
-          'Analyze this app review and return ONLY a JSON object with these exact fields:\n',
-          '{"sentiment": "positive|neutral|negative", ',
+          'Analyze this app review and return ONLY a raw JSON object with no markdown formatting, no code fences, no explanation.\n',
+          'Return exactly this structure: {"sentiment": "positive|neutral|negative", ',
           '"category": "performance|ads|difficulty|bugs|praise|other", ',
           '"score": <number from -1 to 1>}\n\n',
           'Review text: ',
