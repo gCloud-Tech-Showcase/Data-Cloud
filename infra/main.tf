@@ -46,6 +46,11 @@ resource "google_project_service" "datalineage" {
   disable_on_destroy = false
 }
 
+resource "google_project_service" "gemini_data_analytics" {
+  service            = "geminidataanalytics.googleapis.com"
+  disable_on_destroy = false
+}
+
 # -----------------------------------------------------------------------------
 # VPC Network
 # -----------------------------------------------------------------------------
