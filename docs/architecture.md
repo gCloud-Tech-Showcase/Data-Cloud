@@ -17,20 +17,20 @@ graph TB
 
     subgraph "BigQuery + Dataform"
         subgraph "Bronze Objects"
-            BRONZE_REV[bronze_user_reviews<br/>BigLake Object Table]
+            BRONZE_REV[user_reviews<br/>BigLake Object Table]
             BRONZE_EVT[events_*<br/>External Declaration]
         end
 
         subgraph "Silver Layer - Cleansed"
-            SILVER_REV[silver_review_sentiment<br/>Gemini Enriched]
-            SILVER_EVT[silver_events_flattened<br/>Unnested GA4]
+            SILVER_REV[review_sentiment<br/>Gemini Enriched]
+            SILVER_EVT[events_flattened<br/>Unnested GA4]
         end
 
         subgraph "Gold Layer - ML Ready"
-            GOLD_FEAT[gold_training_features<br/>7-day Windows]
-            GOLD_MODEL[gold_user_retention_model<br/>BQML Logistic Reg]
-            GOLD_FI[gold_user_retention_model_feature_importance<br/>ML.GLOBAL_EXPLAIN]
-            GOLD_SCORES[gold_user_risk_scores<br/>ML.PREDICT Materialized]
+            GOLD_FEAT[training_features<br/>7-day Windows]
+            GOLD_MODEL[user_retention_model<br/>BQML Logistic Reg]
+            GOLD_FI[feature_importance<br/>ML.GLOBAL_EXPLAIN]
+            GOLD_SCORES[user_risk_scores<br/>ML.PREDICT]
         end
     end
 
@@ -75,15 +75,15 @@ graph TB
 
     subgraph "BigQuery + Dataform"
         subgraph "Silver Layer - Spatial Joins"
-            SILVER_USERS[silver_users_with_census<br/>ST_CONTAINS Join]
-            SILVER_ENGAGE[silver_engagement_signals<br/>User Aggregates]
-            SILVER_DEMO[silver_tract_demographics<br/>Housing Features]
+            SILVER_USERS[users_with_census<br/>ST_CONTAINS Join]
+            SILVER_ENGAGE[engagement_signals<br/>User Aggregates]
+            SILVER_DEMO[tract_demographics<br/>Housing Features]
         end
 
         subgraph "Gold Layer - Campaign Ready"
-            GOLD_TRACT[gold_tract_campaign_features<br/>Tract Scoring]
-            GOLD_SEG[gold_user_segments<br/>User Segments]
-            GOLD_REC[gold_campaign_recommendations<br/>AI Recommendations]
+            GOLD_TRACT[tract_campaign_features<br/>Tract Scoring]
+            GOLD_SEG[user_segments<br/>User Segments]
+            GOLD_REC[campaign_recommendations<br/>AI Recommendations]
         end
     end
 
