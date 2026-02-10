@@ -34,8 +34,8 @@ FROM
         uri,
         SAFE_CONVERT_BYTES_TO_STRING(data) AS data_string,
         CONCAT(
-          'Analyze this app review and return ONLY a JSON object with these exact fields:\n',
-          '{"sentiment": "positive|neutral|negative", ',
+          'Analyze this app review and return ONLY a raw JSON object with no markdown formatting, no code fences, no explanation.\n',
+          'Return exactly this structure: {"sentiment": "positive|neutral|negative", ',
           '"category": "performance|ads|difficulty|bugs|praise|other", ',
           '"score": <number from -1 to 1>}\n\n',
           'Review text: ',
