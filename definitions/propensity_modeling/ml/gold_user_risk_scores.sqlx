@@ -1,0 +1,41 @@
+config {
+  type: "table",
+  schema: "propensity_modeling",
+  description: "GOLD: Materialized churn risk scores from ML.PREDICT, enabling analyst exploration in Data Canvas without running ML functions",
+  tags: ["propensity_modeling", "gold", "ml"],
+  dependencies: ["gold_user_retention_model"]
+}
+
+-- Materialize predictions for analyst-friendly querying
+-- In production, this would run daily on current user features
+
+SELECT
+  user_pseudo_id,
+  observation_date,
+
+  -- Original features (for context in exploration)
+  days_active,
+  total_events,
+  level_completion_rate,
+  days_since_last_activity,
+  device_category,
+  operating_system,
+  country,
+
+  -- Predicted probability of returning
+  ROUND((SELECT prob FROM UNNEST(predicted_will_return_probs) WHERE label = 1), 4) AS return_probability,
+
+  -- Risk category for easy filtering/grouping
+  CASE
+    WHEN (SELECT prob FROM UNNEST(predicted_will_return_probs) WHERE label = 1) < 0.3 THEN 'HIGH'
+    WHEN (SELECT prob FROM UNNEST(predicted_will_return_probs) WHERE label = 1) < 0.6 THEN 'MEDIUM'
+    ELSE 'LOW'
+  END AS risk_category,
+
+  -- Actual outcome (for demo/evaluation purposes)
+  will_return AS actual_outcome
+
+FROM ML.PREDICT(
+  MODEL ${ref("gold_user_retention_model")},
+  (SELECT * FROM ${ref("gold_training_features")})
+)

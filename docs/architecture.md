@@ -30,6 +30,7 @@ graph TB
             GOLD_FEAT[gold_training_features<br/>7-day Windows]
             GOLD_MODEL[gold_user_retention_model<br/>BQML Logistic Reg]
             GOLD_FI[gold_user_retention_model_feature_importance<br/>ML.GLOBAL_EXPLAIN]
+            GOLD_SCORES[gold_user_risk_scores<br/>ML.PREDICT Materialized]
         end
     end
 
@@ -49,6 +50,7 @@ graph TB
     GOLD_FEAT --> GOLD_MODEL
     GOLD_MODEL --> REGISTRY
     GOLD_MODEL --> GOLD_FI
+    GOLD_MODEL --> GOLD_SCORES
 
     classDef bronze fill:#cd7f32,stroke:#333,color:#fff
     classDef silver fill:#c0c0c0,stroke:#333,color:#000
@@ -57,7 +59,7 @@ graph TB
 
     class BRONZE_REV,BRONZE_EVT bronze
     class SILVER_REV,SILVER_EVT silver
-    class GOLD_FEAT,GOLD_MODEL,GOLD_FI gold
+    class GOLD_FEAT,GOLD_MODEL,GOLD_FI,GOLD_SCORES gold
     class GEMINI,REGISTRY external
 ```
 

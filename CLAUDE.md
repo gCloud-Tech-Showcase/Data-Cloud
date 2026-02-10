@@ -139,6 +139,7 @@ Use `${ref("table_name")}` for dependencies. Use `${self()}` in model definition
 | `propensity_modeling/marts/gold_training_features.sqlx` | Rolling 7-day window feature engineering |
 | `propensity_modeling/ml/gold_user_retention_model.sqlx` | BQML logistic regression with Vertex AI |
 | `propensity_modeling/ml/gold_user_retention_model_feature_importance.sqlx` | Model explainability via ML.GLOBAL_EXPLAIN |
+| `propensity_modeling/ml/gold_user_risk_scores.sqlx` | Materialized predictions for Data Canvas exploration |
 
 **Campaign Intelligence** *(proof of concept)*:
 | File | Purpose |
