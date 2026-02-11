@@ -2,7 +2,26 @@ config {
   type: "table",
   schema: "campaign_intelligence",
   description: "SILVER: Housing tenure and income demographics by census tract from ACS data",
-  tags: ["campaign_intelligence", "silver", "staging"]
+  tags: ["campaign_intelligence", "silver", "staging"],
+  columns: {
+    census_tract_id: "Census tract GEOID (state + county + tract codes)",
+    total_population: "Total population in the tract",
+    total_households: "Total households (occupied housing units)",
+    owner_occupied_housing_units: "Number of owner-occupied housing units",
+    renter_occupied_housing_units: "Number of renter-occupied housing units",
+    occupied_housing_units: "Total occupied housing units",
+    homeownership_rate: "Ratio of owner-occupied to total households (0-1)",
+    renter_rate: "Ratio of renter-occupied to total households (0-1)",
+    median_income: "Median household income in dollars",
+    income_category: "Income tier: low (<35k), middle (35-75k), upper_middle (75-150k), high (>150k)",
+    working_age_pop: "Population aged 25-64",
+    working_age_ratio: "Ratio of working age to total population",
+    college_educated_pop: "Population with bachelor's or master's degree",
+    college_education_rate: "Ratio of college educated to total population",
+    employed_pop: "Employed population count",
+    employment_rate: "Ratio of employed to total population",
+    median_home_value: "Median value of owner-occupied housing units"
+  }
 }
 
 -- Extract housing features from Census ACS 5-year estimates

@@ -3,5 +3,17 @@ config {
   database: "bigquery-public-data",
   schema: "census_bureau_acs",
   name: "censustract_2018_5yr",
-  description: "BRONZE: American Community Survey 5-year estimates with housing tenure and income data by census tract"
+  description: "BRONZE: American Community Survey 5-year estimates with housing tenure and income data by census tract",
+  columns: {
+    geo_id: "Census tract GEOID (state + county + tract FIPS codes)",
+    total_pop: "Total population in the census tract",
+    households: "Total number of households (occupied housing units)",
+    median_income: "Median household income in dollars",
+    owner_occupied_housing_units: "Number of owner-occupied housing units",
+    owner_occupied_housing_units_median_value: "Median value of owner-occupied housing units",
+    pop_25_64: "Population aged 25 to 64 (working age)",
+    bachelors_degree: "Population with bachelor's degree",
+    masters_degree: "Population with master's degree",
+    employed_pop: "Employed civilian population 16 years and over"
+  }
 }

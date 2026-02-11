@@ -3,5 +3,16 @@ config {
   database: "bigquery-public-data",
   schema: "thelook_ecommerce",
   name: "orders",
-  description: "BRONZE: theLook eCommerce order transactions"
+  description: "BRONZE: theLook eCommerce order transactions",
+  columns: {
+    order_id: "Unique order identifier",
+    user_id: "Reference to user who placed the order",
+    status: "Order status (Complete, Shipped, Processing, Cancelled, Returned)",
+    gender: "Gender of the customer",
+    created_at: "Timestamp when order was created",
+    returned_at: "Timestamp when order was returned (if applicable)",
+    shipped_at: "Timestamp when order was shipped",
+    delivered_at: "Timestamp when order was delivered",
+    num_of_item: "Number of items in the order"
+  }
 }

@@ -2,7 +2,30 @@ config {
   type: "table",
   schema: "propensity_modeling",
   description: "GOLD: Feature-engineered training data for user retention ML model using rolling 7-day windows",
-  tags: ["propensity_modeling", "gold", "marts"]
+  tags: ["propensity_modeling", "gold", "marts"],
+  columns: {
+    user_pseudo_id: "Anonymous user identifier from GA4",
+    observation_date: "End date of the 7-day feature observation window",
+    days_in_window: "Fixed value of 7 (length of observation window)",
+    days_active: "Number of days with activity in the observation window",
+    total_events: "Total events recorded in the observation window",
+    events_per_day: "Average events per day (total_events / 7)",
+    engagement_minutes_per_day: "Average engagement time per day in minutes",
+    levels_started: "Number of game levels started",
+    levels_completed: "Number of game levels completed",
+    levels_failed: "Number of game levels failed",
+    level_completion_rate: "Ratio of levels completed to started (0-1)",
+    max_score: "Highest score achieved in the window",
+    avg_score: "Average score across events",
+    total_engagement_minutes: "Total engaged time in minutes",
+    avg_engagement_seconds_per_event: "Average engagement per event in seconds",
+    events_per_active_day: "Events per day when user was active",
+    days_since_last_activity: "Days between last activity and observation date",
+    device_category: "Primary device type used",
+    operating_system: "Primary operating system used",
+    country: "User's country",
+    will_return: "Target label: 1 if user returned within 7 days after observation, 0 otherwise"
+  }
 }
 
 -- Rolling window approach:

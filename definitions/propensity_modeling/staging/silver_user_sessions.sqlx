@@ -2,7 +2,23 @@ config {
   type: "view",
   schema: "ga4_source",
   description: "SILVER: Session-level aggregations from cleansed GA4 events",
-  tags: ["propensity_modeling", "silver", "staging"]
+  tags: ["propensity_modeling", "silver", "staging"],
+  columns: {
+    user_pseudo_id: "Anonymous user identifier from GA4",
+    session_id: "Unique session identifier",
+    session_start: "Timestamp when the session began",
+    session_end: "Timestamp when the session ended",
+    session_duration_seconds: "Total session length in seconds",
+    events_in_session: "Count of events during the session",
+    levels_completed: "Number of game levels completed",
+    levels_failed: "Number of game levels failed",
+    levels_started: "Number of game levels started",
+    max_score_in_session: "Highest score achieved during the session",
+    total_engagement_seconds: "Total engaged time in seconds",
+    device_category: "Device type used in this session",
+    operating_system: "Operating system used in this session",
+    country: "Country where the session occurred"
+  }
 }
 
 SELECT

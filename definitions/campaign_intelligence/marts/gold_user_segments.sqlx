@@ -2,7 +2,30 @@ config {
   type: "table",
   schema: "campaign_intelligence",
   description: "GOLD: User segments with campaign propensity scores for targeting",
-  tags: ["campaign_intelligence", "gold", "marts"]
+  tags: ["campaign_intelligence", "gold", "marts"],
+  columns: {
+    user_id: "Unique user identifier",
+    age: "User's age in years",
+    gender: "User's gender",
+    city: "User's city",
+    state: "User's state",
+    census_tract_id: "Census tract where user is located",
+    traffic_source: "User acquisition channel",
+    user_created_at: "When user account was created",
+    total_events: "Total web events from user",
+    days_active: "Days with recorded activity",
+    total_orders: "Total orders placed",
+    engagement_score: "Composite engagement score",
+    days_since_last_event: "Days since last activity",
+    income_category: "Income tier of user's census tract",
+    homeownership_rate: "Homeownership rate in user's tract",
+    renter_rate: "Renter rate in user's tract",
+    first_time_buyer_propensity: "User-level first-time buyer score (0-100)",
+    refinance_propensity: "User-level refinance score (0-100)",
+    home_equity_propensity: "User-level home equity score (0-100)",
+    primary_segment: "Assigned segment: first_time_buyer_prospect, refinance_prospect, or home_equity_prospect",
+    segment_tier: "Score tier within segment: high, medium, or low"
+  }
 }
 
 -- Assign users to campaign segments based on demographics and engagement

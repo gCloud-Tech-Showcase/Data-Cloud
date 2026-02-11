@@ -3,5 +3,22 @@ config {
   database: "bigquery-public-data",
   schema: "thelook_ecommerce",
   name: "users",
-  description: "BRONZE: theLook eCommerce users with demographics and geographic coordinates"
+  description: "BRONZE: theLook eCommerce users with demographics and geographic coordinates",
+  columns: {
+    id: "Unique user identifier",
+    first_name: "User's first name",
+    last_name: "User's last name",
+    email: "User's email address",
+    age: "User's age in years",
+    gender: "User's gender (M/F)",
+    state: "US state of residence",
+    street_address: "Street address",
+    postal_code: "Postal/ZIP code",
+    city: "City of residence",
+    country: "Country of residence",
+    latitude: "Geographic latitude coordinate",
+    longitude: "Geographic longitude coordinate",
+    traffic_source: "User acquisition channel (Search, Organic, Display, Email, Facebook)",
+    created_at: "Timestamp when user account was created"
+  }
 }

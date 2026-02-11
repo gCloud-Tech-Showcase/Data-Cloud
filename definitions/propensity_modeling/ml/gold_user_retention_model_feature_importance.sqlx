@@ -3,7 +3,11 @@ config {
   schema: "propensity_modeling",
   description: "GOLD: Feature importance scores from the trained user retention model, used for model explainability and reporting",
   tags: ["propensity_modeling", "gold", "ml"],
-  dependencies: ["gold_user_retention_model"]
+  dependencies: ["gold_user_retention_model"],
+  columns: {
+    feature: "Name of the model feature (may include transformation prefix like 'scaled_')",
+    attribution: "Relative importance score indicating feature contribution to predictions (higher = more important)"
+  }
 }
 
 SELECT

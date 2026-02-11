@@ -2,7 +2,21 @@ config {
   type: "table",
   schema: "campaign_intelligence",
   description: "GOLD: AI-generated campaign recommendations from Gemini agent based on tract and segment analysis",
-  tags: ["campaign_intelligence", "gold", "models"]
+  tags: ["campaign_intelligence", "gold", "models"],
+  columns: {
+    campaign_type: "Type of campaign: first_time_buyer, refinance, or home_equity",
+    target_tracts: "Number of census tracts targeted by this campaign",
+    total_target_users: "Total users in targeted tracts",
+    avg_score: "Average propensity score for this campaign type",
+    avg_digital_engagement: "Average digital engagement in targeted tracts",
+    gemini_recommendation: "Raw JSON response from Gemini",
+    campaign_name: "Gemini-generated catchy campaign name",
+    target_audience: "Gemini-generated audience description",
+    key_messaging: "Gemini-generated value propositions",
+    channels: "Gemini-suggested marketing channels (JSON array)",
+    estimated_reach: "Gemini-estimated household reach",
+    priority: "Gemini-assigned priority: high, medium, or low"
+  }
 }
 
 -- Generate campaign recommendations using Gemini

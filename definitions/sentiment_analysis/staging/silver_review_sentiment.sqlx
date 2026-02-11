@@ -3,7 +3,23 @@ config {
   schema: "sentiment_analysis",
   description: "SILVER: Gemini-enriched review sentiment analysis with cleansing and validation",
   tags: ["sentiment_analysis", "silver", "staging"],
-  uniqueKey: ["review_id"]
+  uniqueKey: ["review_id"],
+  columns: {
+    uri: "GCS URI of the source JSON file",
+    platform: "Source platform (e.g., play_store)",
+    review_id: "Unique identifier for the review",
+    user_pseudo_id: "Anonymous user identifier if available",
+    user_name: "Display name of the reviewer",
+    review_date: "Date the review was posted",
+    rating: "Star rating given by the user (1-5)",
+    app_version: "Version of the app being reviewed",
+    thumbs_up_count: "Number of helpful votes the review received",
+    review_text: "Full text content of the review",
+    developer_reply: "Developer's response to the review if any",
+    sentiment: "Gemini-detected sentiment: positive, neutral, or negative",
+    category: "Gemini-detected complaint category: performance, ads, difficulty, bugs, praise, or other",
+    sentiment_score: "Gemini-assigned sentiment score from -1 (very negative) to 1 (very positive)"
+  }
 }
 
 SELECT

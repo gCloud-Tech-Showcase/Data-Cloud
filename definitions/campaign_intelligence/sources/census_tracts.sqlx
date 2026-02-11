@@ -3,5 +3,19 @@ config {
   database: "bigquery-public-data",
   schema: "geo_census_tracts",
   name: "us_census_tracts_national",
-  description: "BRONZE: US Census tract geographic boundaries with GEOGRAPHY column for spatial joins"
+  description: "BRONZE: US Census tract geographic boundaries with GEOGRAPHY column for spatial joins",
+  columns: {
+    geo_id: "Census tract GEOID (state + county + tract FIPS codes)",
+    state_fips_code: "Two-digit state FIPS code",
+    county_fips_code: "Three-digit county FIPS code",
+    tract_ce: "Six-digit census tract code",
+    tract_name: "Census tract name",
+    lsad_name: "Legal/Statistical Area Description name",
+    tract_geom: "GEOGRAPHY polygon boundary of the census tract",
+    aland: "Land area in square meters",
+    awater: "Water area in square meters",
+    internal_point_geo: "GEOGRAPHY point at tract centroid",
+    internal_point_lat: "Latitude of tract centroid",
+    internal_point_lon: "Longitude of tract centroid"
+  }
 }

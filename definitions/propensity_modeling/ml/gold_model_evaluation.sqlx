@@ -3,7 +3,21 @@ config {
   schema: "propensity_modeling",
   description: "GOLD: Model evaluation metrics for user retention model. Runs after model training to capture performance.",
   tags: ["propensity_modeling", "gold", "ml"],
-  dependencies: ["gold_user_retention_model"]
+  dependencies: ["gold_user_retention_model"],
+  columns: {
+    model_name: "Name of the evaluated model",
+    evaluation_timestamp: "When the evaluation was performed",
+    roc_auc: "Area Under ROC Curve (0-1, higher is better)",
+    accuracy: "Overall prediction accuracy (0-1)",
+    precision: "Precision score - true positives / predicted positives",
+    recall: "Recall score - true positives / actual positives",
+    f1_score: "Harmonic mean of precision and recall",
+    log_loss: "Logarithmic loss (lower is better)",
+    total_iterations: "Number of training iterations completed",
+    final_loss: "Final training loss value",
+    training_duration_ms: "Training time in milliseconds",
+    top_5_features: "Comma-separated list of top 5 features with attribution scores"
+  }
 }
 
 -- Combine key evaluation metrics into a single table

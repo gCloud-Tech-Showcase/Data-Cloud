@@ -2,7 +2,27 @@ config {
   type: "table",
   schema: "campaign_intelligence",
   description: "SILVER: theLook users joined to census tracts via spatial ST_CONTAINS join",
-  tags: ["campaign_intelligence", "silver", "staging"]
+  tags: ["campaign_intelligence", "silver", "staging"],
+  columns: {
+    user_id: "Unique user identifier from theLook eCommerce",
+    first_name: "User's first name",
+    last_name: "User's last name",
+    email: "User's email address",
+    age: "User's age in years",
+    gender: "User's gender",
+    city: "User's city",
+    state: "User's state",
+    postal_code: "User's postal/ZIP code",
+    country: "User's country (filtered to United States)",
+    latitude: "Geographic latitude of user location",
+    longitude: "Geographic longitude of user location",
+    traffic_source: "How the user was acquired (Search, Organic, etc.)",
+    created_at: "When the user account was created",
+    census_tract_id: "Census tract GEOID matched via ST_CONTAINS spatial join",
+    state_fips_code: "State FIPS code from census tract",
+    county_fips_code: "County FIPS code from census tract",
+    tract_ce: "Census tract code within the county"
+  }
 }
 
 -- Join theLook eCommerce users to census tracts using spatial geography functions

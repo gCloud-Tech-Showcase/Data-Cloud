@@ -3,7 +3,17 @@ config {
   schema: "sentiment_analysis",
   hasOutput: true,
   description: "BRONZE: Raw user review JSON files from GCS via BigLake Object Table",
-  tags: ["sentiment_analysis", "bronze", "sources"]
+  tags: ["sentiment_analysis", "bronze", "sources"],
+  columns: {
+    uri: "GCS URI path to the JSON file",
+    generation: "GCS object generation number for versioning",
+    content_type: "MIME type of the file (application/json)",
+    size: "File size in bytes",
+    md5_hash: "MD5 hash of file contents for integrity",
+    updated: "Timestamp when file was last modified in GCS",
+    metadata: "Custom metadata key-value pairs from GCS object",
+    data: "Raw JSON content of the review file as bytes"
+  }
 }
 
 CREATE OR REPLACE EXTERNAL TABLE ${self()}

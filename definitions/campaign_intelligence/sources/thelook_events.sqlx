@@ -3,5 +3,20 @@ config {
   database: "bigquery-public-data",
   schema: "thelook_ecommerce",
   name: "events",
-  description: "BRONZE: theLook eCommerce web events (page views, cart actions, purchases)"
+  description: "BRONZE: theLook eCommerce web events (page views, cart actions, purchases)",
+  columns: {
+    id: "Unique event identifier",
+    user_id: "Reference to user who triggered the event",
+    sequence_number: "Sequential order of events within session",
+    session_id: "Unique session identifier",
+    created_at: "Timestamp when event occurred",
+    ip_address: "IP address of the user",
+    city: "City derived from IP geolocation",
+    state: "State derived from IP geolocation",
+    postal_code: "Postal code derived from IP geolocation",
+    browser: "Browser used (Chrome, Safari, Firefox, IE, Other)",
+    traffic_source: "Traffic source for this session",
+    uri: "Page URI that was accessed",
+    event_type: "Type of event (home, department, product, cart, purchase)"
+  }
 }

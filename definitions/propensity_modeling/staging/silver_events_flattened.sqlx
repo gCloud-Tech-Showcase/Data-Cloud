@@ -2,7 +2,25 @@ config {
   type: "view",
   schema: "ga4_source",
   description: "SILVER: Flattened and cleansed GA4 events with unnested parameters",
-  tags: ["propensity_modeling", "silver", "staging"]
+  tags: ["propensity_modeling", "silver", "staging"],
+  columns: {
+    event_date: "Date of the event (parsed from YYYYMMDD string)",
+    event_name: "Type of event (e.g., level_start, level_complete, screen_view)",
+    event_datetime: "Precise timestamp of the event",
+    user_pseudo_id: "Anonymous user identifier from GA4",
+    device_category: "Device type: mobile, tablet, or desktop",
+    operating_system: "OS of the device (Android, iOS, etc.)",
+    device_language: "Language setting on the device",
+    country: "User's country from geo data",
+    region: "User's region/state from geo data",
+    engagement_time_msec: "Time spent engaged in milliseconds",
+    session_id: "Unique session identifier",
+    screen_name: "Name of the screen/view displayed",
+    score: "Game score achieved in the event",
+    board: "Game board identifier",
+    level_name: "Name of the game level",
+    event_value: "Numeric value associated with the event"
+  }
 }
 
 SELECT

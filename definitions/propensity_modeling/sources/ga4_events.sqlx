@@ -3,5 +3,25 @@ config {
   database: "firebase-public-project",
   schema: "analytics_153293282",
   name: "events_*",
-  description: "Firebase Flood-it! public dataset - GA4 event data"
+  description: "Firebase Flood-it! public dataset - GA4 event data",
+  columns: {
+    event_date: "Event date in YYYYMMDD format",
+    event_timestamp: "Event timestamp in microseconds UTC",
+    event_name: "Name of the event (e.g., session_start, level_complete)",
+    event_params: "Array of key-value pairs with event parameters",
+    event_previous_timestamp: "Timestamp of previous event in microseconds",
+    event_value_in_usd: "Monetary value of the event in USD",
+    event_bundle_sequence_id: "Sequential ID for event bundles",
+    event_server_timestamp_offset: "Offset between client and server timestamps",
+    user_pseudo_id: "Anonymous user identifier for cross-session tracking",
+    user_properties: "Array of user property key-value pairs",
+    user_first_touch_timestamp: "Timestamp of user's first app interaction",
+    user_ltv: "Lifetime value struct with revenue and currency",
+    device: "Device information struct (category, brand, model, os)",
+    geo: "Geographic information struct (continent, country, region, city)",
+    app_info: "App metadata struct (id, version, firebase_app_id)",
+    traffic_source: "Traffic source struct (name, medium, source)",
+    stream_id: "Analytics stream identifier",
+    platform: "Platform (Android, iOS, Web)"
+  }
 }

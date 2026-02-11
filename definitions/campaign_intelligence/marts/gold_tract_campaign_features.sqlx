@@ -2,7 +2,31 @@ config {
   type: "table",
   schema: "campaign_intelligence",
   description: "GOLD: Campaign scoring features by census tract combining demographics with aggregated digital engagement",
-  tags: ["campaign_intelligence", "gold", "marts"]
+  tags: ["campaign_intelligence", "gold", "marts"],
+  columns: {
+    census_tract_id: "Census tract GEOID",
+    total_population: "Total population in the tract",
+    total_households: "Total households in the tract",
+    homeownership_rate: "Ratio of owner-occupied housing (0-1)",
+    renter_rate: "Ratio of renter-occupied housing (0-1)",
+    median_income: "Median household income in dollars",
+    income_category: "Income tier: low, middle, upper_middle, high",
+    working_age_ratio: "Ratio of population aged 25-64",
+    college_education_rate: "Ratio of college-educated population",
+    employment_rate: "Ratio of employed population",
+    median_home_value: "Median value of homes in the tract",
+    users_in_tract: "Count of theLook users in this tract",
+    avg_engagement_score: "Average engagement score of users in tract",
+    avg_orders_per_user: "Average orders per user in tract",
+    avg_days_active: "Average active days per user in tract",
+    total_orders_in_tract: "Total orders from users in this tract",
+    avg_cart_rate: "Average cart rate of users in tract",
+    avg_checkout_rate: "Average checkout rate of users in tract",
+    digital_engagement_score: "Normalized digital engagement (0-100)",
+    first_time_buyer_score: "Propensity score for first-time buyer campaigns (0-100)",
+    refinance_score: "Propensity score for refinance campaigns (0-100)",
+    home_equity_score: "Propensity score for home equity campaigns (0-100)"
+  }
 }
 
 -- Join tract demographics with aggregated user engagement

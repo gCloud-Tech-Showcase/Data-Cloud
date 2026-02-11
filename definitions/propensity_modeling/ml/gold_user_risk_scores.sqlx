@@ -3,7 +3,21 @@ config {
   schema: "propensity_modeling",
   description: "GOLD: Materialized churn risk scores from ML.PREDICT, enabling analyst exploration in Data Canvas without running ML functions",
   tags: ["propensity_modeling", "gold", "ml"],
-  dependencies: ["gold_user_retention_model"]
+  dependencies: ["gold_user_retention_model"],
+  columns: {
+    user_pseudo_id: "Unique anonymous identifier for the user from GA4",
+    observation_date: "Date when features were calculated (end of 7-day observation window)",
+    days_active: "Number of days with at least one event in the observation window",
+    total_events: "Total number of events recorded in the observation window",
+    level_completion_rate: "Ratio of levels completed to levels started (0-1)",
+    days_since_last_activity: "Days between last activity and observation date",
+    device_category: "Device type: mobile, tablet, or desktop",
+    operating_system: "Operating system of the user's device",
+    country: "Country where the user is located",
+    return_probability: "Model-predicted probability of user returning in next 7 days (0-1)",
+    risk_category: "Churn risk tier: HIGH (<30% return), MEDIUM (30-60%), LOW (>60%)",
+    actual_outcome: "Whether user actually returned (1) or churned (0) - for evaluation"
+  }
 }
 
 -- Materialize predictions for analyst-friendly querying

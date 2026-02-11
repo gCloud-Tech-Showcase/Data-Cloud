@@ -2,7 +2,34 @@ config {
   type: "table",
   schema: "campaign_intelligence",
   description: "SILVER: Aggregated digital engagement signals by user from theLook events and orders",
-  tags: ["campaign_intelligence", "silver", "staging"]
+  tags: ["campaign_intelligence", "silver", "staging"],
+  columns: {
+    user_id: "Unique user identifier",
+    total_events: "Total web events recorded for user",
+    days_active: "Number of distinct days with activity",
+    total_sessions: "Number of unique sessions",
+    events_per_active_day: "Average events per day when active",
+    events_per_session: "Average events per session",
+    home_page_events: "Count of home page views",
+    department_view_events: "Count of department page views",
+    product_view_events: "Count of product page views",
+    cart_events: "Count of add-to-cart events",
+    purchase_events: "Count of purchase events",
+    cart_rate: "Ratio of cart events to product views",
+    checkout_rate: "Ratio of purchases to cart events",
+    total_orders: "Total orders placed",
+    total_items_purchased: "Total items bought across all orders",
+    completed_orders: "Orders with Complete status",
+    returned_orders: "Orders with Returned status",
+    return_rate: "Ratio of returned to total orders",
+    first_event_at: "Timestamp of first recorded event",
+    last_event_at: "Timestamp of most recent event",
+    first_order_at: "Timestamp of first order",
+    last_order_at: "Timestamp of most recent order",
+    days_since_last_event: "Days since last web event",
+    days_since_last_order: "Days since last order",
+    engagement_score: "Composite score combining activity, orders, and conversions"
+  }
 }
 
 -- Aggregate user engagement from web events and orders
