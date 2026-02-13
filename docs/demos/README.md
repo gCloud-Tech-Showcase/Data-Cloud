@@ -11,6 +11,19 @@ Explore GCP Data Cloud capabilities through these use cases.
 
 ---
 
+## Prerequisites by Demo
+
+| Demo | Data Source | Setup Required | Notes |
+|------|-------------|----------------|-------|
+| **Churn Prediction** | GA4 public dataset (`firebase-public-project.analytics_153293282`) | None | Public dataset, automatically accessible |
+| **Sentiment Analysis** | Play Store reviews in GCS | Python scraper | Run `scripts/scrape_play_store_reviews.py` to populate data ([instructions](../../scripts/README.md)) |
+| **Multimodal Insights** | Both above | Same as above | Combines churn predictions with sentiment data |
+| **Campaign Intelligence** | theLook eCommerce + Census public datasets | None | Public datasets (`bigquery-public-data.thelook_ecommerce`, `bigquery-public-data.geo_census_tracts`) |
+
+**Bottom line**: Churn Prediction and Campaign Intelligence work immediately after deployment. Sentiment Analysis (and Multimodal Insights) require running the review scraper first.
+
+---
+
 ## Quick Reference
 
 SQL queries with expected outputs — run these directly in BigQuery Console.
