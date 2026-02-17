@@ -8,6 +8,19 @@ Explore GCP Data Cloud capabilities through these use cases.
 | [**Sentiment Analysis**](sentiment-analysis/) | Analyze reviews with Gemini AI |
 | [**Multimodal Insights**](multimodal-insights/) | Combine behavioral + sentiment data |
 | [**Campaign Intelligence**](campaign-intelligence/) | Target campaigns using public Census data *(proof of concept)* |
+| [**Security Logs**](security-logs/) | AI-powered audit log analysis with semantic search |
+
+---
+
+## Choose Your Path
+
+| If you're interested in... | Start here |
+|---------------------------|------------|
+| ML/AI model training in SQL | [Churn Prediction](churn-prediction/) |
+| Unstructured data + Gemini | [Sentiment Analysis](sentiment-analysis/) |
+| Security / log analytics | [Security Logs](security-logs/) |
+| Geospatial + public data | [Campaign Intelligence](campaign-intelligence/) |
+| Combining multiple data signals | [Multimodal Insights](multimodal-insights/) |
 
 ---
 
@@ -15,12 +28,11 @@ Explore GCP Data Cloud capabilities through these use cases.
 
 | Demo | Data Source | Setup Required | Notes |
 |------|-------------|----------------|-------|
-| **Churn Prediction** | GA4 public dataset (`firebase-public-project.analytics_153293282`) | None | Public dataset, automatically accessible |
-| **Sentiment Analysis** | Play Store reviews in GCS | Python scraper | Run `scripts/scrape_play_store_reviews.py` to populate data ([instructions](../../scripts/README.md)) |
+| **Churn Prediction** | GA4 public dataset | None | Public dataset, automatically accessible |
+| **Sentiment Analysis** | Play Store reviews in GCS | Python scraper | Run `scripts/scrape_play_store_reviews.py` ([instructions](../../scripts/README.md)) |
 | **Multimodal Insights** | Both above | Same as above | Combines churn predictions with sentiment data |
-| **Campaign Intelligence** | theLook eCommerce + Census public datasets | None | Public datasets (`bigquery-public-data.thelook_ecommerce`, `bigquery-public-data.geo_census_tracts`) |
-
-**Bottom line**: Churn Prediction and Campaign Intelligence work immediately after deployment. Sentiment Analysis (and Multimodal Insights) require running the review scraper first.
+| **Campaign Intelligence** | theLook + Census public datasets | None | Public datasets, automatically accessible |
+| **Security Logs** | Cloud Audit Logs | Terraform + log generator | Run `terraform apply`, then `scripts/generate_security_logs.py` |
 
 ---
 
@@ -32,6 +44,7 @@ SQL queries with expected outputs — run these directly in BigQuery Console.
 - [Sentiment Analysis](sentiment-analysis/quick.md)
 - [Multimodal Insights](multimodal-insights/quick.md)
 - [Campaign Intelligence](campaign-intelligence/quick.md)
+- [Security Logs](security-logs/quick.md)
 
 ---
 
@@ -54,9 +67,10 @@ Churn Prediction → Sentiment Analysis → Multimodal Insights
 
 ### Standalone
 
-Campaign Intelligence can be explored independently:
+These can be explored independently:
 
 - [Campaign Intelligence](campaign-intelligence/guide.md)
+- [Security Logs](security-logs/guide.md)
 
 ---
 
