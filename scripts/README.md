@@ -77,6 +77,72 @@ python scrape_play_store_reviews.py
 
 The script automatically resumes from the last checkpoint. Simply run the script again after an interruption.
 
+---
+
+### `generate_security_logs.py`
+
+Generates realistic GCP audit logs by executing actual API operations. Designed to populate the `security_logs` BigQuery dataset for demonstrating Gemini AI threat classification and BigQuery security analytics.
+
+**Features:**
+- 5 scenarios mapped to MITRE ATT&CK categories
+- Normal vs suspicious operation modes
+- Dry-run for previewing actions
+- Automatic cleanup of demo resources
+- Progress tracking with tqdm
+
+**Scenarios:**
+
+| Scenario | MITRE ATT&CK | Operations |
+|----------|--------------|------------|
+| `recon` | TA0043 - Reconnaissance | List service accounts, IAM policies, buckets, instances |
+| `privesc` | TA0004 - Privilege Escalation | Create service accounts, list SA keys |
+| `defense-evasion` | TA0005 - Defense Evasion | Create/update/delete logging sinks |
+| `persistence` | TA0003 - Persistence | Create multiple SAs, create GCS buckets |
+| `lateral-movement` | TA0008 - Lateral Movement | Multi-service enumeration, cross-region access |
+
+**Usage:**
+
+```bash
+# Run all scenarios
+python generate_security_logs.py --project gcloud-tech-showcase --scenario all
+
+# Run specific scenario
+python generate_security_logs.py --project gcloud-tech-showcase --scenario recon
+
+# Suspicious mode (unusual regions, rapid operations)
+python generate_security_logs.py --project gcloud-tech-showcase --mode suspicious
+
+# Preview without executing
+python generate_security_logs.py --project gcloud-tech-showcase --dry-run
+
+# Faster operations for live demo
+python generate_security_logs.py --project gcloud-tech-showcase --delay 0.5
+
+# Clean up all demo- prefixed resources
+python generate_security_logs.py --project gcloud-tech-showcase --cleanup
+```
+
+**Output:**
+- Audit logs flow to BigQuery via existing log sink: `security_logs.cloudaudit_googleapis_com_activity`
+- Local log file: `security_logs_generator.log`
+
+**Verify logs in BigQuery:**
+
+```sql
+FROM `gcloud-tech-showcase.security_logs.cloudaudit_googleapis_com_activity`
+|> WHERE timestamp >= TIMESTAMP_SUB(CURRENT_TIMESTAMP(), INTERVAL 5 MINUTE)
+|> SELECT timestamp, protopayload_auditlog.methodName, protopayload_auditlog.serviceName
+|> ORDER BY timestamp DESC
+|> LIMIT 20
+```
+
+**Safety:**
+- All created resources use `demo-` prefix
+- `--cleanup` removes all demo resources
+- Continue-on-failure (permission denied doesn't stop script)
+
+---
+
 ## File Structure
 
 ```
@@ -84,10 +150,12 @@ scripts/
 ├── .gitignore
 ├── README.md
 ├── requirements.txt
-├── scrape_play_store_reviews.py
-├── .venv/                    # Git-ignored
-├── checkpoint.json           # Git-ignored
-└── scrape.log               # Git-ignored
+├── scrape_play_store_reviews.py      # Play Store review scraper
+├── generate_security_logs.py         # Security log generator
+├── .venv/                            # Git-ignored
+├── checkpoint.json                   # Git-ignored (scraper state)
+├── scrape.log                        # Git-ignored (scraper logs)
+└── security_logs_generator.log       # Git-ignored (security gen logs)
 ```
 
 ## Notes

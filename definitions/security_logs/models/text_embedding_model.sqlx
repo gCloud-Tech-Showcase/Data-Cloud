@@ -1,0 +1,13 @@
+config {
+  type: "operations",
+  schema: "security_logs",
+  hasOutput: true,
+  description: "Remote text embedding model for generating vector representations of log events. Used for semantic similarity search and anomaly detection.",
+  tags: ["security_logs", "models", "embeddings"]
+}
+
+CREATE OR REPLACE MODEL ${self()}
+REMOTE WITH CONNECTION `US.vertex-ai-connection`
+OPTIONS (
+  ENDPOINT = 'text-embedding-005'
+)

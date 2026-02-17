@@ -1,0 +1,63 @@
+config {
+  type: "table",
+  schema: "security_logs",
+  description: "SILVER: Vector embeddings of audit log events for semantic similarity search. Each log event is converted to a 768-dimensional vector using text-embedding-005.",
+  columns: {
+    event_id: "Unique identifier for the audit event",
+    event_timestamp: "When the event occurred",
+    principal_email: "User or service account that performed the action",
+    service_name: "GCP service that was called",
+    method_name: "API method that was called",
+    status_code: "gRPC status code (0 = success)",
+    event_summary: "Natural language summary of the event used for embedding",
+    embedding: "768-dimensional vector representation of the event"
+  },
+  tags: ["security_logs", "silver", "staging", "embeddings"]
+}
+
+SELECT
+  event_id,
+  event_timestamp,
+  principal_email,
+  service_name,
+  method_name,
+  status_code,
+  content AS event_summary,
+  ml_generate_embedding_result AS embedding
+
+FROM
+  ML.GENERATE_EMBEDDING(
+    MODEL ${ref("text_embedding_model")},
+    (
+      SELECT
+        event_id,
+        event_timestamp,
+        principal_email,
+        service_name,
+        method_name,
+        status_code,
+        -- Create a natural language summary for embedding
+        CONCAT(
+          'A ',
+          CASE
+            WHEN status_code = 0 THEN 'successful'
+            ELSE 'failed'
+          END,
+          ' ',
+          COALESCE(method_name, 'unknown action'),
+          ' operation on ',
+          COALESCE(service_name, 'unknown service'),
+          ' by ',
+          COALESCE(principal_email, 'unknown user'),
+          '.'
+        ) AS content
+      FROM ${ref("silver_audit_events")}
+      WHERE event_timestamp >= TIMESTAMP_SUB(CURRENT_TIMESTAMP(), INTERVAL 7 DAY)
+      -- Limit for demo purposes
+      LIMIT 5000
+    ),
+    STRUCT(
+      'CLUSTERING' AS task_type,
+      768 AS output_dimensionality
+    )
+  )

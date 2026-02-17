@@ -71,3 +71,32 @@ output "vertex_endpoint_id" {
 output "vertex_endpoint_predict_url" {
   value = "https://${var.region}-aiplatform.googleapis.com/v1/${google_vertex_ai_endpoint.retention_endpoint.id}:predict"
 }
+
+# -----------------------------------------------------------------------------
+# Security Logs Demo
+# -----------------------------------------------------------------------------
+
+output "security_logs_dataset_id" {
+  description = "The security logs BigQuery dataset ID"
+  value       = google_bigquery_dataset.security_logs.dataset_id
+}
+
+output "audit_log_sink_name" {
+  description = "The Cloud Audit Log sink name"
+  value       = google_logging_project_sink.audit_to_bigquery.name
+}
+
+output "audit_log_sink_writer_identity" {
+  description = "The service account identity used by the log sink"
+  value       = google_logging_project_sink.audit_to_bigquery.writer_identity
+}
+
+output "security_alerts_topic" {
+  description = "Pub/Sub topic for security alerts from continuous queries"
+  value       = google_pubsub_topic.security_alerts.id
+}
+
+output "security_logs_iceberg_bucket" {
+  description = "GCS bucket for BigLake Iceberg security logs"
+  value       = google_storage_bucket.security_logs_iceberg.name
+}

@@ -1,0 +1,16 @@
+config {
+  type: "declaration",
+  schema: "security_logs",
+  name: "cloudaudit_googleapis_com_data_access",
+  description: "BRONZE: Cloud Audit Logs (Data Access) - auto-populated by log sink. Contains API calls that read resources or user data.",
+  columns: {
+    timestamp: "When the log entry was created",
+    logName: "Full resource name of the log",
+    severity: "Log severity level (INFO, WARNING, ERROR, etc.)",
+    insertId: "Unique identifier for the log entry",
+    resource: "The monitored resource that produced this log entry",
+    protoPayload: "The audit log payload containing request/response details",
+    receiveTimestamp: "When Cloud Logging received the log entry"
+  },
+  tags: ["security_logs", "bronze", "sources", "audit"]
+}

@@ -1,0 +1,13 @@
+config {
+  type: "operations",
+  schema: "security_logs",
+  hasOutput: true,
+  description: "Remote Gemini model for security log analysis, threat classification, and anomaly explanation",
+  tags: ["security_logs", "models"]
+}
+
+CREATE OR REPLACE MODEL ${self()}
+REMOTE WITH CONNECTION `US.vertex-ai-connection`
+OPTIONS (
+  ENDPOINT = 'gemini-2.0-flash-001'
+)
