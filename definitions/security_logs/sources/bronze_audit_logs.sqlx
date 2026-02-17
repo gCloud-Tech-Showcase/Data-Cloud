@@ -11,6 +11,5 @@ config {
     resource: "The monitored resource that produced this log entry",
     protoPayload: "The audit log payload containing request/response details",
     receiveTimestamp: "When Cloud Logging received the log entry"
-  },
-  tags: ["security_logs", "bronze", "sources", "audit"]
+  }
 }
