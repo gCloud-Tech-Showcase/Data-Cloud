@@ -30,6 +30,7 @@ Users in high-renter, middle-income neighborhoods who are actively engaging are 
 ## Guides
 
 - [Quick Reference](quick.md) — SQL queries with expected outputs
+- [Architecture](architecture.md) — Pipeline diagram and data flow
 - [Full Guide](guide.md) — Complete walkthrough
 
 ## Standalone

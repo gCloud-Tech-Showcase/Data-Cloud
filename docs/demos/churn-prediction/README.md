@@ -26,6 +26,7 @@ Train a machine learning model entirely in SQL:
 ## Guides
 
 - [Quick Reference](quick.md) — SQL queries with expected outputs
+- [Architecture](architecture.md) — Pipeline diagram and data flow
 - [Feature Engineering](01-features.md) — Build ML-ready features
 - [Model Training](02-training.md) — Train and evaluate the model
 - [Predictions](03-predictions.md) — Score users by risk level

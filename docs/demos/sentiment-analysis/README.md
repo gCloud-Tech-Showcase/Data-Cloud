@@ -27,6 +27,7 @@ Use Gemini 2.0 Flash to analyze reviews directly in BigQuery:
 ## Guides
 
 - [Quick Reference](quick.md) — SQL queries with expected outputs
+- [Architecture](architecture.md) — Pipeline diagram and data flow
 - [Enrichment](01-enrichment.md) — BigLake + Gemini walkthrough
 - [Insights](02-insights.md) — Analyze sentiment patterns
 

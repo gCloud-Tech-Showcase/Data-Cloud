@@ -29,6 +29,7 @@ Use BigQuery's pipe syntax, Gemini AI, and vector embeddings for security operat
 ## Guides
 
 - [Quick Reference](quick.md) — SQL queries with expected outputs
+- [Architecture](architecture.md) — Pipeline diagram and data flow
 - [Full Guide](guide.md) — Step-by-step walkthrough
 
 ## Standalone

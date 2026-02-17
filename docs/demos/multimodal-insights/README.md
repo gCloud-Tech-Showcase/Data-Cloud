@@ -25,6 +25,7 @@ Join behavioral predictions with sentiment data:
 ## Guides
 
 - [Quick Reference](quick.md) — SQL queries with expected outputs
+- [Architecture](architecture.md) — Pipeline diagram and data flow
 - [Full Guide](guide.md) — Complete walkthrough
 
 ## Prerequisites
