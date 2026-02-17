@@ -12,12 +12,14 @@ Combine churn predictions with sentiment analysis for targeted interventions.
 **From Sentiment Analysis:** We identified complaints (ads, bugs) but didn't know which users complained.
 
 **Generic approach:**
+
 ```
 High churn risk → Send generic discount to everyone
 Result: 30-40% conversion, wasted spend on 60-70%
 ```
 
 **Multimodal approach:**
+
 ```
 High churn risk + Specific complaint → Targeted intervention
 Result: 60-70% conversion, efficient spend
@@ -71,15 +73,15 @@ WHERE p.risk_category = 'HIGH CHURN RISK'
 
 With both datasets combined, we can create precise interventions.
 
-| Churn Risk | Complaint Category | Intervention |
-|------------|-------------------|--------------|
-| **HIGH** | Ads | Offer 7-day premium ad-free trial |
-| **HIGH** | Bugs | Priority support + update notification |
-| **HIGH** | Difficulty | Suggest easier levels + tutorial |
-| **HIGH** | No complaints | Generic engagement email |
-| **MEDIUM** | Ads | Show fewer ads for 30 days |
-| **MEDIUM** | Any | Monitor, light engagement |
-| **LOW** | Any | Standard communication |
+| Churn Risk | Complaint Category | Intervention                           |
+| ---------- | ------------------ | -------------------------------------- |
+| **HIGH**   | Ads                | Offer 7-day premium ad-free trial      |
+| **HIGH**   | Bugs               | Priority support + update notification |
+| **HIGH**   | Difficulty         | Suggest easier levels + tutorial       |
+| **HIGH**   | No complaints      | Generic engagement email               |
+| **MEDIUM** | Ads                | Show fewer ads for 30 days             |
+| **MEDIUM** | Any                | Monitor, light engagement              |
+| **LOW**    | Any                | Standard communication                 |
 
 ---
 
@@ -105,6 +107,7 @@ LIMIT 100;
 **Target:** HIGH churn risk + bugs complaint
 
 **Action:**
+
 1. Prioritize their specific crash in next update
 2. Email: "We fixed the bug you reported!"
 3. Offer in-app currency as apology
@@ -122,6 +125,7 @@ WHERE model_name = 'gold_user_retention_model';
 ```
 
 **Via gcloud:**
+
 ```bash
 gcloud ai models list \
   --region=us-central1 \
@@ -158,33 +162,123 @@ gcloud ai endpoints deploy-model ENDPOINT_ID \
 
 ---
 
+## Step 6: Data Canvas Exploration
+
+[Data Canvas](https://cloud.google.com/bigquery/docs/data-canvas) provides a visual, AI-assisted interface for exploring BigQuery data. Use these prompts to create visualizations from your demo tables.
+
+First, add the tables for context:
+
+- propensity_modeling.gold_user_risk_scores
+- sentiment_analysis.silver_review_sentiment
+
+### Churn Prediction Visualizations
+
+**Risk Distribution:**
+
+```
+Create a donut chart showing count by user risk category with percentages, using traffic light color-coding
+
+```
+
+**Feature Patterns by Risk:**
+
+```
+Create a grouped bar chart from propensity_modeling.gold_user_risk_scores
+comparing average days_active, total_events, and level_completion_rate
+by risk_category
+```
+
+**Risk by Device:**
+
+```
+Create a bar chart from propensity_modeling.gold_user_risk_scores
+showing count by device_category, colored by risk_category
+```
+
+### Sentiment Analysis Visualizations
+
+**Sentiment Distribution:**
+
+```
+Create a donut chart from sentiment_analysis.silver_review_sentiment
+Group by sentiment column and count reviews
+Show positive, neutral, and negative with counts and percentages
+```
+
+**Complaint Categories:**
+
+```
+Create a horizontal bar chart showing the category count of negative reviews
+from sentiment_analysis.silver_review_sentiment
+```
+
+**Sentiment Over Time:**
+
+```
+Create a line chart from sentiment_analysis.silver_review_sentiment
+with positive, neutral, and negative review counts over time at monthly level
+Use traffic light colors (green, yellow, red)
+```
+
+### Combined Insights
+
+**Complaint Severity by Category:**
+
+```
+Create a bar chart from sentiment_analysis.silver_review_sentiment
+showing average sentiment_score by category for negative reviews
+sorted from most negative to least negative
+```
+
+**Rating vs Sentiment Heatmap:**
+
+```
+Create a heatmap from sentiment_analysis.silver_review_sentiment
+that cross-tabulates rating (1-5) against sentiment (positive, neutral, negative)
+Show review counts in each cell
+```
+
+**Tip:** Pass one prompt at a time for best results. Data Canvas will generate the SQL and visualization automatically.
+
+---
+
 ## Key Takeaways
 
-| Capability | Technology Stack | Business Value |
-|------------|------------------|----------------|
-| Multimodal analytics | BigQuery + BigLake + Gemini + BQML | WHO + WHY insights |
-| No data movement | BigLake Object Tables | Faster time-to-insight |
-| Unified platform | Everything in BigQuery | No tool sprawl |
-| Production-ready | Vertex AI integration | Real-time deployment |
+| Capability           | Technology Stack                   | Business Value         |
+| -------------------- | ---------------------------------- | ---------------------- |
+| Multimodal analytics | BigQuery + BigLake + Gemini + BQML | WHO + WHY insights     |
+| No data movement     | BigLake Object Tables              | Faster time-to-insight |
+| Unified platform     | Everything in BigQuery             | No tool sprawl         |
+| Production-ready     | Vertex AI integration              | Real-time deployment   |
+| Visual exploration   | Data Canvas                        | Self-service analytics |
 
 ---
 
 ## Demo Summary
 
 **Part 1: Churn Prediction**
+
 - Processed 5.7M GA4 events
 - Trained BQML model (79% AUC)
 - Scored 18K users for churn risk
 
 **Part 2: Sentiment Analysis**
+
 - Queried 500+ JSON reviews from Cloud Storage
 - Enriched with Gemini AI via SQL
 - Identified complaint categories
 
 **Part 3: Multimodal Analytics**
+
 - Combined both datasets
 - Created targeted intervention matrix
 - Demonstrated production deployment paths
+
+**Part 4: Data Canvas**
+
+- Visual exploration with natural language
+- Self-service dashboards without code
+- AI-generated SQL and charts
 
 ---
 
