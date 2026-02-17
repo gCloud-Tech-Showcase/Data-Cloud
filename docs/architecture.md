@@ -168,7 +168,6 @@ Each demo has its own architecture diagram:
 
 - [Churn Prediction](demos/churn-prediction/architecture.md)
 - [Sentiment Analysis](demos/sentiment-analysis/architecture.md)
-- [Multimodal Insights](demos/multimodal-insights/architecture.md)
 - [Campaign Intelligence](demos/campaign-intelligence/architecture.md)
 - [Security Logs](demos/security-logs/architecture.md)
 

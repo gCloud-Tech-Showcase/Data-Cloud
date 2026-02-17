@@ -12,7 +12,6 @@ This repository demonstrates BigQuery, Gemini AI, Vertex AI, and related service
 |------|---------------|------------------|
 | [**Churn Prediction**](docs/demos/churn-prediction/) | Train ML models in SQL | BigQuery ML, Vertex AI |
 | [**Sentiment Analysis**](docs/demos/sentiment-analysis/) | AI on unstructured data | BigLake, Gemini |
-| [**Multimodal Insights**](docs/demos/multimodal-insights/) | Combine structured + unstructured | Cross-domain joins |
 | [**Campaign Intelligence**](docs/demos/campaign-intelligence/) | Spatial + public data | Geography, Census |
 | [**Security Logs**](docs/demos/security-logs/) | AI-powered threat detection | Pipe syntax, embeddings |
 
