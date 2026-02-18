@@ -8,6 +8,7 @@ Use BigQuery's pipe syntax, Gemini AI, and vector embeddings for security operat
 1. **Pipe Syntax** — Intuitive log queries familiar to Splunk/KQL users
 2. **Gemini Triage** — AI-powered threat classification with explanations
 3. **Vector Search** — Semantic similarity for threat hunting
+4. **Real-Time Alerts** (Optional) — Continuous queries with Pub/Sub for instant threat detection
 
 ## Technologies
 
@@ -18,6 +19,8 @@ Use BigQuery's pipe syntax, Gemini AI, and vector embeddings for security operat
 | Gemini 2.0 Flash | AI threat classification |
 | Text Embeddings | Semantic vector search |
 | Dataform | Pipeline orchestration |
+| Continuous Queries | Real-time event processing (optional) |
+| Pub/Sub | Alert distribution (optional) |
 
 ## Results
 
@@ -31,6 +34,7 @@ Use BigQuery's pipe syntax, Gemini AI, and vector embeddings for security operat
 - [Quick Reference](quick.md) — SQL queries with expected outputs
 - [Architecture](architecture.md) — Pipeline diagram and data flow
 - [Full Guide](guide.md) — Step-by-step walkthrough
+- [Real-Time Alerts](08-realtime-alerts.md) — Continuous queries with Pub/Sub (optional)
 
 ## Standalone
 

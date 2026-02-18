@@ -99,6 +99,47 @@ sequenceDiagram
 
 ---
 
+## Real-Time Alerting (Optional)
+
+When `enable_realtime_alerts = true`, continuous queries enable sub-minute alerting:
+
+```mermaid
+flowchart LR
+    subgraph "Event Source"
+        API[GCP API Call]
+    end
+
+    subgraph "Cloud Logging"
+        LOG[Audit Log]
+        SINK[Log Sink]
+    end
+
+    subgraph "BigQuery"
+        TABLE[cloudaudit_googleapis_com_activity]
+        CQ[Continuous Query<br/>APPENDS + Filter]
+    end
+
+    subgraph "Alerting"
+        PUBSUB[Pub/Sub Topic]
+        CF[Cloud Function]
+        SLACK[Slack/PagerDuty]
+    end
+
+    API --> LOG --> SINK --> TABLE --> CQ --> PUBSUB --> CF --> SLACK
+
+    classDef bq fill:#4285f4,stroke:#333,color:#fff
+    classDef alert fill:#ea4335,stroke:#333,color:#fff
+    class TABLE,CQ bq
+    class PUBSUB,CF,SLACK alert
+```
+
+**Key points:**
+- Uses `APPENDS()` function to process only new rows
+- No JOINs or aggregations — each event classified independently
+- Query auto-terminates after 1 hour (configurable via `@@query_job_timeout_ms`)
+
+---
+
 ## Navigation
 
 [Guide](guide.md) | [Quick Reference](quick.md) | [Patterns Reference](../../architecture.md)

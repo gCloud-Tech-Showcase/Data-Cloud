@@ -1,7 +1,21 @@
+# =============================================================================
+# REQUIRED VARIABLES
+# =============================================================================
+
 variable "project_id" {
   description = "The GCP project ID"
   type        = string
 }
+
+variable "github_token" {
+  description = "GitHub personal access token for Dataform"
+  type        = string
+  sensitive   = true
+}
+
+# =============================================================================
+# OPTIONAL VARIABLES - General
+# =============================================================================
 
 variable "region" {
   description = "The GCP region for resources"
@@ -9,9 +23,15 @@ variable "region" {
   default     = "us-central1"
 }
 
-# -----------------------------------------------------------------------------
-# Network
-# -----------------------------------------------------------------------------
+variable "dataset_location" {
+  description = "BigQuery dataset location (multi-region)"
+  type        = string
+  default     = "US"
+}
+
+# =============================================================================
+# NETWORK
+# =============================================================================
 
 variable "network_name" {
   description = "Name of the VPC network"
@@ -25,9 +45,9 @@ variable "subnet_cidr" {
   default     = "10.0.0.0/24"
 }
 
-# -----------------------------------------------------------------------------
-# BigQuery
-# -----------------------------------------------------------------------------
+# =============================================================================
+# BIGQUERY
+# =============================================================================
 
 variable "dataset_id" {
   description = "BigQuery dataset ID for the propensity modeling use case"
@@ -35,15 +55,9 @@ variable "dataset_id" {
   default     = "propensity_modeling"
 }
 
-variable "dataset_location" {
-  description = "BigQuery dataset location"
-  type        = string
-  default     = "US"
-}
-
-# -----------------------------------------------------------------------------
-# Dataform
-# -----------------------------------------------------------------------------
+# =============================================================================
+# DATAFORM
+# =============================================================================
 
 variable "git_repo_url" {
   description = "GitHub repository URL for Dataform"
@@ -51,18 +65,42 @@ variable "git_repo_url" {
   default     = "https://github.com/gCloud-Tech-Showcase/Data-Cloud.git"
 }
 
-variable "github_token" {
-  description = "GitHub personal access token for Dataform"
-  type        = string
-  sensitive   = true
-}
-
-# -----------------------------------------------------------------------------
-# Vertex AI
-# -----------------------------------------------------------------------------
+# =============================================================================
+# VERTEX AI
+# =============================================================================
 
 variable "retention_model_endpoint_name" {
   description = "Name of endpoint used for user retention model inference"
   type        = string
   default     = "retention-prediction"
+}
+
+# =============================================================================
+# FEATURE FLAGS - Premium Features
+# These features incur additional costs beyond standard usage
+# =============================================================================
+
+variable "enable_realtime_alerts" {
+  description = <<-EOT
+    Enable Enterprise reservation for continuous queries.
+
+    Set to true to explore the real-time alerting portion of the Security Logs demo.
+
+    WARNING: Creates an Enterprise reservation that incurs charges even when idle
+    (~1 slot while listening for events).
+  EOT
+  type        = bool
+  default     = false
+}
+
+variable "realtime_alerts_max_slots" {
+  description = <<-EOT
+    Maximum slots for the continuous queries reservation (autoscaling ceiling).
+    Only used when enable_realtime_alerts = true.
+
+    Must be a multiple of 50. Minimum: 50, maximum: 500 per CONTINUOUS reservation.
+    With 0 baseline + autoscale, you only pay for slots actually used (~1 slot when idle).
+  EOT
+  type        = number
+  default     = 50
 }

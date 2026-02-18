@@ -1,3 +1,7 @@
+# =============================================================================
+# OUTPUTS
+# =============================================================================
+
 output "project_id" {
   description = "The GCP project ID"
   value       = var.project_id
@@ -28,7 +32,7 @@ output "subnet_self_link" {
 }
 
 # -----------------------------------------------------------------------------
-# BigQuery
+# BigQuery - Churn Prediction
 # -----------------------------------------------------------------------------
 
 output "propensity_modeling_dataset_id" {
@@ -61,19 +65,44 @@ output "dataform_workflow_config_name" {
 }
 
 # -----------------------------------------------------------------------------
-# Vertex AI
+# Vertex AI - Churn Prediction
 # -----------------------------------------------------------------------------
 
 output "vertex_endpoint_id" {
-  value = google_vertex_ai_endpoint.retention_endpoint.name
+  description = "The Vertex AI endpoint ID for retention model"
+  value       = google_vertex_ai_endpoint.retention_endpoint.name
 }
 
 output "vertex_endpoint_predict_url" {
-  value = "https://${var.region}-aiplatform.googleapis.com/v1/${google_vertex_ai_endpoint.retention_endpoint.id}:predict"
+  description = "The Vertex AI endpoint prediction URL"
+  value       = "https://${var.region}-aiplatform.googleapis.com/v1/${google_vertex_ai_endpoint.retention_endpoint.id}:predict"
 }
 
 # -----------------------------------------------------------------------------
-# Security Logs Demo
+# Sentiment Analysis
+# -----------------------------------------------------------------------------
+
+output "sentiment_analysis_dataset_id" {
+  description = "The sentiment analysis BigQuery dataset ID"
+  value       = google_bigquery_dataset.sentiment_analysis.dataset_id
+}
+
+output "multimodal_data_bucket" {
+  description = "GCS bucket for unstructured review data"
+  value       = google_storage_bucket.multimodal_data.name
+}
+
+# -----------------------------------------------------------------------------
+# Campaign Intelligence
+# -----------------------------------------------------------------------------
+
+output "campaign_intelligence_dataset_id" {
+  description = "The campaign intelligence BigQuery dataset ID"
+  value       = google_bigquery_dataset.campaign_intelligence.dataset_id
+}
+
+# -----------------------------------------------------------------------------
+# Security Logs
 # -----------------------------------------------------------------------------
 
 output "security_logs_dataset_id" {
@@ -92,11 +121,30 @@ output "audit_log_sink_writer_identity" {
 }
 
 output "security_alerts_topic" {
-  description = "Pub/Sub topic for security alerts from continuous queries"
-  value       = google_pubsub_topic.security_alerts.id
+  description = "Pub/Sub topic for security alerts from continuous queries (if enabled)"
+  value       = var.enable_realtime_alerts ? google_pubsub_topic.security_alerts[0].id : null
 }
 
 output "security_logs_iceberg_bucket" {
   description = "GCS bucket for BigLake Iceberg security logs"
   value       = google_storage_bucket.security_logs_iceberg.name
+}
+
+# -----------------------------------------------------------------------------
+# Security Logs - Real-Time (Conditional)
+# -----------------------------------------------------------------------------
+
+output "continuous_queries_reservation" {
+  description = "BigQuery Enterprise reservation for continuous queries (if enabled)"
+  value       = var.enable_realtime_alerts ? google_bigquery_reservation.continuous_queries[0].name : null
+}
+
+output "continuous_queries_service_account" {
+  description = "Service account email for running continuous queries with Pub/Sub export"
+  value       = var.enable_realtime_alerts ? google_service_account.continuous_queries[0].email : null
+}
+
+output "realtime_alerts_enabled" {
+  description = "Whether real-time alerts (continuous queries) are enabled"
+  value       = var.enable_realtime_alerts
 }

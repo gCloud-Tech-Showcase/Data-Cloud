@@ -1,11 +1,28 @@
+# =============================================================================
+# REQUIRED
 # Copy this file to terraform.tfvars and fill in your values
+# =============================================================================
+
 project_id   = "your-gcp-project-id"
 github_token = "your-github-personal-access-token"
 
-# Optional overrides (defaults shown)
+# =============================================================================
+# OPTIONAL - General (defaults shown)
+# =============================================================================
+
 # region           = "us-central1"
-# dataset_id       = "propensity_modeling"
 # dataset_location = "US"
 # network_name     = "data-cloud-vpc"
 # subnet_cidr      = "10.0.0.0/24"
 # git_repo_url     = "https://github.com/gCloud-Tech-Showcase/Data-Cloud.git"
+
+# =============================================================================
+# FEATURE FLAGS - Premium Features
+# These features incur additional costs beyond standard usage
+# =============================================================================
+
+# Enable to explore the real-time alerting portion of the Security Logs demo
+# WARNING: Creates an Enterprise reservation (~1 slot cost while idle)
+# Note: Only affects continuous queries, not regular queries (isolated by job_type)
+# enable_realtime_alerts    = false
+# realtime_alerts_max_slots = 50  # must be multiple of 50, min 50, max 500

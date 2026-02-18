@@ -214,6 +214,18 @@ LIMIT 20;
 
 ---
 
+---
+
+## Step 8: Real-Time Alerts (Optional)
+
+Enable continuous queries for instant threat detection with Pub/Sub export.
+
+**Requirements:** Enterprise reservation (`enable_realtime_alerts = true`)
+
+[Continue to Real-Time Alerts →](08-realtime-alerts.md)
+
+---
+
 ## Navigation
 
 [← Demos](../README.md) | [Quick Reference](quick.md)

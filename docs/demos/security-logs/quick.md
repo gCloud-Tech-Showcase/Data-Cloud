@@ -167,6 +167,52 @@ event_timestamp         | principal_email   | method_name              | event_s
 
 ---
 
+## 7. Continuous Query: Real-Time Pub/Sub Export (Optional)
+
+**Requires:** `enable_realtime_alerts = true` in Terraform
+
+```sql
+SET @@query_job_timeout_ms = 3600000; -- 1 hour timeout
+
+EXPORT DATA OPTIONS (
+  format = 'CLOUD_PUBSUB',
+  uri = 'https://pubsub.googleapis.com/projects/gcloud-tech-showcase/topics/security-alerts'
+) AS (
+  SELECT TO_JSON_STRING(STRUCT(
+    timestamp,
+    protopayload_auditlog.methodName AS method,
+    protopayload_auditlog.serviceName AS service,
+    protopayload_auditlog.authenticationInfo.principalEmail AS principal
+  )) AS message
+  FROM APPENDS(
+    TABLE `gcloud-tech-showcase.security_logs.cloudaudit_googleapis_com_activity`,
+    CURRENT_TIMESTAMP() - INTERVAL 10 MINUTE
+  )
+  WHERE protopayload_auditlog.methodName LIKE '%Delete%'
+     OR protopayload_auditlog.methodName LIKE '%Sink%'
+     OR protopayload_auditlog.methodName LIKE '%CreateServiceAccount%'
+);
+```
+
+**Generate test events:**
+```bash
+python generate_security_logs.py --project gcloud-tech-showcase --scenario defense-evasion --delay 0.5
+```
+
+**Check Pub/Sub:**
+```bash
+gcloud pubsub subscriptions pull security-alerts-sub --project=gcloud-tech-showcase --auto-ack --limit=10
+```
+
+**Output:**
+```json
+{"timestamp":"2026-02-17T16:07:28Z","method":"CreateSink","service":"logging.googleapis.com","principal":"user@example.com"}
+```
+
+[Full walkthrough →](08-realtime-alerts.md)
+
+---
+
 ## Navigation
 
 - [Overview](./)

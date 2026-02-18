@@ -7,7 +7,7 @@ Explore GCP Data Cloud capabilities through these use cases.
 | [**Churn Prediction**](churn-prediction/) | Train a retention model with BigQuery ML |
 | [**Sentiment Analysis**](sentiment-analysis/) | Analyze reviews with Gemini AI |
 | [**Campaign Intelligence**](campaign-intelligence/) | Target campaigns using public Census data *(proof of concept)* |
-| [**Security Logs**](security-logs/) | AI-powered audit log analysis with semantic search |
+| [**Security Logs**](security-logs/) | AI-powered audit log analysis with semantic search and real-time alerts |
 
 ---
 
