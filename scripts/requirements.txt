@@ -1,4 +1,17 @@
+# Play Store scraper
 google-play-scraper==1.2.7
+
+# Google Cloud SDKs
 google-cloud-storage==2.14.0
+google-cloud-iam==2.21.0
+google-cloud-compute==1.43.0
+google-cloud-logging==3.13.0
+google-cloud-resource-manager==1.16.0
+
+# Transitive dependencies (pinned for reproducibility)
+google-cloud-appengine-logging==1.8.0
+google-cloud-audit-log==0.4.0
+
+# Utilities
 python-dotenv==1.0.0
 tqdm==4.66.1

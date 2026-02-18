@@ -1,0 +1,15 @@
+config {
+  type: "declaration",
+  schema: "security_logs",
+  name: "cloudaudit_googleapis_com_activity",
+  description: "BRONZE: Cloud Audit Logs (Admin Activity) - auto-populated by log sink. Contains API calls that modify resources (create, delete, update operations).",
+  columns: {
+    timestamp: "When the log entry was created",
+    logName: "Full resource name of the log",
+    severity: "Log severity level (INFO, WARNING, ERROR, etc.)",
+    insertId: "Unique identifier for the log entry",
+    resource: "The monitored resource that produced this log entry",
+    protoPayload: "The audit log payload containing request/response details",
+    receiveTimestamp: "When Cloud Logging received the log entry"
+  }
+}

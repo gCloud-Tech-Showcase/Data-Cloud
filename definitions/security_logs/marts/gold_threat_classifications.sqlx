@@ -1,0 +1,92 @@
+config {
+  type: "table",
+  schema: "security_logs",
+  description: "GOLD: AI-classified security events using Gemini. Each audit log event is analyzed and classified by threat level, category, and given an explanation.",
+  columns: {
+    event_id: "Unique identifier for the audit event",
+    event_timestamp: "When the event occurred",
+    principal_email: "User or service account that performed the action",
+    service_name: "GCP service that was called",
+    method_name: "API method that was called",
+    resource_name: "Resource that was accessed or modified",
+    status_code: "gRPC status code (0 = success)",
+    caller_ip: "IP address of the caller",
+    request_summary: "Original request summary sent to AI",
+    threat_level: "AI-assigned threat level: CRITICAL, HIGH, MEDIUM, LOW, INFO",
+    threat_category: "AI-assigned category: iam_change, data_exfil, resource_deletion, config_change, recon, normal",
+    explanation: "AI-generated explanation of why this classification was assigned",
+    recommended_action: "AI-suggested next steps for security team"
+  },
+  tags: ["security_logs", "gold", "marts", "ai"]
+}
+
+WITH ai_results AS (
+  SELECT
+    event_id,
+    event_timestamp,
+    principal_email,
+    service_name,
+    method_name,
+    resource_name,
+    status_code,
+    caller_ip,
+    request_summary,
+    -- Extract JSON from response, stripping markdown code fences if present
+    REGEXP_EXTRACT(ml_generate_text_llm_result, r'\{[^{}]*"threat_level"[^{}]*\}') AS json_response
+  FROM
+    ML.GENERATE_TEXT(
+      MODEL ${ref("gemini_log_analyst")},
+      (
+        SELECT
+          event_id,
+          event_timestamp,
+          principal_email,
+          service_name,
+          method_name,
+          resource_name,
+          status_code,
+          caller_ip,
+          request_summary,
+          CONCAT(
+            'Return ONLY raw JSON. No markdown, no code fences, no explanation.\n',
+            'Format: {"threat_level": "<CRITICAL|HIGH|MEDIUM|LOW|INFO>", ',
+            '"category": "<iam_change|data_exfil|resource_deletion|config_change|recon|auth_failure|normal>", ',
+            '"explanation": "<one sentence>", ',
+            '"recommended_action": "<one sentence>"}\n\n',
+            'Guidelines:\n',
+            '- CRITICAL: IAM key/SA creation, policy changes\n',
+            '- HIGH: Resource deletion, permission escalation\n',
+            '- MEDIUM: Config changes, unusual patterns\n',
+            '- LOW: Sensitive data reads\n',
+            '- INFO: Normal operations\n\n',
+            'Classify this event:\n',
+            request_summary
+          ) AS prompt
+        FROM ${ref("silver_audit_events")}
+        WHERE event_timestamp >= TIMESTAMP_SUB(CURRENT_TIMESTAMP(), INTERVAL 24 HOUR)
+        ORDER BY event_timestamp DESC
+        LIMIT 100
+      ),
+      STRUCT(
+        0.1 AS temperature,
+        256 AS max_output_tokens,
+        TRUE AS flatten_json_output
+      )
+    )
+)
+
+SELECT
+  event_id,
+  event_timestamp,
+  principal_email,
+  service_name,
+  method_name,
+  resource_name,
+  status_code,
+  caller_ip,
+  request_summary,
+  JSON_EXTRACT_SCALAR(json_response, '$.threat_level') AS threat_level,
+  JSON_EXTRACT_SCALAR(json_response, '$.category') AS threat_category,
+  JSON_EXTRACT_SCALAR(json_response, '$.explanation') AS explanation,
+  JSON_EXTRACT_SCALAR(json_response, '$.recommended_action') AS recommended_action
+FROM ai_results

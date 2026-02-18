@@ -167,16 +167,10 @@ We now understand:
 - **How severe complaints are:** Avg score -0.81 for ads, -0.87 for bugs
 - **What users love:** Addictive gameplay, challenging levels
 
-**But we still haven't connected this to churn predictions.**
-
----
-
-## What's Next
-
-Continue to [Multimodal Insights](../multimodal-insights/) to combine WHO will churn with WHY they're unhappy.
+See [Churn Prediction](../churn-prediction/) to identify WHO is at risk of leaving.
 
 ---
 
 ## Navigation
 
-[← Enrichment](01-enrichment.md) | [Multimodal Insights →](../multimodal-insights/) | [Quick Reference](quick.md)
+[← Enrichment](01-enrichment.md) | [Quick Reference](quick.md)
