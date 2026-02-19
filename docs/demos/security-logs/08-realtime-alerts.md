@@ -62,13 +62,14 @@ flowchart LR
 In BigQuery Console:
 
 1. Paste the query below
-2. Click **More** → **Query settings** → select `bq-continuous-queries@...` service account
-3. Click **More** → **Continuous query** → enable
-4. Click **Run**
+2. Click **More** → **Query settings**:
+   - Select `bq-continuous-queries@...` as the **Service account**
+   - Set **Job timeout** to `3600000` milliseconds (1 hour)
+3. Click **Save**
+4. Click **More** → **Continuous query** → enable
+5. Click **Run**
 
 ```sql
-SET @@query_job_timeout_ms = 3600000; -- 1 hour timeout
-
 EXPORT DATA OPTIONS (
   format = 'CLOUD_PUBSUB',
   uri = 'https://pubsub.googleapis.com/projects/gcloud-tech-showcase/topics/security-alerts'
@@ -97,7 +98,7 @@ EXPORT DATA OPTIONS (
 );
 ```
 
-> **Note:** The `@@query_job_timeout_ms` setting ensures the query auto-terminates after 1 hour, preventing unexpected costs.
+> **Note:** The job timeout is configured via Query Settings. This ensures the query auto-terminates after 1 hour, preventing unexpected costs.
 
 ### 2. Generate Security Events
 

@@ -171,9 +171,9 @@ event_timestamp         | principal_email   | method_name              | event_s
 
 **Requires:** `enable_realtime_alerts = true` in Terraform
 
-```sql
-SET @@query_job_timeout_ms = 3600000; -- 1 hour timeout
+**Setup:** In Query Settings, select the `bq-continuous-queries` service account and set Job timeout to `3600000` ms (1 hour).
 
+```sql
 EXPORT DATA OPTIONS (
   format = 'CLOUD_PUBSUB',
   uri = 'https://pubsub.googleapis.com/projects/gcloud-tech-showcase/topics/security-alerts'
