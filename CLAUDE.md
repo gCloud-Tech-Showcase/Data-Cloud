@@ -18,6 +18,11 @@ Google Cloud Data Showcase with **4 demos** using BigQuery, Gemini AI, and Verte
 cd infra && terraform init && terraform plan && terraform apply
 
 # Dataform: Cloud Console → Dataform → data-cloud → Compile → Execute
+
+# Python scripts - ALWAYS use the virtual environment
+cd scripts
+source .venv/bin/activate  # Activate venv before running any script
+python generate_security_logs.py --help
 ```
 
 ## Conventions

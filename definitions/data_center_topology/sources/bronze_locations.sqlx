@@ -1,0 +1,16 @@
+config {
+  type: "declaration",
+  schema: "data_center_topology",
+  name: "locations",
+  description: "BRONZE: Physical locations in the data center hierarchy (regions, data centers, floors, rooms). Forms the root nodes of the topology graph.",
+  columns: {
+    location_id: "Unique identifier for the location (UUID)",
+    location_type: "Type of location: REGION, DATA_CENTER, FLOOR, or ROOM",
+    name: "Human-readable name of the location",
+    parent_location_id: "Reference to parent location (NULL for regions)",
+    region: "Geographic region code (e.g., us-central1, europe-west1)",
+    geo_coordinates: "Geographic coordinates as JSON {lat, lng}",
+    created_at: "Timestamp when the location record was created",
+    updated_at: "Timestamp when the location record was last updated"
+  }
+}

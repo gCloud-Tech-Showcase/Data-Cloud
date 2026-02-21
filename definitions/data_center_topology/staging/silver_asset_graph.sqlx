@@ -1,0 +1,61 @@
+config {
+  type: "view",
+  schema: "data_center_topology",
+  description: "SILVER: Flattened asset view with location hierarchy for graph queries. Denormalizes the location path from region to room for each hardware asset.",
+  tags: ["data_center_topology", "silver", "staging"]
+}
+
+-- Flattened view of hardware assets with full location hierarchy
+-- Useful for graph queries that need location context without traversing the hierarchy
+SELECT
+  -- Asset details
+  ha.asset_id,
+  ha.asset_type,
+  ha.hostname,
+  ha.model,
+  ha.manufacturer,
+  ha.criticality_tier AS asset_criticality,
+  ha.status AS asset_status,
+  ha.cpu_cores,
+  ha.ram_gb,
+  ha.storage_tb,
+  ha.warranty_expiry,
+
+  -- Rack details
+  r.rack_id,
+  r.rack_name,
+  r.power_capacity_kw,
+  r.cooling_zone,
+  r.status AS rack_status,
+  ha.rack_position,
+
+  -- Room (immediate location of rack)
+  room.location_id AS room_id,
+  room.name AS room_name,
+
+  -- Floor
+  floor.location_id AS floor_id,
+  floor.name AS floor_name,
+
+  -- Data Center
+  dc.location_id AS data_center_id,
+  dc.name AS data_center_name,
+
+  -- Region
+  region.location_id AS region_id,
+  region.name AS region_name,
+  region.region AS region_code,
+  region.geo_coordinates,
+
+  -- Timestamps
+  ha.created_at,
+  ha.updated_at
+
+FROM ${ref("hardware_assets")} ha
+JOIN ${ref("racks")} r ON ha.rack_id = r.rack_id
+JOIN ${ref("locations")} room ON r.location_id = room.location_id AND room.location_type = 'ROOM'
+JOIN ${ref("locations")} floor ON room.parent_location_id = floor.location_id AND floor.location_type = 'FLOOR'
+JOIN ${ref("locations")} dc ON floor.parent_location_id = dc.location_id AND dc.location_type = 'DATA_CENTER'
+JOIN ${ref("locations")} region ON dc.parent_location_id = region.location_id AND region.location_type = 'REGION'
+
+WHERE ha.status != 'DECOMMISSIONED'

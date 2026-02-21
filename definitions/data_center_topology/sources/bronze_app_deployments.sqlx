@@ -1,0 +1,18 @@
+config {
+  type: "declaration",
+  schema: "data_center_topology",
+  name: "app_deployments",
+  description: "BRONZE: Application deployments on hardware assets. Links applications to the servers they run on.",
+  columns: {
+    deployment_id: "Unique identifier for the deployment (UUID)",
+    app_id: "Reference to the deployed application",
+    asset_id: "Reference to the hardware asset hosting the deployment",
+    deployment_role: "Role: PRIMARY, SECONDARY, or STANDBY",
+    deployed_at: "Timestamp when the deployment was created",
+    cpu_allocation: "CPU cores allocated to this deployment",
+    memory_allocation_gb: "Memory in GB allocated to this deployment",
+    status: "Deployment status: RUNNING, STOPPED, or FAILED",
+    created_at: "Timestamp when the deployment record was created",
+    updated_at: "Timestamp when the deployment record was last updated"
+  }
+}

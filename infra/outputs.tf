@@ -148,3 +148,54 @@ output "realtime_alerts_enabled" {
   description = "Whether real-time alerts (continuous queries) are enabled"
   value       = var.enable_realtime_alerts
 }
+
+# -----------------------------------------------------------------------------
+# Data Center Topology (Knowledge Graph)
+# -----------------------------------------------------------------------------
+
+output "data_center_topology_dataset_id" {
+  description = "The data center topology BigQuery dataset ID (if enabled)"
+  value       = var.enable_knowledge_graph_demo ? google_bigquery_dataset.data_center_topology[0].dataset_id : null
+}
+
+output "knowledge_graph_demo_enabled" {
+  description = "Whether the Knowledge Graph demo is enabled"
+  value       = var.enable_knowledge_graph_demo
+}
+
+# -----------------------------------------------------------------------------
+# Vertica Ingestion (Conditional)
+# -----------------------------------------------------------------------------
+
+output "vertica_demo_enabled" {
+  description = "Whether the Vertica ingestion demo is enabled"
+  value       = var.enable_vertica_demo
+}
+
+output "vertica_vm_internal_ip" {
+  description = "Vertica VM internal IP address (for Spark connector)"
+  value       = var.enable_vertica_demo ? google_compute_instance.vertica[0].network_interface[0].network_ip : null
+}
+
+# No external IP output - VM uses internal IP only (secure by default)
+# Access via IAP: gcloud compute ssh vertica-demo --tunnel-through-iap
+
+output "vertica_staging_bucket" {
+  description = "GCS bucket for Vertica Spark connector staging"
+  value       = var.enable_vertica_demo ? google_storage_bucket.vertica_staging[0].name : null
+}
+
+output "spark_scripts_bucket" {
+  description = "GCS bucket containing PySpark jobs"
+  value       = var.enable_vertica_demo ? google_storage_bucket.spark_scripts[0].name : null
+}
+
+output "dataproc_workflow_template" {
+  description = "Dataproc workflow template for Vertica to BigQuery ingestion"
+  value       = var.enable_vertica_demo ? google_dataproc_workflow_template.vertica_to_bq[0].name : null
+}
+
+output "scheduler_job_name" {
+  description = "Cloud Scheduler job for weekly sync (paused by default)"
+  value       = var.enable_vertica_demo ? google_cloud_scheduler_job.vertica_sync[0].name : null
+}

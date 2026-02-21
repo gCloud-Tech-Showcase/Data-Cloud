@@ -1,0 +1,15 @@
+config {
+  type: "declaration",
+  schema: "data_center_topology",
+  name: "app_dependencies",
+  description: "BRONZE: Dependencies between applications. Critical for impact analysis - shows which apps depend on which other apps.",
+  columns: {
+    dependency_id: "Unique identifier for the dependency (UUID)",
+    app_id: "Reference to the dependent application",
+    depends_on_app_id: "Reference to the application being depended upon",
+    dependency_type: "Type: SYNC (blocking), ASYNC (non-blocking), or OPTIONAL",
+    is_critical: "Whether this is a critical dependency (app fails if dependency fails)",
+    created_at: "Timestamp when the dependency record was created",
+    updated_at: "Timestamp when the dependency record was last updated"
+  }
+}

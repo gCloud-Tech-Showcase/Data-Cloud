@@ -1,0 +1,17 @@
+config {
+  type: "declaration",
+  schema: "data_center_topology",
+  name: "network_connections",
+  description: "BRONZE: Network connections between interfaces. Edges in the network topology graph.",
+  columns: {
+    connection_id: "Unique identifier for the connection (UUID)",
+    source_interface_id: "Reference to the source network interface",
+    target_interface_id: "Reference to the target network interface",
+    connection_type: "Type: ETHERNET, FIBER, or CROSSCONNECT",
+    bandwidth_gbps: "Connection bandwidth in gigabits per second",
+    latency_ms: "Typical latency in milliseconds",
+    status: "Connection status: ACTIVE, DEGRADED, or DOWN",
+    created_at: "Timestamp when the connection record was created",
+    updated_at: "Timestamp when the connection record was last updated"
+  }
+}

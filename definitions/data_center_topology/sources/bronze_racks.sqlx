@@ -1,0 +1,16 @@
+config {
+  type: "declaration",
+  schema: "data_center_topology",
+  name: "racks",
+  description: "BRONZE: Server racks within data center locations. Contains capacity and operational status information.",
+  columns: {
+    rack_id: "Unique identifier for the rack (UUID)",
+    location_id: "Reference to the parent location (room)",
+    rack_name: "Human-readable rack identifier (e.g., RACK-A01)",
+    power_capacity_kw: "Maximum power capacity in kilowatts",
+    cooling_zone: "Cooling zone identifier for thermal management",
+    status: "Operational status: ACTIVE, MAINTENANCE, or DECOMMISSIONED",
+    created_at: "Timestamp when the rack record was created",
+    updated_at: "Timestamp when the rack record was last updated"
+  }
+}

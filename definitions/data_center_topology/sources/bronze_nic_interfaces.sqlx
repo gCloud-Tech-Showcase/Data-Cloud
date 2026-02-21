@@ -1,0 +1,18 @@
+config {
+  type: "declaration",
+  schema: "data_center_topology",
+  name: "nic_interfaces",
+  description: "BRONZE: Network interfaces on hardware assets. Used to establish network connections between devices.",
+  columns: {
+    interface_id: "Unique identifier for the network interface (UUID)",
+    asset_id: "Reference to the parent hardware asset",
+    interface_name: "Interface name (e.g., eth0, bond0)",
+    mac_address: "MAC address of the interface",
+    ip_address: "IP address assigned to the interface",
+    speed_gbps: "Interface speed in gigabits per second",
+    interface_type: "Type: ETHERNET, FIBER, or MANAGEMENT",
+    vlan_id: "VLAN identifier if applicable",
+    created_at: "Timestamp when the interface record was created",
+    updated_at: "Timestamp when the interface record was last updated"
+  }
+}

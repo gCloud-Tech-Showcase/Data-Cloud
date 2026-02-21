@@ -143,6 +143,95 @@ FROM `gcloud-tech-showcase.security_logs.cloudaudit_googleapis_com_activity`
 
 ---
 
+### `generate_datacenter_topology.py`
+
+Generates realistic data center topology data for the Knowledge Graph and Vertica Ingestion demos. Creates a complete graph of data centers, racks, servers, network interfaces, applications, and their relationships.
+
+**Features:**
+- Generates ~5,000 servers, ~200 apps, ~500 racks across 3 regions / 5 data centers
+- Two targets: `bigquery` (direct load) or `vertica` (for ingestion demo)
+- Graph structure with entities (nodes) and relationships (edges)
+- Realistic data: warranty dates, criticality tiers, network topology
+
+**Generated Tables:**
+
+| Table | Type | Description |
+|-------|------|-------------|
+| `locations` | Entity | Regions, data centers, floors, rooms |
+| `racks` | Entity | Server racks with power capacity |
+| `hardware_assets` | Entity | Servers, switches, storage arrays |
+| `nic_interfaces` | Entity | NICs with IPs and MACs |
+| `applications` | Entity | Apps with criticality tiers |
+| `network_connections` | Edge | Physical network topology |
+| `app_deployments` | Edge | App-to-server mappings |
+| `app_dependencies` | Edge | App-to-app dependencies |
+| `maintenance_events` | Edge | Historical maintenance records |
+
+**Usage - Direct to BigQuery:**
+
+```bash
+# Activate virtual environment
+source .venv/bin/activate
+
+# Load to BigQuery (recommended for Knowledge Graph demo)
+python generate_datacenter_topology.py --project gcloud-tech-showcase --target bigquery
+
+# Preview without loading
+python generate_datacenter_topology.py --project gcloud-tech-showcase --dry-run
+
+# Clean up existing data first
+python generate_datacenter_topology.py --project gcloud-tech-showcase --target bigquery --cleanup
+```
+
+**Usage - Load to Vertica (for Ingestion Demo):**
+
+The Vertica VM has no external IP (secure by default). You must set up an IAP tunnel to connect.
+
+```bash
+# Terminal 1: Start IAP tunnel for port-forwarding
+gcloud compute ssh vertica-demo --zone=us-central1-a --tunnel-through-iap -- -L 5433:localhost:5433
+
+# Keep this terminal open while loading data
+```
+
+```bash
+# Terminal 2: Load data to Vertica
+source .venv/bin/activate
+
+# Set Vertica connection via environment variables
+export VERTICA_HOST=localhost
+export VERTICA_PORT=5433
+export VERTICA_USER=dbadmin
+export VERTICA_PASSWORD=""
+export VERTICA_DATABASE=demo
+
+# Load data
+python generate_datacenter_topology.py --project gcloud-tech-showcase --target vertica
+```
+
+**Vertica Connection Variables:**
+
+| Variable | Default | Description |
+|----------|---------|-------------|
+| `VERTICA_HOST` | localhost | Vertica server hostname |
+| `VERTICA_PORT` | 5433 | Vertica port |
+| `VERTICA_USER` | dbadmin | Database user |
+| `VERTICA_PASSWORD` | (empty) | Database password |
+| `VERTICA_DATABASE` | demo | Database name |
+
+**After Loading to Vertica - Run Ingestion:**
+
+```bash
+# Trigger the Dataproc workflow to move data from Vertica to BigQuery
+gcloud dataproc workflow-templates instantiate vertica-to-bigquery --region=us-central1
+```
+
+**Known Issues:**
+- IAP tunnel must remain open during the entire load process
+- Large tables (18K+ rows) may take several minutes via the tunnel
+
+---
+
 ## File Structure
 
 ```
@@ -150,12 +239,15 @@ scripts/
 ├── .gitignore
 ├── README.md
 ├── requirements.txt
-├── scrape_play_store_reviews.py      # Play Store review scraper
-├── generate_security_logs.py         # Security log generator
-├── .venv/                            # Git-ignored
-├── checkpoint.json                   # Git-ignored (scraper state)
-├── scrape.log                        # Git-ignored (scraper logs)
-└── security_logs_generator.log       # Git-ignored (security gen logs)
+├── scrape_play_store_reviews.py       # Play Store review scraper
+├── generate_security_logs.py          # Security log generator
+├── generate_datacenter_topology.py    # Data center topology generator
+├── spark/
+│   └── vertica_to_bigquery.py         # PySpark job for Vertica ingestion
+├── .venv/                             # Git-ignored
+├── checkpoint.json                    # Git-ignored (scraper state)
+├── scrape.log                         # Git-ignored (scraper logs)
+└── security_logs_generator.log        # Git-ignored (security gen logs)
 ```
 
 ## Notes

@@ -1,0 +1,17 @@
+config {
+  type: "declaration",
+  schema: "data_center_topology",
+  name: "applications",
+  description: "BRONZE: Business applications deployed across the infrastructure. Linked to hardware via deployments and to other apps via dependencies.",
+  columns: {
+    app_id: "Unique identifier for the application (UUID)",
+    app_name: "Application name",
+    app_type: "Type: WEB_SERVICE, DATABASE, CACHE, MESSAGE_QUEUE, or BATCH_JOB",
+    version: "Current deployed version",
+    criticality_tier: "Business criticality: TIER_1 (critical), TIER_2 (important), TIER_3 (standard)",
+    owner_team: "Team responsible for the application",
+    sla_uptime_percent: "Required SLA uptime percentage (e.g., 99.99)",
+    created_at: "Timestamp when the application record was created",
+    updated_at: "Timestamp when the application record was last updated"
+  }
+}
