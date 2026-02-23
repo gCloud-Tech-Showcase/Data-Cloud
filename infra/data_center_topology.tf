@@ -1,24 +1,24 @@
 # =============================================================================
 # DATA CENTER TOPOLOGY DEMO
-# Knowledge Graph analytics on data center hardware inventory
+# Vertica-to-BigQuery ingestion with data center hardware inventory
 # =============================================================================
 
 # -----------------------------------------------------------------------------
-# BigQuery Dataset (Shared)
-# Used by both Knowledge Graph demo and Vertica ingestion demo
+# BigQuery Dataset
+# Target dataset for Vertica ingestion
 # -----------------------------------------------------------------------------
 
 resource "google_bigquery_dataset" "data_center_topology" {
-  count = var.enable_knowledge_graph_demo ? 1 : 0
+  count = var.enable_vertica_demo ? 1 : 0
 
   dataset_id  = "data_center_topology"
   location    = var.dataset_location
-  description = "Data center hardware topology - Knowledge Graph ready schema with entities (locations, racks, servers, applications) and relationships (connections, deployments, dependencies)"
+  description = "Data center hardware topology - entities (locations, racks, servers, applications) and relationships (connections, deployments, dependencies) ingested from Vertica"
 
   labels = {
     project = "data-cloud"
     purpose = "showcase"
-    demo    = "data-center-topology"
+    demo    = "vertica-ingestion"
   }
 
   depends_on = [google_project_service.bigquery]

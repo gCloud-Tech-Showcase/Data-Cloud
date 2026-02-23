@@ -150,17 +150,12 @@ output "realtime_alerts_enabled" {
 }
 
 # -----------------------------------------------------------------------------
-# Data Center Topology (Knowledge Graph)
+# Data Center Topology (Vertica Ingestion)
 # -----------------------------------------------------------------------------
 
 output "data_center_topology_dataset_id" {
-  description = "The data center topology BigQuery dataset ID (if enabled)"
-  value       = var.enable_knowledge_graph_demo ? google_bigquery_dataset.data_center_topology[0].dataset_id : null
-}
-
-output "knowledge_graph_demo_enabled" {
-  description = "Whether the Knowledge Graph demo is enabled"
-  value       = var.enable_knowledge_graph_demo
+  description = "The data center topology BigQuery dataset ID (if Vertica demo enabled)"
+  value       = var.enable_vertica_demo ? google_bigquery_dataset.data_center_topology[0].dataset_id : null
 }
 
 # -----------------------------------------------------------------------------

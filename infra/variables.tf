@@ -106,37 +106,22 @@ variable "realtime_alerts_max_slots" {
 }
 
 # =============================================================================
-# FEATURE FLAGS - Data Center Topology Demos
+# FEATURE FLAGS - Data Center Topology Demo
 # =============================================================================
-
-variable "enable_knowledge_graph_demo" {
-  description = <<-EOT
-    Enable the Knowledge Graph demo with data center topology dataset.
-
-    Creates:
-    - BigQuery dataset: data_center_topology
-    - Schema for entities (locations, racks, servers, apps) and relationships
-
-    Use generate_datacenter_topology.py to load sample data.
-  EOT
-  type        = bool
-  default     = true
-}
 
 variable "enable_vertica_demo" {
   description = <<-EOT
     Enable the Vertica-to-BigQuery ingestion demo.
 
     Creates:
+    - BigQuery dataset: data_center_topology
     - Vertica VM (single node Community Edition)
     - Dataproc workflow template for ingestion
     - Cloud Scheduler job (paused by default)
     - GCS buckets for staging
 
     WARNING: Vertica VM runs continuously when enabled (~$0.13/hr for e2-standard-4).
-    Run 'terraform destroy' when not in use.
-
-    Requires enable_knowledge_graph_demo = true (shares the same BigQuery dataset).
+    Run 'terraform destroy -var="enable_vertica_demo=true"' when not in use.
   EOT
   type        = bool
   default     = false

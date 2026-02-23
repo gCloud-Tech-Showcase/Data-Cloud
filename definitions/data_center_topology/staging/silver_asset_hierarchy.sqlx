@@ -1,12 +1,12 @@
 config {
   type: "view",
   schema: "data_center_topology",
-  description: "SILVER: Flattened asset view with location hierarchy for graph queries. Denormalizes the location path from region to room for each hardware asset.",
+  description: "SILVER: Flattened asset view with location hierarchy. Denormalizes the location path from region to room for each hardware asset.",
   tags: ["data_center_topology", "silver", "staging"]
 }
 
 -- Flattened view of hardware assets with full location hierarchy
--- Useful for graph queries that need location context without traversing the hierarchy
+-- Useful for queries that need location context without traversing the hierarchy
 SELECT
   -- Asset details
   ha.asset_id,
