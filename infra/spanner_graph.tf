@@ -8,12 +8,14 @@
 # -----------------------------------------------------------------------------
 
 resource "google_spanner_instance" "data_center_graph" {
-  count = var.enable_spanner_graph_demo ? 1 : 0
+  provider = google-beta
+  count    = var.enable_spanner_graph_demo ? 1 : 0
 
   name             = "data-center-graph"
   config           = "regional-${var.region}"
   display_name     = "Data Center Topology Graph"
   processing_units = 100 # Minimum capacity
+  edition          = "ENTERPRISE" # Required for Spanner Graph
 
   labels = {
     project = "data-cloud"
