@@ -2,12 +2,13 @@
 
 ## WHAT: Project Overview
 
-Google Cloud Data Showcase with **4 demos** using BigQuery, Gemini AI, and Vertex AI:
+Google Cloud Data Showcase with **5 demos** using BigQuery, Gemini AI, and Vertex AI:
 
 1. **Churn Prediction** - BQML user retention model with rolling 7-day windows
 2. **Sentiment Analysis** - Gemini-powered review analysis via BigLake
 3. **Campaign Intelligence** - Census geospatial + theLook targeting (proof of concept)
 4. **Security Logs** - AI threat detection with log embeddings
+5. **Vertica Ingestion** - Migrate data from Vertica to BigQuery with Dataproc + Spark
 
 **Key Directories:** `definitions/{domain}/` for Dataform, `infra/` for Terraform, `docs/` for guides.
 
@@ -18,6 +19,11 @@ Google Cloud Data Showcase with **4 demos** using BigQuery, Gemini AI, and Verte
 cd infra && terraform init && terraform plan && terraform apply
 
 # Dataform: Cloud Console → Dataform → data-cloud → Compile → Execute
+
+# Python scripts - ALWAYS use the virtual environment
+cd scripts
+source .venv/bin/activate  # Activate venv before running any script
+python generate_security_logs.py --help
 ```
 
 ## Conventions
@@ -35,7 +41,7 @@ config {
 **Naming:** `bronze_*` → `silver_*` → `gold_*`
 
 **Tags:**
-- Domain: `sentiment_analysis`, `propensity_modeling`, `campaign_intelligence`, `security_logs`
+- Domain: `sentiment_analysis`, `propensity_modeling`, `campaign_intelligence`, `security_logs`, `data_center_topology`
 - Layer: `bronze`, `silver`, `gold`
 - Category: `sources`, `staging`, `marts`, `ml`, `models`, `examples`
 

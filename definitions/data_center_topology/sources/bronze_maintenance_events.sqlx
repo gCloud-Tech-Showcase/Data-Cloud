@@ -1,0 +1,21 @@
+config {
+  type: "declaration",
+  schema: "data_center_topology",
+  name: "maintenance_events",
+  description: "BRONZE: Maintenance and incident events for hardware assets. Tracks planned maintenance, failures, and resolutions.",
+  columns: {
+    event_id: "Unique identifier for the maintenance event (UUID)",
+    asset_id: "Reference to the affected hardware asset",
+    event_type: "Type: PLANNED_MAINTENANCE, EMERGENCY_MAINTENANCE, HARDWARE_FAILURE, or SOFTWARE_UPDATE",
+    severity: "Event severity: LOW, MEDIUM, HIGH, or CRITICAL",
+    title: "Short description of the event",
+    description: "Detailed description of the maintenance or incident",
+    scheduled_start: "Scheduled start time (for planned maintenance)",
+    scheduled_end: "Scheduled end time (for planned maintenance)",
+    started_at: "Actual start timestamp",
+    resolved_at: "Resolution timestamp (NULL if ongoing)",
+    created_by: "User or system that created the event",
+    created_at: "Timestamp when the event record was created",
+    updated_at: "Timestamp when the event record was last updated"
+  }
+}

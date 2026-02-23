@@ -8,6 +8,7 @@ Explore GCP Data Cloud capabilities through these use cases.
 | [**Sentiment Analysis**](sentiment-analysis/) | Analyze reviews with Gemini AI |
 | [**Campaign Intelligence**](campaign-intelligence/) | Target campaigns using public Census data *(proof of concept)* |
 | [**Security Logs**](security-logs/) | AI-powered audit log analysis with semantic search and real-time alerts |
+| [**Vertica Ingestion**](vertica-ingestion/) | Migrate data from Vertica to BigQuery with Dataproc + Spark |
 
 ---
 
@@ -19,6 +20,7 @@ Explore GCP Data Cloud capabilities through these use cases.
 | Unstructured data + Gemini | [Sentiment Analysis](sentiment-analysis/) |
 | Security / log analytics | [Security Logs](security-logs/) |
 | Geospatial + public data | [Campaign Intelligence](campaign-intelligence/) |
+| Data migration from Vertica | [Vertica Ingestion](vertica-ingestion/) |
 
 ---
 
@@ -30,6 +32,7 @@ Explore GCP Data Cloud capabilities through these use cases.
 | **Sentiment Analysis** | Play Store reviews in GCS | Python scraper | Run `scripts/scrape_play_store_reviews.py` ([instructions](../../scripts/README.md)) |
 | **Campaign Intelligence** | theLook + Census public datasets | None | Public datasets, automatically accessible |
 | **Security Logs** | Cloud Audit Logs | Terraform + log generator | Run `terraform apply`, then `scripts/generate_security_logs.py` |
+| **Vertica Ingestion** | Vertica CE VM | Terraform + data generator | Run `terraform apply -var="enable_vertica_demo=true"`, then load data |
 
 ---
 
@@ -41,6 +44,7 @@ SQL queries with expected outputs — run these directly in BigQuery Console.
 - [Sentiment Analysis](sentiment-analysis/quick.md)
 - [Campaign Intelligence](campaign-intelligence/quick.md)
 - [Security Logs](security-logs/quick.md)
+- [Vertica Ingestion](vertica-ingestion/quick.md)
 
 ---
 
@@ -52,6 +56,7 @@ Step-by-step guides with explanations.
 - [Sentiment Analysis](sentiment-analysis/01-enrichment.md)
 - [Campaign Intelligence](campaign-intelligence/guide.md)
 - [Security Logs](security-logs/guide.md)
+- [Vertica Ingestion](vertica-ingestion/guide.md)
 
 ---
 

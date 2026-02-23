@@ -104,3 +104,26 @@ variable "realtime_alerts_max_slots" {
   type        = number
   default     = 50
 }
+
+# =============================================================================
+# FEATURE FLAGS - Data Center Topology Demo
+# =============================================================================
+
+variable "enable_vertica_demo" {
+  description = <<-EOT
+    Enable the Vertica-to-BigQuery ingestion demo.
+
+    Creates:
+    - BigQuery dataset: data_center_topology
+    - Vertica VM (single node Community Edition)
+    - Dataproc workflow template for ingestion
+    - Cloud Scheduler job (paused by default)
+    - GCS buckets for staging
+
+    WARNING: Vertica VM runs continuously when enabled (~$0.13/hr for e2-standard-4).
+    Run 'terraform destroy -var="enable_vertica_demo=true"' when not in use.
+  EOT
+  type        = bool
+  default     = false
+}
+

@@ -6,14 +6,30 @@ This repository demonstrates BigQuery, Gemini AI, Vertex AI, and related service
 
 ---
 
+## Heads Up
+
+This is a **personal playground**, not an official Google project. I work at Google, but this repo is my own tinkering — built on weekends, powered by coffee, and reviewed by exactly one person (me).
+
+**What this means for you:**
+
+- Code here is for learning and experimentation, not production
+- There's no warranty, no SLA, and no one on pager duty
+- Best practices? I try. Guarantees? Sadly, nope!
+- If something breaks, that's just the demo working as intended
+
+Use it to learn, fork it to experiment, but please don't deploy it as-is to run your actual business. Take as inspiration for some of the cool things you can do on GCP! Make it your own.
+
+---
+
 ## Demos
 
-| Demo | What It Shows | Key Technologies |
-|------|---------------|------------------|
-| [**Churn Prediction**](docs/demos/churn-prediction/) | Train ML models in SQL | BigQuery ML, Vertex AI |
-| [**Sentiment Analysis**](docs/demos/sentiment-analysis/) | AI on unstructured data | BigLake, Gemini |
-| [**Campaign Intelligence**](docs/demos/campaign-intelligence/) | Spatial + public data | Geography, Census |
-| [**Security Logs**](docs/demos/security-logs/) | AI-powered threat detection | Pipe syntax, embeddings |
+| Demo                                                           | What It Shows               | Key Technologies        |
+| -------------------------------------------------------------- | --------------------------- | ----------------------- |
+| [**Churn Prediction**](docs/demos/churn-prediction/)           | Train ML models in SQL      | BigQuery ML, Vertex AI  |
+| [**Sentiment Analysis**](docs/demos/sentiment-analysis/)       | AI on unstructured data     | BigLake, Gemini         |
+| [**Campaign Intelligence**](docs/demos/campaign-intelligence/) | Spatial + public data       | Geography, Census       |
+| [**Security Logs**](docs/demos/security-logs/)                 | AI-powered threat detection | Pipe syntax, embeddings |
+| [**Vertica Ingestion**](docs/demos/vertica-ingestion/)         | Migrate from Vertica to BQ  | Dataproc, Spark, JDBC   |
 
 Pick a demo based on your interest — each includes SQL queries, expected outputs, and step-by-step guides.
 
@@ -55,15 +71,15 @@ cd infra && terraform apply
 
 ## Technologies
 
-| Service | Purpose |
-|---------|---------|
-| **BigQuery** | Serverless data warehouse |
-| **BigLake** | Query GCS/external data without ETL |
-| **Gemini 2.0 Flash** | AI analysis via SQL |
-| **BigQuery ML** | In-database ML training |
-| **Vertex AI** | Model registry and deployment |
-| **Dataform** | Git-native SQL transformations |
-| **Terraform** | Infrastructure as Code |
+| Service              | Purpose                             |
+| -------------------- | ----------------------------------- |
+| **BigQuery**         | Serverless data warehouse           |
+| **BigLake**          | Query GCS/external data without ETL |
+| **Gemini 2.0 Flash** | AI analysis via SQL                 |
+| **BigQuery ML**      | In-database ML training             |
+| **Vertex AI**        | Model registry and deployment       |
+| **Dataform**         | Git-native SQL transformations      |
+| **Terraform**        | Infrastructure as Code              |
 
 ---
 
@@ -75,7 +91,8 @@ Data-Cloud/
 │   ├── propensity_modeling/      #   Churn prediction
 │   ├── sentiment_analysis/       #   Review analysis
 │   ├── campaign_intelligence/    #   Campaign targeting
-│   └── security_logs/            #   Audit log analytics
+│   ├── security_logs/            #   Audit log analytics
+│   └── data_center_topology/     #   Vertica ingestion
 ├── infra/                        # Terraform IaC
 ├── scripts/                      # Python utilities
 ├── examples/                     # Standalone SQL examples
@@ -89,11 +106,11 @@ Data-Cloud/
 
 ## Documentation
 
-| Guide | Description |
-|-------|-------------|
-| [**Getting Started**](docs/getting-started.md) | Deploy infrastructure and run pipelines |
-| [**Demos**](docs/demos/README.md) | Step-by-step walkthroughs with SQL examples |
-| [**Architecture**](docs/architecture.md) | Medallion layers, design decisions |
+| Guide                                          | Description                                 |
+| ---------------------------------------------- | ------------------------------------------- |
+| [**Getting Started**](docs/getting-started.md) | Deploy infrastructure and run pipelines     |
+| [**Demos**](docs/demos/README.md)              | Step-by-step walkthroughs with SQL examples |
+| [**Architecture**](docs/architecture.md)       | Medallion layers, design decisions          |
 
 ---
 

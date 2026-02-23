@@ -57,6 +57,16 @@ resource "google_project_service" "pubsub" {
   disable_on_destroy = false
 }
 
+resource "google_project_service" "dataproc" {
+  service            = "dataproc.googleapis.com"
+  disable_on_destroy = false
+}
+
+resource "google_project_service" "cloudscheduler" {
+  service            = "cloudscheduler.googleapis.com"
+  disable_on_destroy = false
+}
+
 # -----------------------------------------------------------------------------
 # VPC Network
 # -----------------------------------------------------------------------------
@@ -76,6 +86,34 @@ resource "google_compute_subnetwork" "main" {
   network       = google_compute_network.main.id
 
   private_ip_google_access = true
+}
+
+# -----------------------------------------------------------------------------
+# Cloud NAT (for VMs without external IPs)
+# Required when Vertica demo is enabled (VMs use internal IPs only)
+# -----------------------------------------------------------------------------
+
+resource "google_compute_router" "main" {
+  count = var.enable_vertica_demo ? 1 : 0
+
+  name    = "data-cloud-router"
+  region  = var.region
+  network = google_compute_network.main.id
+}
+
+resource "google_compute_router_nat" "main" {
+  count = var.enable_vertica_demo ? 1 : 0
+
+  name                               = "data-cloud-nat"
+  router                             = google_compute_router.main[0].name
+  region                             = var.region
+  nat_ip_allocate_option             = "AUTO_ONLY"
+  source_subnetwork_ip_ranges_to_nat = "ALL_SUBNETWORKS_ALL_IP_RANGES"
+
+  log_config {
+    enable = false
+    filter = "ERRORS_ONLY"
+  }
 }
 
 # -----------------------------------------------------------------------------
