@@ -90,6 +90,7 @@ class Target(Enum):
     """Output target for generated data."""
     BIGQUERY = "bigquery"
     VERTICA = "vertica"
+    SPANNER = "spanner"
     CSV = "csv"
 
 
@@ -129,6 +130,7 @@ class DataCenterTopologyGenerator:
         # Lazy-loaded clients
         self._bq_client = None
         self._vertica_conn = None
+        self._spanner_client = None
 
     @property
     def bq_client(self):
@@ -153,6 +155,14 @@ class DataCenterTopologyGenerator:
             }
             self._vertica_conn = vertica_python.connect(**conn_info)
         return self._vertica_conn
+
+    @property
+    def spanner_client(self):
+        """Lazy-load Spanner client."""
+        if self._spanner_client is None:
+            from google.cloud import spanner
+            self._spanner_client = spanner.Client(project=self.project_id)
+        return self._spanner_client
 
     def _generate_uuid(self) -> str:
         """Generate a UUID string."""
@@ -595,6 +605,61 @@ class DataCenterTopologyGenerator:
 
         logger.info("Vertica load complete!")
 
+    def load_to_spanner(
+        self,
+        instance_id: str = "data-center-graph",
+        database_id: str = "topology",
+    ) -> None:
+        """Load generated data to Spanner."""
+        logger.info(f"Loading data to Spanner: {instance_id}/{database_id}")
+
+        instance = self.spanner_client.instance(instance_id)
+        database = instance.database(database_id)
+
+        tables = {
+            "locations": self.locations,
+            "racks": self.racks,
+            "hardware_assets": self.hardware_assets,
+            "nic_interfaces": self.nic_interfaces,
+            "applications": self.applications,
+            "network_connections": self.network_connections,
+            "app_deployments": self.app_deployments,
+            "app_dependencies": self.app_dependencies,
+            "maintenance_events": self.maintenance_events,
+        }
+
+        for table_name, data in tqdm(tables.items(), desc="Loading to Spanner"):
+            if not data:
+                logger.warning(f"No data for {table_name}, skipping")
+                continue
+
+            columns = list(data[0].keys())
+
+            # Convert to Spanner-compatible values
+            rows = []
+            for row in data:
+                values = []
+                for col in columns:
+                    v = row[col]
+                    # Spanner client handles datetime and date natively
+                    values.append(v)
+                rows.append(values)
+
+            # Batch insert (500 rows per batch for Spanner)
+            batch_size = 500
+            for i in range(0, len(rows), batch_size):
+                batch = rows[i:i + batch_size]
+                with database.batch() as transaction:
+                    transaction.insert(
+                        table=table_name,
+                        columns=columns,
+                        values=batch,
+                    )
+
+            logger.info(f"Loaded {len(data)} rows to {table_name}")
+
+        logger.info("Spanner load complete!")
+
     def cleanup_bigquery(self, dataset_id: str = "data_center_topology") -> None:
         """Delete all tables in BigQuery dataset."""
         logger.info(f"Cleaning up BigQuery dataset: {dataset_id}")
@@ -621,7 +686,7 @@ def main():
 
     parser.add_argument(
         "--target",
-        choices=["bigquery", "vertica"],
+        choices=["bigquery", "vertica", "spanner"],
         default="bigquery",
         help="Target database (default: bigquery)",
     )
@@ -630,6 +695,18 @@ def main():
         "--dataset",
         default="data_center_topology",
         help="BigQuery dataset ID (default: data_center_topology)",
+    )
+
+    parser.add_argument(
+        "--spanner-instance",
+        default="data-center-graph",
+        help="Spanner instance ID (default: data-center-graph)",
+    )
+
+    parser.add_argument(
+        "--spanner-database",
+        default="topology",
+        help="Spanner database ID (default: topology)",
     )
 
     parser.add_argument(
@@ -646,7 +723,12 @@ def main():
 
     args = parser.parse_args()
 
-    target = Target.BIGQUERY if args.target == "bigquery" else Target.VERTICA
+    target_map = {
+        "bigquery": Target.BIGQUERY,
+        "vertica": Target.VERTICA,
+        "spanner": Target.SPANNER,
+    }
+    target = target_map[args.target]
 
     logger.info(f"Starting data center topology generation")
     logger.info(f"Project: {args.project}")
@@ -680,8 +762,10 @@ def main():
         if args.cleanup:
             generator.cleanup_bigquery(args.dataset)
         generator.load_to_bigquery(args.dataset)
-    else:
+    elif target == Target.VERTICA:
         generator.load_to_vertica()
+    elif target == Target.SPANNER:
+        generator.load_to_spanner(args.spanner_instance, args.spanner_database)
 
     logger.info("Done!")
 

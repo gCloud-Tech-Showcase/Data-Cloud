@@ -6,31 +6,42 @@ Data flow and pipeline structure for Vertica-to-BigQuery migration.
 
 ## Pipeline Overview
 
-```
-┌─────────────────────────────────────────────────────────────────────────────┐
-│                     VERTICA-TO-BIGQUERY INGESTION                           │
-├─────────────────────────────────────────────────────────────────────────────┤
-│                                                                             │
-│  ┌─────────────────┐         ┌─────────────────┐                           │
-│  │ Vertica CE      │         │ Dataproc        │                           │
-│  │ (Docker on VM)  │ ──────► │ (PySpark Job)   │                           │
-│  │ jbfavre:9.2.0-7 │  JDBC   │ Ephemeral       │                           │
-│  └─────────────────┘         └────────┬────────┘                           │
-│                                       │                                     │
-│                                       ▼                                     │
-│  ┌─────────────────────────────────────────────────────────────────────┐   │
-│  │                    BigQuery: data_center_topology                    │   │
-│  │  ┌──────────────────────────────────────────────────────────────┐   │   │
-│  │  │ Entity Tables               │ Relationship Tables            │   │   │
-│  │  │ - locations                 │ - network_connections          │   │   │
-│  │  │ - racks                     │ - app_deployments              │   │   │
-│  │  │ - hardware_assets           │ - app_dependencies             │   │   │
-│  │  │ - nic_interfaces            │ - maintenance_events           │   │   │
-│  │  │ - applications              │                                │   │   │
-│  │  └──────────────────────────────────────────────────────────────┘   │   │
-│  └─────────────────────────────────────────────────────────────────────┘   │
-│                                                                             │
-└─────────────────────────────────────────────────────────────────────────────┘
+```mermaid
+graph LR
+    subgraph "Source"
+        VERTICA[Vertica CE<br/>Docker on VM<br/>jbfavre:9.2.0-7]
+    end
+
+    subgraph "ETL"
+        DATAPROC[Dataproc<br/>PySpark Job<br/>Ephemeral Cluster]
+    end
+
+    subgraph "BigQuery: data_center_topology"
+        subgraph "Entity Tables"
+            LOC[locations]
+            RACK[racks]
+            HW[hardware_assets]
+            NIC[nic_interfaces]
+            APP[applications]
+        end
+        subgraph "Relationship Tables"
+            NET[network_connections]
+            DEP[app_deployments]
+            DEPS[app_dependencies]
+            MAINT[maintenance_events]
+        end
+    end
+
+    VERTICA -->|JDBC| DATAPROC
+    DATAPROC --> LOC
+    DATAPROC --> RACK
+    DATAPROC --> HW
+    DATAPROC --> NIC
+    DATAPROC --> APP
+    DATAPROC --> NET
+    DATAPROC --> DEP
+    DATAPROC --> DEPS
+    DATAPROC --> MAINT
 ```
 
 ---
@@ -103,30 +114,22 @@ sequenceDiagram
 
 All resources use internal IPs only (org policy compliant):
 
-```
-┌────────────────────────────────────────────────────────────────────┐
-│                     VPC: data-cloud-vpc                            │
-│                                                                    │
-│  ┌──────────────┐     ┌──────────────┐     ┌──────────────┐       │
-│  │ Vertica VM   │     │ Dataproc     │     │ Cloud NAT    │       │
-│  │ 10.0.0.x     │◄───►│ 10.0.0.x     │     │ (outbound)   │       │
-│  │ (internal)   │JDBC │ (internal)   │     └──────────────┘       │
-│  └──────────────┘     └──────────────┘              │              │
-│         ▲                    │                      │              │
-│         │                    ▼                      ▼              │
-│         │              ┌──────────────┐      ┌──────────────┐     │
-│         │              │ BigQuery     │      │ Internet     │     │
-│         │              │ (via Private │      │ (Docker pull)│     │
-│         │              │  Google Access)     └──────────────┘     │
-│         │              └──────────────┘                           │
-│         │ IAP Tunnel                                               │
-│         │ (TCP 22)                                                 │
-└─────────┼──────────────────────────────────────────────────────────┘
-          │
-    ┌─────┴─────┐
-    │ Developer │
-    │ Workstation│
-    └───────────┘
+```mermaid
+graph TB
+    subgraph "VPC: data-cloud-vpc"
+        VERTICA[Vertica VM<br/>10.0.0.x<br/>internal IP]
+        DATAPROC[Dataproc<br/>10.0.0.x<br/>internal IP]
+        NAT[Cloud NAT<br/>outbound only]
+    end
+
+    BQ[BigQuery<br/>Private Google Access]
+    INTERNET[Internet<br/>Docker pull]
+    DEV[Developer<br/>Workstation]
+
+    VERTICA <-->|JDBC| DATAPROC
+    DATAPROC --> BQ
+    NAT --> INTERNET
+    DEV -->|IAP Tunnel<br/>TCP 22| VERTICA
 ```
 
 **Key security features:**

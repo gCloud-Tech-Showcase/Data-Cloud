@@ -154,8 +154,8 @@ output "realtime_alerts_enabled" {
 # -----------------------------------------------------------------------------
 
 output "data_center_topology_dataset_id" {
-  description = "The data center topology BigQuery dataset ID (if Vertica demo enabled)"
-  value       = var.enable_vertica_demo ? google_bigquery_dataset.data_center_topology[0].dataset_id : null
+  description = "The data center topology BigQuery dataset ID (if any topology demo enabled)"
+  value       = (var.enable_vertica_demo || var.enable_spanner_graph_demo) ? google_bigquery_dataset.data_center_topology[0].dataset_id : null
 }
 
 # -----------------------------------------------------------------------------
@@ -193,4 +193,23 @@ output "dataproc_workflow_template" {
 output "scheduler_job_name" {
   description = "Cloud Scheduler job for weekly sync (paused by default)"
   value       = var.enable_vertica_demo ? google_cloud_scheduler_job.vertica_sync[0].name : null
+}
+
+# -----------------------------------------------------------------------------
+# Spanner Graph (Conditional)
+# -----------------------------------------------------------------------------
+
+output "spanner_graph_demo_enabled" {
+  description = "Whether the Spanner Graph demo is enabled"
+  value       = var.enable_spanner_graph_demo
+}
+
+output "spanner_graph_instance_id" {
+  description = "Spanner instance ID for data center topology graph"
+  value       = var.enable_spanner_graph_demo ? google_spanner_instance.data_center_graph[0].name : null
+}
+
+output "spanner_graph_database_id" {
+  description = "Spanner database ID containing the property graph"
+  value       = var.enable_spanner_graph_demo ? google_spanner_database.topology[0].name : null
 }

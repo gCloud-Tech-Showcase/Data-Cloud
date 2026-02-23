@@ -67,6 +67,11 @@ resource "google_project_service" "cloudscheduler" {
   disable_on_destroy = false
 }
 
+resource "google_project_service" "spanner" {
+  service            = "spanner.googleapis.com"
+  disable_on_destroy = false
+}
+
 # -----------------------------------------------------------------------------
 # VPC Network
 # -----------------------------------------------------------------------------

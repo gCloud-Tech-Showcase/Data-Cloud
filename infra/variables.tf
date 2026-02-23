@@ -120,8 +120,23 @@ variable "enable_vertica_demo" {
     - Cloud Scheduler job (paused by default)
     - GCS buckets for staging
 
-    WARNING: Vertica VM runs continuously when enabled (~$0.13/hr for e2-standard-4).
-    Run 'terraform destroy -var="enable_vertica_demo=true"' when not in use.
+    WARNING: Vertica VM incurs costs while running. Destroy when not in use.
+    See https://cloud.google.com/compute/vm-instance-pricing for current pricing.
+  EOT
+  type        = bool
+  default     = false
+}
+
+variable "enable_spanner_graph_demo" {
+  description = <<-EOT
+    Enable the Spanner Graph demo for data center topology analysis.
+
+    Creates:
+    - Spanner instance (regional, minimum capacity)
+    - Spanner database with property graph schema
+
+    WARNING: Spanner incurs costs while running. Destroy when not in use.
+    See https://cloud.google.com/spanner/pricing for current pricing.
   EOT
   type        = bool
   default     = false

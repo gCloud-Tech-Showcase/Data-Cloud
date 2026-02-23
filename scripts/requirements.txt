@@ -16,6 +16,9 @@ google-cloud-audit-log==0.4.0
 # Vertica connector (for data center topology demo)
 vertica-python==1.3.8
 
+# Spanner connector (for Spanner Graph demo)
+google-cloud-spanner==3.49.1
+
 # Data generation
 faker==24.0.0
 
