@@ -29,6 +29,7 @@ Use it to learn, fork it to experiment, but please don't deploy it as-is to run 
 | [**Sentiment Analysis**](docs/demos/sentiment-analysis/)       | AI on unstructured data     | BigLake, Gemini         |
 | [**Campaign Intelligence**](docs/demos/campaign-intelligence/) | Spatial + public data       | Geography, Census       |
 | [**Security Logs**](docs/demos/security-logs/)                 | AI-powered threat detection | Pipe syntax, embeddings |
+| [**Vertica Ingestion**](docs/demos/vertica-ingestion/)         | Migrate from Vertica to BQ  | Dataproc, Spark, JDBC   |
 
 Pick a demo based on your interest — each includes SQL queries, expected outputs, and step-by-step guides.
 
@@ -90,7 +91,8 @@ Data-Cloud/
 │   ├── propensity_modeling/      #   Churn prediction
 │   ├── sentiment_analysis/       #   Review analysis
 │   ├── campaign_intelligence/    #   Campaign targeting
-│   └── security_logs/            #   Audit log analytics
+│   ├── security_logs/            #   Audit log analytics
+│   └── data_center_topology/     #   Vertica ingestion
 ├── infra/                        # Terraform IaC
 ├── scripts/                      # Python utilities
 ├── examples/                     # Standalone SQL examples

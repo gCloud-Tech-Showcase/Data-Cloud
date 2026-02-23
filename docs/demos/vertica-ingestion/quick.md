@@ -15,7 +15,7 @@ terraform apply -var="enable_vertica_demo=true"
 ```
 vertica_vm_internal_ip = "10.0.0.x"
 dataproc_workflow_template = "vertica-to-bigquery"
-scheduler_job_name = "vertica-weekly-sync"
+scheduler_job_name = "vertica-to-bigquery-weekly"
 ```
 
 ---

@@ -159,13 +159,13 @@ ORDER BY count DESC;
 The Cloud Scheduler job is created but paused by default. To enable weekly sync:
 
 ```bash
-gcloud scheduler jobs resume vertica-weekly-sync --location=us-central1
+gcloud scheduler jobs resume vertica-to-bigquery-weekly --location=us-central1
 ```
 
 To pause it again:
 
 ```bash
-gcloud scheduler jobs pause vertica-weekly-sync --location=us-central1
+gcloud scheduler jobs pause vertica-to-bigquery-weekly --location=us-central1
 ```
 
 ---

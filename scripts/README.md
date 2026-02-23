@@ -145,7 +145,7 @@ FROM `gcloud-tech-showcase.security_logs.cloudaudit_googleapis_com_activity`
 
 ### `generate_datacenter_topology.py`
 
-Generates realistic data center topology data for the Knowledge Graph and Vertica Ingestion demos. Creates a complete graph of data centers, racks, servers, network interfaces, applications, and their relationships.
+Generates realistic data center topology data for the Vertica Ingestion demo. Creates a hierarchy of data centers, racks, servers, network interfaces, applications, and their relationships.
 
 **Features:**
 - Generates ~5,000 servers, ~200 apps, ~500 racks across 3 regions / 5 data centers
@@ -173,7 +173,7 @@ Generates realistic data center topology data for the Knowledge Graph and Vertic
 # Activate virtual environment
 source .venv/bin/activate
 
-# Load to BigQuery (recommended for Knowledge Graph demo)
+# Load directly to BigQuery
 python generate_datacenter_topology.py --project gcloud-tech-showcase --target bigquery
 
 # Preview without loading

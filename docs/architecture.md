@@ -170,6 +170,7 @@ Each demo has its own architecture diagram:
 - [Sentiment Analysis](demos/sentiment-analysis/architecture.md)
 - [Campaign Intelligence](demos/campaign-intelligence/architecture.md)
 - [Security Logs](demos/security-logs/architecture.md)
+- [Vertica Ingestion](demos/vertica-ingestion/architecture.md)
 
 ---
 

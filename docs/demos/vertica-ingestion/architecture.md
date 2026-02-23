@@ -63,33 +63,65 @@ sequenceDiagram
 
 ## Infrastructure Components
 
-| Component | Resource | Purpose |
-|-----------|----------|---------|
-| **Vertica VM** | `google_compute_instance.vertica` | Hosts Vertica CE in Docker container |
-| **Workflow Template** | `google_dataproc_workflow_template.vertica_to_bq` | Defines ephemeral cluster + job |
-| **Scheduler Job** | `google_cloud_scheduler_job.vertica_sync` | Weekly trigger (paused by default) |
-| **Spark Scripts Bucket** | `google_storage_bucket.spark_scripts` | Stores PySpark job files |
-| **Staging Bucket** | `google_storage_bucket.vertica_staging` | Temporary storage for Spark |
+### Compute
+
+| Component | Terraform Resource | Purpose |
+|-----------|-------------------|---------|
+| Vertica VM | `google_compute_instance.vertica` | CentOS Stream 9 with Docker, hosts Vertica CE |
+| Workflow Template | `google_dataproc_workflow_template.vertica_to_bq` | Ephemeral Dataproc cluster + PySpark job |
+| Scheduler Job | `google_cloud_scheduler_job.vertica_sync` | Weekly trigger (paused by default) |
+
+### Storage
+
+| Component | Terraform Resource | Purpose |
+|-----------|-------------------|---------|
+| BigQuery Dataset | `google_bigquery_dataset.data_center_topology` | Target for ingested tables |
+| Spark Scripts Bucket | `google_storage_bucket.spark_scripts` | Stores PySpark job file |
+| Staging Bucket | `google_storage_bucket.vertica_staging` | Temporary storage for Spark |
+
+### Networking
+
+| Component | Terraform Resource | Purpose |
+|-----------|-------------------|---------|
+| Cloud Router | `google_compute_router.main` | Routes traffic for NAT |
+| Cloud NAT | `google_compute_router_nat.main` | Outbound internet for VMs with no external IP |
+| IAP Firewall | `google_compute_firewall.vertica_iap_ssh` | SSH access via IAP (35.235.240.0/20) |
+| Vertica Firewall | `google_compute_firewall.vertica_internal` | Port 5433 within subnet |
+| Dataproc Firewall | `google_compute_firewall.dataproc_internal` | All TCP/UDP/ICMP within subnet |
+
+### Service Accounts
+
+| Account | Purpose |
+|---------|---------|
+| `vertica-demo-vm` | Vertica VM identity |
+| `dataproc-vertica-ingestion` | Dataproc cluster + BigQuery writer |
+| `scheduler-vertica-ingestion` | Cloud Scheduler workflow trigger |
 
 ---
 
-## Network Security
+## Network Topology
 
-All resources use internal IPs only:
+All resources use internal IPs only (org policy compliant):
 
 ```
-┌────────────────────────────────────────────────────────────┐
-│                     VPC: data-cloud-vpc                    │
-│                                                            │
-│  ┌──────────────┐     ┌──────────────┐                    │
-│  │ Vertica VM   │     │ Dataproc     │                    │
-│  │ 10.0.0.x     │◄───►│ 10.0.0.x     │                    │
-│  │ (internal)   │JDBC │ (internal)   │                    │
-│  └──────────────┘     └──────────────┘                    │
-│         ▲                                                  │
-│         │ IAP Tunnel                                       │
-│         │ (TCP 22)                                         │
-└─────────┼──────────────────────────────────────────────────┘
+┌────────────────────────────────────────────────────────────────────┐
+│                     VPC: data-cloud-vpc                            │
+│                                                                    │
+│  ┌──────────────┐     ┌──────────────┐     ┌──────────────┐       │
+│  │ Vertica VM   │     │ Dataproc     │     │ Cloud NAT    │       │
+│  │ 10.0.0.x     │◄───►│ 10.0.0.x     │     │ (outbound)   │       │
+│  │ (internal)   │JDBC │ (internal)   │     └──────────────┘       │
+│  └──────────────┘     └──────────────┘              │              │
+│         ▲                    │                      │              │
+│         │                    ▼                      ▼              │
+│         │              ┌──────────────┐      ┌──────────────┐     │
+│         │              │ BigQuery     │      │ Internet     │     │
+│         │              │ (via Private │      │ (Docker pull)│     │
+│         │              │  Google Access)     └──────────────┘     │
+│         │              └──────────────┘                           │
+│         │ IAP Tunnel                                               │
+│         │ (TCP 22)                                                 │
+└─────────┼──────────────────────────────────────────────────────────┘
           │
     ┌─────┴─────┐
     │ Developer │
@@ -97,9 +129,11 @@ All resources use internal IPs only:
     └───────────┘
 ```
 
-**Firewall Rules:**
-- `allow-iap-ssh` — IAP IP range (35.235.240.0/20) to VMs on port 22
-- `allow-dataproc-internal` — All TCP/UDP/ICMP within subnet for Dataproc clusters
+**Key security features:**
+- No external IPs on any compute resources
+- IAP for SSH access (no bastion host needed)
+- Cloud NAT for outbound-only internet (Docker image pull)
+- Private Google Access for BigQuery API
 
 ---
 
@@ -118,9 +152,10 @@ All resources use internal IPs only:
 
 | File | Purpose |
 |------|---------|
-| `infra/vertica_ingestion.tf` | VM, Dataproc, Scheduler, firewall rules |
+| `infra/vertica_ingestion.tf` | VM, Dataproc, Scheduler, firewall, service accounts |
 | `infra/data_center_topology.tf` | BigQuery dataset |
-| `infra/scripts/vertica-install.sh` | VM startup script |
+| `infra/core.tf` | Cloud Router, Cloud NAT, VPC |
+| `infra/scripts/vertica-install.sh` | VM startup script (Docker + Vertica) |
 | `scripts/spark/vertica_to_bigquery.py` | PySpark ingestion job |
 | `scripts/generate_datacenter_topology.py` | Data generator |
 

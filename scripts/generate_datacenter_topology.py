@@ -3,7 +3,7 @@
 Data Center Topology Generator for Demo
 
 Generates realistic data center hardware topology data for demonstrating
-BigQuery Knowledge Graph capabilities and Vertica-to-BigQuery ingestion.
+Vertica-to-BigQuery ingestion with Dataproc and Spark.
 
 Entity Tables (Nodes):
 - locations: Data centers, regions, rows
@@ -609,7 +609,7 @@ class DataCenterTopologyGenerator:
 
 def main():
     parser = argparse.ArgumentParser(
-        description="Generate data center topology data for BigQuery Knowledge Graph demo",
+        description="Generate data center topology data for Vertica-to-BigQuery ingestion demo",
         formatter_class=argparse.RawDescriptionHelpFormatter,
     )
 

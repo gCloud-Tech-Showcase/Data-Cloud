@@ -19,7 +19,8 @@ Demonstrate a complete data migration pipeline from legacy Vertica to BigQuery:
 | PySpark + JDBC | Data extraction and transformation |
 | BigQuery | Target data warehouse |
 | Cloud Scheduler | Automated pipeline triggers |
-| IAP | Secure SSH access (no external IPs) |
+| Cloud NAT | Outbound internet for internal-IP VMs |
+| IAP | Secure SSH access (no bastion needed) |
 
 ## Data Model
 
