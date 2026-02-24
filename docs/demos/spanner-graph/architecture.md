@@ -13,8 +13,8 @@ graph LR
     end
 
     subgraph "Generated Data"
-        NODES[5 Node Tables<br/>~30K rows]
-        EDGES[4 Edge Tables<br/>~4K rows]
+        NODES[6 Node Tables<br/>~25K rows]
+        EDGES[3 Edge Tables<br/>~2K rows]
     end
 
     subgraph "Spanner Database: topology"
@@ -71,23 +71,25 @@ graph TB
 |-------|-------------|-------------|-------------|
 | `locations` | `location_id` | Hierarchical locations (regions, DCs, rows) | ~50 |
 | `racks` | `rack_id` | Physical rack units | ~500 |
-| `hardware_assets` | `asset_id` | Servers, switches, storage | ~6,000 |
-| `nic_interfaces` | `interface_id` | Network interfaces/ports | ~24,000 |
+| `hardware_assets` | `asset_id` | Servers, switches, storage | ~4,700 |
+| `nic_interfaces` | `interface_id` | Network interfaces/ports | ~19,000 |
 | `applications` | `app_id` | Deployed software | ~200 |
-| `maintenance_events` | `event_id` | Historical maintenance | ~2,500 |
+| `maintenance_events` | `event_id` | Historical maintenance | ~1,500 |
 
-## Edge Tables
+## Graph Edge Definitions
 
-| Table | Source | Destination | Label | Description |
-|-------|--------|-------------|-------|-------------|
-| `locations` | location | parent_location | CHILD_OF | Location hierarchy |
-| `racks` | rack | location | LOCATED_IN | Rack placement |
-| `hardware_assets` | asset | rack | MOUNTED_IN | Asset in rack |
-| `nic_interfaces` | interface | asset | BELONGS_TO | NIC on asset |
-| `network_connections` | source_nic | target_nic | CONNECTS_TO | Network links |
-| `app_deployments` | app | asset | DEPLOYED_ON | App on server |
-| `app_dependencies` | app | depends_on_app | DEPENDS_ON | App dependencies |
-| `maintenance_events` | event | asset | MAINTAINED | Maintenance history |
+Some node tables double as edges via their foreign keys. The graph DDL defines 8 edge relationships:
+
+| Table | Source Column | Destination Column | Label | Description |
+|-------|--------------|-------------------|-------|-------------|
+| `locations` | `location_id` | `parent_location_id` | CHILD_OF | Location hierarchy |
+| `racks` | `rack_id` | `location_id` | LOCATED_IN | Rack placement |
+| `hardware_assets` | `asset_id` | `rack_id` | MOUNTED_IN | Asset in rack |
+| `nic_interfaces` | `interface_id` | `asset_id` | BELONGS_TO | NIC on asset |
+| `network_connections` | `source_interface_id` | `target_interface_id` | CONNECTS_TO | Network links |
+| `app_deployments` | `app_id` | `asset_id` | DEPLOYED_ON | App on server |
+| `app_dependencies` | `app_id` | `depends_on_app_id` | DEPENDS_ON | App dependencies |
+| `maintenance_events` | `event_id` | `asset_id` | MAINTAINED | Maintenance history |
 
 ## Infrastructure Components
 

@@ -48,20 +48,20 @@ python generate_datacenter_topology.py \
   --spanner-database topology
 ```
 
-Expected output:
+Expected output (approximate):
 ```
 ============================================================
 Generation Statistics
 ============================================================
-  Locations:           46
+  Locations:           48
   Racks:               480
-  Hardware Assets:     4,800
-  NIC Interfaces:      19,200
+  Hardware Assets:     ~4,700
+  NIC Interfaces:      ~18,800
   Applications:        200
-  Network Connections: 800
-  App Deployments:     800
-  App Dependencies:    400
-  Maintenance Events:  2,000
+  Network Connections: ~900
+  App Deployments:     ~850
+  App Dependencies:    ~430
+  Maintenance Events:  ~1,500
 ============================================================
 ```
 
