@@ -48,4 +48,4 @@ Data center hardware topology with ~27K rows across 9 tables:
 
 This demo is independent from other demos. Requires `enable_vertica_demo = true` in Terraform.
 
-**Cost warning:** Vertica VM runs continuously when enabled (~$0.13/hr for e2-standard-4). Destroy when not in use.
+**Cost warning:** Vertica VM incurs costs while running. Destroy when not in use. See [Compute Engine pricing](https://cloud.google.com/compute/vm-instance-pricing) for current rates.

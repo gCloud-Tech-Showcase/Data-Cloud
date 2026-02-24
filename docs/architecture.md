@@ -171,6 +171,7 @@ Each demo has its own architecture diagram:
 - [Campaign Intelligence](demos/campaign-intelligence/architecture.md)
 - [Security Logs](demos/security-logs/architecture.md)
 - [Vertica Ingestion](demos/vertica-ingestion/architecture.md)
+- [Spanner Graph](demos/spanner-graph/architecture.md)
 
 ---
 

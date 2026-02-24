@@ -30,6 +30,7 @@ Use it to learn, fork it to experiment, but please don't deploy it as-is to run 
 | [**Campaign Intelligence**](docs/demos/campaign-intelligence/) | Spatial + public data       | Geography, Census       |
 | [**Security Logs**](docs/demos/security-logs/)                 | AI-powered threat detection | Pipe syntax, embeddings |
 | [**Vertica Ingestion**](docs/demos/vertica-ingestion/)         | Migrate from Vertica to BQ  | Dataproc, Spark, JDBC   |
+| [**Spanner Graph**](docs/demos/spanner-graph/)                 | Property graph queries      | Cloud Spanner, GQL      |
 
 Pick a demo based on your interest — each includes SQL queries, expected outputs, and step-by-step guides.
 
@@ -79,6 +80,7 @@ cd infra && terraform apply
 | **BigQuery ML**      | In-database ML training             |
 | **Vertex AI**        | Model registry and deployment       |
 | **Dataform**         | Git-native SQL transformations      |
+| **Cloud Spanner**    | Graph database with GQL             |
 | **Terraform**        | Infrastructure as Code              |
 
 ---
@@ -92,7 +94,7 @@ Data-Cloud/
 │   ├── sentiment_analysis/       #   Review analysis
 │   ├── campaign_intelligence/    #   Campaign targeting
 │   ├── security_logs/            #   Audit log analytics
-│   └── data_center_topology/     #   Vertica ingestion
+│   └── data_center_topology/     #   Vertica ingestion + Spanner Graph
 ├── infra/                        # Terraform IaC
 ├── scripts/                      # Python utilities
 ├── examples/                     # Standalone SQL examples

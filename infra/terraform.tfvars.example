@@ -17,12 +17,27 @@ github_token = "your-github-personal-access-token"
 # git_repo_url     = "https://github.com/gCloud-Tech-Showcase/Data-Cloud.git"
 
 # =============================================================================
-# FEATURE FLAGS - Premium Features
-# These features incur additional costs beyond standard usage
+# DEMO FLAGS
+# Controls demos with ongoing costs (resources that run continuously)
+#
+# Demos WITHOUT flags are always enabled (pay-as-you-go, no baseline cost):
+#   - Churn Prediction (BQ datasets, Vertex AI endpoint)
+#   - Sentiment Analysis (BQ dataset, GCS bucket)
+#   - Campaign Intelligence (BQ dataset)
+#   - Security Logs (BQ dataset, GCS bucket, log sink)
 # =============================================================================
 
-# Enable to explore the real-time alerting portion of the Security Logs demo
-# WARNING: Creates an Enterprise reservation (~1 slot cost while idle)
-# Note: Only affects continuous queries, not regular queries (isolated by job_type)
+# Vertica-to-BigQuery ingestion demo
+# Creates: Vertica VM, Dataproc workflow, Cloud Scheduler, GCS buckets
+# WARNING: VM incurs costs while running. See https://cloud.google.com/compute/vm-instance-pricing
+# enable_vertica_demo = false
+
+# Spanner Graph demo for data center topology analysis
+# Creates: Spanner instance (100 PU), database with property graph
+# WARNING: Spanner incurs costs while running. See https://cloud.google.com/spanner/pricing
+# enable_spanner_graph_demo = false
+
+# Real-time alerting for Security Logs demo (continuous queries)
+# WARNING: Creates an Enterprise reservation. See https://cloud.google.com/bigquery/pricing
 # enable_realtime_alerts    = false
 # realtime_alerts_max_slots = 50  # must be multiple of 50, min 50, max 500

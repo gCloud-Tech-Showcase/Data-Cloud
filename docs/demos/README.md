@@ -9,6 +9,7 @@ Explore GCP Data Cloud capabilities through these use cases.
 | [**Campaign Intelligence**](campaign-intelligence/) | Target campaigns using public Census data *(proof of concept)* |
 | [**Security Logs**](security-logs/) | AI-powered audit log analysis with semantic search and real-time alerts |
 | [**Vertica Ingestion**](vertica-ingestion/) | Migrate data from Vertica to BigQuery with Dataproc + Spark |
+| [**Spanner Graph**](spanner-graph/) | Property graph queries for data center topology analysis |
 
 ---
 
@@ -21,6 +22,7 @@ Explore GCP Data Cloud capabilities through these use cases.
 | Security / log analytics | [Security Logs](security-logs/) |
 | Geospatial + public data | [Campaign Intelligence](campaign-intelligence/) |
 | Data migration from Vertica | [Vertica Ingestion](vertica-ingestion/) |
+| Graph databases / GQL | [Spanner Graph](spanner-graph/) |
 
 ---
 
@@ -33,6 +35,7 @@ Explore GCP Data Cloud capabilities through these use cases.
 | **Campaign Intelligence** | theLook + Census public datasets | None | Public datasets, automatically accessible |
 | **Security Logs** | Cloud Audit Logs | Terraform + log generator | Run `terraform apply`, then `scripts/generate_security_logs.py` |
 | **Vertica Ingestion** | Vertica CE VM | Terraform + data generator | Run `terraform apply -var="enable_vertica_demo=true"`, then load data |
+| **Spanner Graph** | Data center topology | Terraform + data generator | Run `terraform apply -var="enable_spanner_graph_demo=true"`, then load data |
 
 ---
 
@@ -45,6 +48,7 @@ SQL queries with expected outputs — run these directly in BigQuery Console.
 - [Campaign Intelligence](campaign-intelligence/quick.md)
 - [Security Logs](security-logs/quick.md)
 - [Vertica Ingestion](vertica-ingestion/quick.md)
+- [Spanner Graph](spanner-graph/quick.md)
 
 ---
 
@@ -57,6 +61,7 @@ Step-by-step guides with explanations.
 - [Campaign Intelligence](campaign-intelligence/guide.md)
 - [Security Logs](security-logs/guide.md)
 - [Vertica Ingestion](vertica-ingestion/guide.md)
+- [Spanner Graph](spanner-graph/guide.md)
 
 ---
 
