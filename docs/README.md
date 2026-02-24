@@ -13,6 +13,7 @@ Explore GCP Data Cloud capabilities through these use cases:
 - [Campaign Intelligence](demos/campaign-intelligence/) — Target campaigns using public Census data *(proof of concept)*
 - [Security Logs](demos/security-logs/) — AI-powered audit log analysis with semantic search
 - [Vertica Ingestion](demos/vertica-ingestion/) — Migrate data from Vertica to BigQuery with Dataproc
+- [Spanner Graph](demos/spanner-graph/) — Property graph queries for data center topology analysis
 
 ## Reference
 

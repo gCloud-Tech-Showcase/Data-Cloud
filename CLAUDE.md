@@ -2,13 +2,14 @@
 
 ## WHAT: Project Overview
 
-Google Cloud Data Showcase with **5 demos** using BigQuery, Gemini AI, and Vertex AI:
+Google Cloud Data Showcase with **6 demos** using BigQuery, Gemini AI, and Vertex AI:
 
 1. **Churn Prediction** - BQML user retention model with rolling 7-day windows
 2. **Sentiment Analysis** - Gemini-powered review analysis via BigLake
 3. **Campaign Intelligence** - Census geospatial + theLook targeting (proof of concept)
 4. **Security Logs** - AI threat detection with log embeddings
 5. **Vertica Ingestion** - Migrate data from Vertica to BigQuery with Dataproc + Spark
+6. **Spanner Graph** - Property graph queries for data center topology analysis
 
 **Key Directories:** `definitions/{domain}/` for Dataform, `infra/` for Terraform, `docs/` for guides.
 
