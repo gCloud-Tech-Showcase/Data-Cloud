@@ -2,6 +2,11 @@
 
 Copy-paste GQL queries for Spanner Studio.
 
+> **Tabular vs Graph view:** Queries that `RETURN` scalar values (e.g. `app.app_name`)
+> produce tabular results. To enable the **Graph** tab in Spanner Studio, wrap graph
+> elements in `TO_JSON()` (e.g. `RETURN TO_JSON(app) AS app`).
+> See [Graph Visualization Queries](#graph-visualization-queries) below.
+
 ## Basic Queries
 
 ### List All Node Types
@@ -106,6 +111,72 @@ RETURN child.name AS child_location,
        parent.name AS parent_location,
        parent.location_type AS parent_type
 ORDER BY parent.location_type, parent.name, child.name;
+```
+
+## Graph Visualization Queries
+
+These queries return graph elements via `TO_JSON()`, enabling the **Graph** tab
+in Spanner Studio for interactive visual exploration.
+
+### Visualize: Apps on Servers in Racks
+
+```sql
+GRAPH DataCenterGraph
+MATCH (app:applications)-[d:DEPLOYED_ON]->(server:hardware_assets)-[m:MOUNTED_IN]->(rack:racks)
+WHERE rack.rack_name LIKE 'US-West-1-R01%'
+RETURN TO_JSON(app) AS app_node,
+       TO_JSON(d) AS deployed_edge,
+       TO_JSON(server) AS server_node,
+       TO_JSON(m) AS mounted_edge,
+       TO_JSON(rack) AS rack_node
+LIMIT 50;
+```
+
+### Visualize: Critical Maintenance Events
+
+```sql
+GRAPH DataCenterGraph
+MATCH (asset:hardware_assets)<-[m:MAINTAINED]-(event:maintenance_events)
+WHERE asset.criticality_tier = 1
+  AND event.severity = 'critical'
+RETURN TO_JSON(asset) AS asset_node,
+       TO_JSON(m) AS maintained_edge,
+       TO_JSON(event) AS event_node
+LIMIT 50;
+```
+
+### Visualize: Application Dependencies
+
+```sql
+GRAPH DataCenterGraph
+MATCH (app:applications)-[d:DEPENDS_ON]->(dep:applications)
+WHERE app.criticality_tier = 1
+RETURN TO_JSON(app) AS app_node,
+       TO_JSON(d) AS depends_edge,
+       TO_JSON(dep) AS dep_node
+LIMIT 50;
+```
+
+### Visualize: Full Stack (DC → Row → Rack → Server → App)
+
+```sql
+GRAPH DataCenterGraph
+MATCH (dc:locations {location_type: 'data_center'})
+      <-[c:CHILD_OF]-(row:locations)
+      <-[l:LOCATED_IN]-(rack:racks)
+      <-[m:MOUNTED_IN]-(server:hardware_assets)
+      <-[d:DEPLOYED_ON]-(app:applications)
+WHERE dc.name = 'US-West-1'
+RETURN TO_JSON(dc) AS dc_node,
+       TO_JSON(c) AS child_edge,
+       TO_JSON(row) AS row_node,
+       TO_JSON(l) AS located_edge,
+       TO_JSON(rack) AS rack_node,
+       TO_JSON(m) AS mounted_edge,
+       TO_JSON(server) AS server_node,
+       TO_JSON(d) AS deployed_edge,
+       TO_JSON(app) AS app_node
+LIMIT 50;
 ```
 
 ## Hybrid SQL + GQL
