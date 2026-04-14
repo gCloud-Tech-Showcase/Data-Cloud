@@ -172,6 +172,7 @@ Each demo has its own architecture diagram:
 - [Security Logs](demos/security-logs/architecture.md)
 - [Vertica Ingestion](demos/vertica-ingestion/architecture.md)
 - [Spanner Graph](demos/spanner-graph/architecture.md)
+- [BQ Graph](demos/bq-graph/architecture.md)
 
 ---
 

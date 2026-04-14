@@ -155,7 +155,7 @@ output "realtime_alerts_enabled" {
 
 output "data_center_topology_dataset_id" {
   description = "The data center topology BigQuery dataset ID (if any topology demo enabled)"
-  value       = (var.enable_vertica_demo || var.enable_spanner_graph_demo) ? google_bigquery_dataset.data_center_topology[0].dataset_id : null
+  value       = (var.enable_vertica_demo || var.enable_bq_graph_demo) ? google_bigquery_dataset.data_center_topology[0].dataset_id : null
 }
 
 # -----------------------------------------------------------------------------
@@ -212,4 +212,18 @@ output "spanner_graph_instance_id" {
 output "spanner_graph_database_id" {
   description = "Spanner database ID containing the property graph"
   value       = var.enable_spanner_graph_demo ? google_spanner_database.topology[0].name : null
+}
+
+# -----------------------------------------------------------------------------
+# BQ Graph (Conditional)
+# -----------------------------------------------------------------------------
+
+output "bq_graph_demo_enabled" {
+  description = "Whether the BQ Graph demo is enabled"
+  value       = var.enable_bq_graph_demo
+}
+
+output "bq_graph_reservation" {
+  description = "BigQuery Enterprise reservation for graph queries (if enabled)"
+  value       = var.enable_bq_graph_demo ? google_bigquery_reservation.graph_queries[0].name : null
 }

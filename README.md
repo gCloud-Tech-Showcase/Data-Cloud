@@ -31,6 +31,7 @@ Use it to learn, fork it to experiment, but please don't deploy it as-is to run 
 | [**Security Logs**](docs/demos/security-logs/)                 | AI-powered threat detection | Pipe syntax, embeddings |
 | [**Vertica Ingestion**](docs/demos/vertica-ingestion/)         | Migrate from Vertica to BQ  | Dataproc, Spark, JDBC   |
 | [**Spanner Graph**](docs/demos/spanner-graph/)                 | Property graph queries      | Cloud Spanner, GQL      |
+| [**BQ Graph**](docs/demos/bq-graph/)                           | Graph analytics at scale    | BigQuery, GQL           |
 
 Pick a demo based on your interest — each includes SQL queries, expected outputs, and step-by-step guides.
 
@@ -94,7 +95,7 @@ Data-Cloud/
 │   ├── sentiment_analysis/       #   Review analysis
 │   ├── campaign_intelligence/    #   Campaign targeting
 │   ├── security_logs/            #   Audit log analytics
-│   └── data_center_topology/     #   Vertica ingestion + Spanner Graph
+│   └── data_center_topology/     #   Vertica ingestion + Spanner/BQ Graph
 ├── infra/                        # Terraform IaC
 ├── scripts/                      # Python utilities
 ├── examples/                     # Standalone SQL examples

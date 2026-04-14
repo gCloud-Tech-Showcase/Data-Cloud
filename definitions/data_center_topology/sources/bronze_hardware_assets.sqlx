@@ -7,7 +7,8 @@ config {
     asset_id: "Unique identifier for the hardware asset (UUID)",
     asset_type: "Type of hardware: SERVER, SWITCH, STORAGE, or PDU",
     rack_id: "Reference to the rack containing this asset",
-    rack_position: "Position within the rack (U number, 1-42)",
+    rack_position_start: "Start position within the rack (U number, 1-42)",
+    rack_position_end: "End position within the rack (U number, 1-42)",
     hostname: "Network hostname of the device",
     model: "Hardware model identifier",
     manufacturer: "Hardware manufacturer name",
@@ -16,8 +17,8 @@ config {
     ram_gb: "RAM capacity in gigabytes (for servers)",
     storage_tb: "Storage capacity in terabytes",
     warranty_expiry: "Date when warranty expires",
-    criticality_tier: "Business criticality: TIER_1 (critical), TIER_2 (important), TIER_3 (standard)",
-    status: "Operational status: ACTIVE, MAINTENANCE, FAILED, or DECOMMISSIONED",
+    criticality_tier: "Business criticality: 1 (critical), 2 (important), 3 (standard), 4 (low)",
+    status: "Operational status: active, maintenance, failed, or decommissioned",
     created_at: "Timestamp when the asset record was created",
     updated_at: "Timestamp when the asset record was last updated"
   }

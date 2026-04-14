@@ -32,6 +32,12 @@ github_token = "your-github-personal-access-token"
 # WARNING: VM incurs costs while running. See https://cloud.google.com/compute/vm-instance-pricing
 # enable_vertica_demo = false
 
+# BigQuery Graph demo for data center topology analysis (GQL queries)
+# Creates: Enterprise reservation (0 baseline, autoscale)
+# No ongoing costs when idle — slots only consumed during queries
+# enable_bq_graph_demo   = false
+# bq_graph_max_slots     = 50  # must be multiple of 50, min 50, max 500
+
 # Spanner Graph demo for data center topology analysis
 # Creates: Spanner instance (100 PU), database with property graph
 # WARNING: Spanner incurs costs while running. See https://cloud.google.com/spanner/pricing

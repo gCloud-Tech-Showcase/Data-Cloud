@@ -27,15 +27,12 @@ SELECT
   r.power_capacity_kw,
   r.cooling_zone,
   r.status AS rack_status,
-  ha.rack_position,
+  ha.rack_position_start,
+  ha.rack_position_end,
 
-  -- Room (immediate location of rack)
-  room.location_id AS room_id,
-  room.name AS room_name,
-
-  -- Floor
-  floor.location_id AS floor_id,
-  floor.name AS floor_name,
+  -- Row (immediate location of rack)
+  row_loc.location_id AS row_id,
+  row_loc.name AS row_name,
 
   -- Data Center
   dc.location_id AS data_center_id,
@@ -44,8 +41,8 @@ SELECT
   -- Region
   region.location_id AS region_id,
   region.name AS region_name,
-  region.region AS region_code,
-  region.geo_coordinates,
+  region.geo_latitude,
+  region.geo_longitude,
 
   -- Timestamps
   ha.created_at,
@@ -53,9 +50,8 @@ SELECT
 
 FROM ${ref("hardware_assets")} ha
 JOIN ${ref("racks")} r ON ha.rack_id = r.rack_id
-JOIN ${ref("locations")} room ON r.location_id = room.location_id AND room.location_type = 'ROOM'
-JOIN ${ref("locations")} floor ON room.parent_location_id = floor.location_id AND floor.location_type = 'FLOOR'
-JOIN ${ref("locations")} dc ON floor.parent_location_id = dc.location_id AND dc.location_type = 'DATA_CENTER'
-JOIN ${ref("locations")} region ON dc.parent_location_id = region.location_id AND region.location_type = 'REGION'
+JOIN ${ref("locations")} row_loc ON r.location_id = row_loc.location_id AND row_loc.location_type = 'row'
+JOIN ${ref("locations")} dc ON row_loc.parent_location_id = dc.location_id AND dc.location_type = 'data_center'
+JOIN ${ref("locations")} region ON dc.parent_location_id = region.location_id AND region.location_type = 'region'
 
-WHERE ha.status != 'DECOMMISSIONED'
+WHERE ha.status != 'decommissioned'

@@ -10,6 +10,7 @@ Explore GCP Data Cloud capabilities through these use cases.
 | [**Security Logs**](security-logs/) | AI-powered audit log analysis with semantic search and real-time alerts |
 | [**Vertica Ingestion**](vertica-ingestion/) | Migrate data from Vertica to BigQuery with Dataproc + Spark |
 | [**Spanner Graph**](spanner-graph/) | Property graph queries for data center topology analysis |
+| [**BQ Graph**](bq-graph/) | BigQuery property graph for data center topology GQL analytics |
 
 ---
 
@@ -22,7 +23,8 @@ Explore GCP Data Cloud capabilities through these use cases.
 | Security / log analytics | [Security Logs](security-logs/) |
 | Geospatial + public data | [Campaign Intelligence](campaign-intelligence/) |
 | Data migration from Vertica | [Vertica Ingestion](vertica-ingestion/) |
-| Graph databases / GQL | [Spanner Graph](spanner-graph/) |
+| Graph databases / GQL (Spanner) | [Spanner Graph](spanner-graph/) |
+| Graph databases / GQL (BigQuery) | [BQ Graph](bq-graph/) |
 
 ---
 
@@ -36,6 +38,7 @@ Explore GCP Data Cloud capabilities through these use cases.
 | **Security Logs** | Cloud Audit Logs | Terraform + log generator | Run `terraform apply`, then `scripts/generate_security_logs.py` |
 | **Vertica Ingestion** | Vertica CE VM | Terraform + data generator | Run `terraform apply -var="enable_vertica_demo=true"`, then load data |
 | **Spanner Graph** | Data center topology | Terraform + data generator | Run `terraform apply -var="enable_spanner_graph_demo=true"`, then load data |
+| **BQ Graph** | Data center topology | Terraform + data generator + Dataform | Run `terraform apply -var="enable_bq_graph_demo=true"`, load data, then execute Dataform (tag: graph) |
 
 ---
 
@@ -49,6 +52,7 @@ SQL queries with expected outputs — run these directly in BigQuery Console.
 - [Security Logs](security-logs/quick.md)
 - [Vertica Ingestion](vertica-ingestion/quick.md)
 - [Spanner Graph](spanner-graph/quick.md)
+- [BQ Graph](bq-graph/quick.md)
 
 ---
 
@@ -62,6 +66,7 @@ Step-by-step guides with explanations.
 - [Security Logs](security-logs/guide.md)
 - [Vertica Ingestion](vertica-ingestion/guide.md)
 - [Spanner Graph](spanner-graph/guide.md)
+- [BQ Graph](bq-graph/guide.md)
 
 ---
 
