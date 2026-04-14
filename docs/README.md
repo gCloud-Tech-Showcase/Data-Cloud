@@ -14,6 +14,7 @@ Explore GCP Data Cloud capabilities through these use cases:
 - [Security Logs](demos/security-logs/) — AI-powered audit log analysis with semantic search
 - [Vertica Ingestion](demos/vertica-ingestion/) — Migrate data from Vertica to BigQuery with Dataproc
 - [Spanner Graph](demos/spanner-graph/) — Property graph queries for data center topology analysis
+- [BQ Graph](demos/bq-graph/) — BigQuery property graph for data center topology GQL analytics
 
 ## Reference
 
