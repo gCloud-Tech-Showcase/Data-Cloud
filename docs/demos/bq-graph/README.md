@@ -64,29 +64,31 @@ This runs `CREATE OR REPLACE PROPERTY GRAPH` on the 9 bronze tables, creating a 
 Open [BigQuery Console](https://console.cloud.google.com/bigquery) and run the queries below.
 
 > **Note:** BQ Graph uses the same GQL syntax as Spanner Graph. Key differences from the Spanner demo:
-> - Enum values are uppercase: `'FAILED'` not `'failed'`, `'DATA_CENTER'` not `'data_center'`
-> - `criticality_tier` is a string (`'TIER_1'`) not an integer (`1`)
+> - Enum values are lowercase: `'failed'`, `'data_center'`, `'critical'`
+> - `criticality_tier` is an integer (`1`, `2`, `3`, `4`) not a string
+> - Location hierarchy has 3 levels: `region` → `data_center` → `row`
 > - Graph name is fully qualified: `` `data_center_topology.data_center_graph` ``
 
 ### Verify Data Loaded
 
 ```sql
 -- Check row counts
-SELECT 'locations' as table_name, COUNT(*) as rows FROM `data_center_topology.locations`
+SELECT 'locations' as table_name, COUNT(*) as row_count FROM `data_center_topology.locations`
 UNION ALL SELECT 'racks', COUNT(*) FROM `data_center_topology.racks`
 UNION ALL SELECT 'hardware_assets', COUNT(*) FROM `data_center_topology.hardware_assets`
 UNION ALL SELECT 'applications', COUNT(*) FROM `data_center_topology.applications`
-ORDER BY rows DESC;
+ORDER BY row_count DESC;
 ```
 
-### Find Apps Deployed on Failed Servers
+### Find Apps Affected by Critical Maintenance
 
 ```sql
 GRAPH `data_center_topology.data_center_graph`
-MATCH (app:applications)-[:DEPLOYED_ON]->(server:hardware_assets)
-WHERE server.status = 'FAILED'
-RETURN app.app_name, app.criticality_tier, server.hostname, server.status
-ORDER BY app.criticality_tier;
+MATCH (app:applications)-[:DEPLOYED_ON]->(server:hardware_assets)<-[:MAINTAINED]-(event:maintenance_events)
+WHERE event.severity = 'critical'
+RETURN app.app_name, app.criticality_tier, server.hostname, event.event_type, event.downtime_minutes
+ORDER BY app.criticality_tier, event.downtime_minutes DESC
+LIMIT 20;
 ```
 
 ### Trace App Dependencies (2 hops)
@@ -106,7 +108,7 @@ ORDER BY dep.criticality_tier;
 
 ```sql
 GRAPH `data_center_topology.data_center_graph`
-MATCH (dc:locations {location_type: 'DATA_CENTER'})
+MATCH (dc:locations {location_type: 'data_center'})
       <-[:CHILD_OF]-(row:locations)
       <-[:LOCATED_IN]-(rack:racks)
       <-[:MOUNTED_IN]-(server:hardware_assets)
@@ -136,8 +138,8 @@ ORDER BY apps_affected DESC;
 ```sql
 GRAPH `data_center_topology.data_center_graph`
 MATCH (asset:hardware_assets)<-[:MAINTAINED]-(event:maintenance_events)
-WHERE asset.criticality_tier = 'TIER_1'
-  AND event.severity = 'CRITICAL'
+WHERE asset.criticality_tier = 1
+  AND event.severity = 'critical'
 RETURN asset.hostname,
        event.event_type,
        event.started_at,
@@ -171,7 +173,7 @@ SELECT gt.app_name, gt.server_hostname, a.owner_team
 FROM GRAPH_TABLE(
   `data_center_topology.data_center_graph`
   MATCH (app:applications)-[:DEPLOYED_ON]->(server:hardware_assets)
-  WHERE server.status = 'MAINTENANCE'
+  WHERE server.criticality_tier = 1
   RETURN app.app_name, server.hostname AS server_hostname, app.app_id
 ) AS gt
 JOIN `data_center_topology.applications` a ON gt.app_id = a.app_id
@@ -185,11 +187,11 @@ Find the shortest path between two nodes:
 ```sql
 GRAPH `data_center_topology.data_center_graph`
 MATCH ANY SHORTEST
-  (src:applications)-[:DEPENDS_ON]->{1,5}(dst:applications)
-WHERE src.app_name LIKE 'Finance%' AND dst.app_name LIKE 'Auth%'
+  (src:applications)-[e:DEPENDS_ON]->{1,5}(dst:applications)
+WHERE src.app_name LIKE 'Finance%' AND dst.app_name LIKE 'Security%'
 RETURN src.app_name AS source,
        dst.app_name AS destination,
-       ARRAY_LENGTH(dst) AS hops;
+       ARRAY_LENGTH(e) AS hops;
 ```
 
 ### NEXT: Chained Graph Queries
