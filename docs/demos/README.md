@@ -52,7 +52,7 @@ SQL queries with expected outputs — run these directly in BigQuery Console.
 - [Security Logs](security-logs/quick.md)
 - [Vertica Ingestion](vertica-ingestion/quick.md)
 - [Spanner Graph](spanner-graph/quick.md)
-- [BQ Graph](bq-graph/README.md)
+- [BQ Graph](bq-graph/quick.md)
 
 ---
 
@@ -66,7 +66,7 @@ Step-by-step guides with explanations.
 - [Security Logs](security-logs/guide.md)
 - [Vertica Ingestion](vertica-ingestion/guide.md)
 - [Spanner Graph](spanner-graph/guide.md)
-- [BQ Graph](bq-graph/README.md)
+- [BQ Graph](bq-graph/guide.md)
 
 ---
 

@@ -1,246 +1,60 @@
-# BQ Graph Demo
+# BQ Graph: Data Center Topology
 
-BigQuery property graph for data center topology analysis using GQL.
+Analyze data center infrastructure using BigQuery property graph and GQL — the same ISO-standard graph query language used by Spanner Graph, running on BigQuery's serverless analytics engine.
 
-Same data center topology as the [Spanner Graph](../spanner-graph/) demo, but running on BigQuery with Enterprise edition. Demonstrates that BQ Graph and Spanner Graph share the same GQL query language — use Spanner for real-time operational queries, BigQuery for deep analytics at scale.
+## What You'll Build
 
-## Prerequisites
+1. **BigQuery Property Graph** - Graph overlay on relational tables (zero data duplication)
+2. **GQL Queries** - Path traversals, impact analysis, dependency mapping
+3. **BQ-Specific Features** - GRAPH_TABLE, ANY SHORTEST, NEXT chaining
 
-- GCP project with billing enabled
-- Terraform installed
-- Python 3.9+ with virtual environment
-- `gcloud` CLI authenticated
+## Technologies
 
-## 1. Deploy Infrastructure
+| Service | Purpose |
+|---------|---------|
+| BigQuery | Serverless data warehouse with graph support |
+| BQ Graph | Property graph layer over BigQuery tables |
+| GQL | ISO-standard graph query language |
+| Enterprise Reservation | Dedicated capacity for graph queries |
 
-Enable the BQ Graph demo in Terraform:
+## Data Model
 
-```bash
-cd infra
+Same data center topology as the [Spanner Graph](../spanner-graph/) demo:
 
-# Preview changes
-terraform plan -var="enable_bq_graph_demo=true"
+| Node Type | Examples |
+|-----------|----------|
+| locations | Regions, data centers, rows |
+| racks | Physical rack units |
+| hardware_assets | Servers, switches, storage |
+| nic_interfaces | Network interfaces |
+| applications | Deployed software |
+| maintenance_events | Historical maintenance records |
 
-# Apply
-terraform apply -var="enable_bq_graph_demo=true"
-```
+| Edge Type | Relationship |
+|-----------|--------------|
+| CHILD_OF | Location hierarchy |
+| LOCATED_IN | Rack placement |
+| MOUNTED_IN | Server in rack |
+| BELONGS_TO | NIC on asset |
+| CONNECTS_TO | Network topology |
+| DEPLOYED_ON | App on server |
+| DEPENDS_ON | App dependencies |
+| MAINTAINED | Maintenance history |
 
-This creates:
-- Enterprise reservation for QUERY jobs (0 baseline, autoscale to 50 slots)
-- BigQuery dataset: `data_center_topology`
+## Results
 
-## 2. Load Sample Data
+- **Same GQL syntax** as Spanner Graph — write once, run on either engine
+- **BQ-exclusive features** like GRAPH_TABLE hybrid queries, ANY SHORTEST, NEXT chaining
+- **5-JOIN SQL queries** reduced to single-line graph patterns
 
-Generate and load the data center topology to BigQuery:
+## Guides
 
-```bash
-cd scripts
+- [Quick Reference](quick.md) - GQL queries with outputs
+- [Architecture](architecture.md) - Graph schema and data model
+- [Full Guide](guide.md) - Step-by-step walkthrough
 
-# Activate virtual environment
-source .venv/bin/activate
+## What's Next
 
-# Install dependencies (if not already installed)
-pip install -r requirements.txt
+This demo uses the same data and GQL syntax as [Spanner Graph](../spanner-graph/). Compare them side-by-side: use Spanner for real-time operational queries, BigQuery for deep analytics at scale.
 
-# Generate and load data to BigQuery
-python generate_datacenter_topology.py \
-  --project YOUR_PROJECT_ID \
-  --target bigquery
-```
-
-## 3. Create the Property Graph
-
-Create the property graph via Dataform:
-
-1. Open [Cloud Console > Dataform](https://console.cloud.google.com/bigquery/dataform)
-2. Select repository: `data-cloud`
-3. Click **Start Execution** > select tag: `graph`
-4. Execute
-
-This runs `CREATE OR REPLACE PROPERTY GRAPH` on the 9 bronze tables, creating a graph with 6 node types and 8 edge relationships.
-
-## 4. Run Graph Queries
-
-Open [BigQuery Console](https://console.cloud.google.com/bigquery) and run the queries below.
-
-> **Note:** BQ Graph uses the same GQL syntax as Spanner Graph. Key differences from the Spanner demo:
-> - Enum values are lowercase: `'failed'`, `'data_center'`, `'critical'`
-> - `criticality_tier` is an integer (`1`, `2`, `3`, `4`) not a string
-> - Location hierarchy has 3 levels: `region` → `data_center` → `row`
-> - Graph name is fully qualified: `` `data_center_topology.data_center_graph` ``
-
-### Verify Data Loaded
-
-```sql
--- Check row counts
-SELECT 'locations' as table_name, COUNT(*) as row_count FROM `data_center_topology.locations`
-UNION ALL SELECT 'racks', COUNT(*) FROM `data_center_topology.racks`
-UNION ALL SELECT 'hardware_assets', COUNT(*) FROM `data_center_topology.hardware_assets`
-UNION ALL SELECT 'applications', COUNT(*) FROM `data_center_topology.applications`
-ORDER BY row_count DESC;
-```
-
-### Find Apps Affected by Critical Maintenance
-
-```sql
-GRAPH `data_center_topology.data_center_graph`
-MATCH (app:applications)-[:DEPLOYED_ON]->(server:hardware_assets)<-[:MAINTAINED]-(event:maintenance_events)
-WHERE event.severity = 'critical'
-RETURN app.app_name, app.criticality_tier, server.hostname, event.event_type, event.downtime_minutes
-ORDER BY app.criticality_tier, event.downtime_minutes DESC
-LIMIT 20;
-```
-
-### Trace App Dependencies (2 hops)
-
-```sql
-GRAPH `data_center_topology.data_center_graph`
-MATCH (app:applications)-[:DEPENDS_ON]->{1,2}(dep:applications)
-WHERE app.app_name LIKE 'Finance%'
-RETURN app.app_name AS source_app,
-       dep.app_name AS dependency,
-       dep.app_type,
-       dep.criticality_tier
-ORDER BY dep.criticality_tier;
-```
-
-### Find All Apps in a Data Center
-
-```sql
-GRAPH `data_center_topology.data_center_graph`
-MATCH (dc:locations {location_type: 'data_center'})
-      <-[:CHILD_OF]-(row:locations)
-      <-[:LOCATED_IN]-(rack:racks)
-      <-[:MOUNTED_IN]-(server:hardware_assets)
-      <-[:DEPLOYED_ON]-(app:applications)
-WHERE dc.name = 'US-West-1'
-RETURN DISTINCT app.app_name, app.criticality_tier
-ORDER BY app.criticality_tier, app.app_name;
-```
-
-### Blast Radius: Rack Failure Impact
-
-```sql
-GRAPH `data_center_topology.data_center_graph`
-MATCH (rack:racks)
-      <-[:MOUNTED_IN]-(server:hardware_assets)
-      <-[:DEPLOYED_ON]-(app:applications)
-WHERE rack.rack_name LIKE 'US-West-1-R01%'
-RETURN rack.rack_name,
-       COUNT(DISTINCT server.asset_id) AS servers_affected,
-       COUNT(DISTINCT app.app_id) AS apps_affected
-GROUP BY rack.rack_name
-ORDER BY apps_affected DESC;
-```
-
-### Critical Assets with Recent Maintenance
-
-```sql
-GRAPH `data_center_topology.data_center_graph`
-MATCH (asset:hardware_assets)<-[:MAINTAINED]-(event:maintenance_events)
-WHERE asset.criticality_tier = 1
-  AND event.severity = 'critical'
-RETURN asset.hostname,
-       event.event_type,
-       event.started_at,
-       event.downtime_minutes
-ORDER BY event.started_at DESC
-LIMIT 20;
-```
-
-### Location Hierarchy
-
-```sql
-GRAPH `data_center_topology.data_center_graph`
-MATCH (child:locations)-[:CHILD_OF]->(parent:locations)
-RETURN child.name AS child_location,
-       child.location_type AS child_type,
-       parent.name AS parent_location,
-       parent.location_type AS parent_type
-ORDER BY parent.location_type, parent.name, child.name;
-```
-
-## BQ-Specific Features
-
-These features are available in BQ Graph but not in Spanner Graph.
-
-### GRAPH_TABLE: Hybrid SQL + GQL
-
-Embed graph queries in standard SQL using `GRAPH_TABLE`:
-
-```sql
-SELECT gt.app_name, gt.server_hostname, a.owner_team
-FROM GRAPH_TABLE(
-  `data_center_topology.data_center_graph`
-  MATCH (app:applications)-[:DEPLOYED_ON]->(server:hardware_assets)
-  WHERE server.criticality_tier = 1
-  RETURN app.app_name, server.hostname AS server_hostname, app.app_id
-) AS gt
-JOIN `data_center_topology.applications` a ON gt.app_id = a.app_id
-ORDER BY a.owner_team, gt.app_name;
-```
-
-### ANY SHORTEST: Shortest Path
-
-Find the shortest path between two nodes:
-
-```sql
-GRAPH `data_center_topology.data_center_graph`
-MATCH ANY SHORTEST
-  (src:applications)-[e:DEPENDS_ON]->{1,5}(dst:applications)
-WHERE src.app_name LIKE 'Finance%' AND dst.app_name LIKE 'Security%'
-RETURN src.app_name AS source,
-       dst.app_name AS destination,
-       ARRAY_LENGTH(e) AS hops;
-```
-
-### NEXT: Chained Graph Queries
-
-Chain multiple graph operations:
-
-```sql
-GRAPH `data_center_topology.data_center_graph`
-MATCH (rack:racks)<-[:MOUNTED_IN]-(server:hardware_assets)
-WHERE rack.rack_name LIKE 'US-West-1-R01%'
-RETURN server, COUNT(*) AS server_count
-GROUP BY server
-ORDER BY server_count DESC
-LIMIT 5
-
-NEXT
-
-MATCH (server:hardware_assets)<-[:DEPLOYED_ON]-(app:applications)
-RETURN server.hostname, app.app_name, app.criticality_tier
-ORDER BY app.criticality_tier;
-```
-
-## Graph Visualization
-
-BQ Graph supports visualization in the BigQuery console. Use `TO_JSON()` to return graph elements:
-
-```sql
-GRAPH `data_center_topology.data_center_graph`
-MATCH (app:applications)-[d:DEPLOYED_ON]->(server:hardware_assets)-[m:MOUNTED_IN]->(rack:racks)
-WHERE rack.rack_name LIKE 'US-West-1-R01%'
-RETURN TO_JSON(app) AS app_node,
-       TO_JSON(d) AS deployed_edge,
-       TO_JSON(server) AS server_node,
-       TO_JSON(m) AS mounted_edge,
-       TO_JSON(rack) AS rack_node
-LIMIT 50;
-```
-
-## 5. Cleanup
-
-Destroy the reservation when done:
-
-```bash
-cd infra
-terraform apply -var="enable_bq_graph_demo=false"
-```
-
-The property graph and dataset can remain (no ongoing cost). The reservation is the only resource with potential cost implications.
-
----
-
-[Back to Demos](../README.md)
+**Cost note:** The Enterprise reservation uses autoscale (0 baseline). Destroy when not in use: `terraform apply -var="enable_bq_graph_demo=false"`.
