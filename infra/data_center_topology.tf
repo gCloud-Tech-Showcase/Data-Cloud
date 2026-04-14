@@ -10,7 +10,7 @@
 
 resource "google_bigquery_dataset" "data_center_topology" {
   # Create if any topology-based demo is enabled
-  count = (var.enable_vertica_demo || var.enable_spanner_graph_demo) ? 1 : 0
+  count = (var.enable_vertica_demo || var.enable_bq_graph_demo) ? 1 : 0
 
   dataset_id  = "data_center_topology"
   location    = var.dataset_location

@@ -1,0 +1,80 @@
+config {
+  type: "operations",
+  schema: "data_center_topology",
+  hasOutput: true,
+  description: "Property graph overlay on data center topology tables for BQ Graph GQL queries",
+  tags: ["data_center_topology", "graph"]
+}
+
+CREATE OR REPLACE PROPERTY GRAPH ${self()}
+  NODE TABLES (
+    ${ref("locations")} AS locations
+      KEY (location_id),
+    ${ref("racks")} AS racks
+      KEY (rack_id),
+    ${ref("hardware_assets")} AS hardware_assets
+      KEY (asset_id),
+    ${ref("nic_interfaces")} AS nic_interfaces
+      KEY (interface_id),
+    ${ref("applications")} AS applications
+      KEY (app_id),
+    ${ref("maintenance_events")} AS maintenance_events
+      KEY (event_id)
+  )
+  EDGE TABLES (
+    -- Location hierarchy (parent-child)
+    ${ref("locations")} AS location_hierarchy
+      KEY (location_id)
+      SOURCE KEY (location_id) REFERENCES locations (location_id)
+      DESTINATION KEY (parent_location_id) REFERENCES locations (location_id)
+      LABEL CHILD_OF,
+
+    -- Rack placement in location
+    ${ref("racks")} AS rack_placement
+      KEY (rack_id)
+      SOURCE KEY (rack_id) REFERENCES racks (rack_id)
+      DESTINATION KEY (location_id) REFERENCES locations (location_id)
+      LABEL LOCATED_IN,
+
+    -- Asset placement in rack
+    ${ref("hardware_assets")} AS asset_placement
+      KEY (asset_id)
+      SOURCE KEY (asset_id) REFERENCES hardware_assets (asset_id)
+      DESTINATION KEY (rack_id) REFERENCES racks (rack_id)
+      LABEL MOUNTED_IN,
+
+    -- NIC belongs to asset
+    ${ref("nic_interfaces")} AS nic_ownership
+      KEY (interface_id)
+      SOURCE KEY (interface_id) REFERENCES nic_interfaces (interface_id)
+      DESTINATION KEY (asset_id) REFERENCES hardware_assets (asset_id)
+      LABEL BELONGS_TO,
+
+    -- Network connections between NICs
+    ${ref("network_connections")} AS network_connections
+      KEY (connection_id)
+      SOURCE KEY (source_interface_id) REFERENCES nic_interfaces (interface_id)
+      DESTINATION KEY (target_interface_id) REFERENCES nic_interfaces (interface_id)
+      LABEL CONNECTS_TO,
+
+    -- App deployments on assets
+    ${ref("app_deployments")} AS app_deployments
+      KEY (deployment_id)
+      SOURCE KEY (app_id) REFERENCES applications (app_id)
+      DESTINATION KEY (asset_id) REFERENCES hardware_assets (asset_id)
+      LABEL DEPLOYED_ON,
+
+    -- App dependencies
+    ${ref("app_dependencies")} AS app_dependencies
+      KEY (dependency_id)
+      SOURCE KEY (app_id) REFERENCES applications (app_id)
+      DESTINATION KEY (depends_on_app_id) REFERENCES applications (app_id)
+      LABEL DEPENDS_ON,
+
+    -- Maintenance events on assets
+    ${ref("maintenance_events")} AS maintenance_history
+      KEY (event_id)
+      SOURCE KEY (event_id) REFERENCES maintenance_events (event_id)
+      DESTINATION KEY (asset_id) REFERENCES hardware_assets (asset_id)
+      LABEL MAINTAINED
+  );

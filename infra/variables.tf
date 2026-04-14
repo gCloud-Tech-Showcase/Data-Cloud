@@ -127,6 +127,35 @@ variable "enable_vertica_demo" {
   default     = false
 }
 
+variable "enable_bq_graph_demo" {
+  description = <<-EOT
+    Enable the BigQuery Graph demo for data center topology analysis.
+
+    Creates:
+    - Enterprise reservation for QUERY jobs (0 baseline, autoscale)
+    - Property graph created via Dataform on existing bronze tables
+
+    Requires data loaded via: python generate_datacenter_topology.py --target bigquery
+
+    WARNING: QUERY-type reservation applies to all queries in the project.
+    No cost when idle (0 baseline slots with autoscale).
+  EOT
+  type        = bool
+  default     = false
+}
+
+variable "bq_graph_max_slots" {
+  description = <<-EOT
+    Maximum slots for the BQ Graph reservation (autoscaling ceiling).
+    Only used when enable_bq_graph_demo = true.
+
+    Must be a multiple of 50. Minimum: 50, maximum: 500.
+    With 0 baseline + autoscale, you only pay for slots actually used.
+  EOT
+  type        = number
+  default     = 50
+}
+
 variable "enable_spanner_graph_demo" {
   description = <<-EOT
     Enable the Spanner Graph demo for data center topology analysis.
