@@ -30,9 +30,15 @@ import google.auth
 import google.auth.transport.requests
 
 SEGMENT_DURATION = 120  # seconds
-DATAFORM_REPO = "projects/gcloud-tech-showcase/locations/us-central1/repositories/data-cloud"
-# TODO: Switch to "production" after merging to main
-DATAFORM_RELEASE_CONFIG = f"{DATAFORM_REPO}/releaseConfigs/video-search-dev"
+DATAFORM_REPO = os.environ.get(
+    "DATAFORM_REPO",
+    "projects/gcloud-tech-showcase/locations/us-central1/repositories/data-cloud",
+)
+DATAFORM_RELEASE_CONFIG = os.environ.get(
+    "DATAFORM_RELEASE_CONFIG",
+    f"{DATAFORM_REPO}/releaseConfigs/video-search-dev",
+)
+DATAFORM_SERVICE_ACCOUNT = os.environ.get("DATAFORM_SERVICE_ACCOUNT", "")
 
 METADATA_CSV_COLUMNS = [
     "video_id", "identifier", "title", "year", "source_url",
@@ -78,6 +84,7 @@ def trigger_dataform_pipeline() -> None:
                 "includedTags": ["video_vector_search"],
                 "transitiveDependenciesIncluded": True,
                 "fullyRefreshIncrementalTablesEnabled": False,
+                "serviceAccount": DATAFORM_SERVICE_ACCOUNT,
             },
         }
         resp = http_requests.post(invoke_url, headers=headers, json=body, timeout=10)

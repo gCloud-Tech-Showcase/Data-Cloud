@@ -235,6 +235,12 @@ resource "google_cloudfunctions2_function" "segment_video" {
     available_memory      = "1Gi"
     timeout_seconds       = 540
     service_account_email = google_service_account.video_segmenter.email
+
+    environment_variables = {
+      DATAFORM_REPO            = "projects/${var.project_id}/locations/${var.region}/repositories/${google_dataform_repository.main.name}"
+      DATAFORM_RELEASE_CONFIG  = "projects/${var.project_id}/locations/${var.region}/repositories/${google_dataform_repository.main.name}/releaseConfigs/${google_dataform_repository_release_config.video_search_dev.name}"
+      DATAFORM_SERVICE_ACCOUNT = google_project_service_identity.dataform.email
+    }
   }
 
   event_trigger {
