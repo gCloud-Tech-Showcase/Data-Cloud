@@ -27,6 +27,9 @@ Thumbs.db
 !package-lock.json
 !scripts/video_sources.json
 
+# Cloud Function build artifacts
+functions/*.zip
+
 # Node.js (Dataform)
 node_modules/
 .df/

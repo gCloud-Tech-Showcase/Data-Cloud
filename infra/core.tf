@@ -72,6 +72,26 @@ resource "google_project_service" "spanner" {
   disable_on_destroy = false
 }
 
+resource "google_project_service" "cloudfunctions" {
+  service            = "cloudfunctions.googleapis.com"
+  disable_on_destroy = false
+}
+
+resource "google_project_service" "cloudbuild" {
+  service            = "cloudbuild.googleapis.com"
+  disable_on_destroy = false
+}
+
+resource "google_project_service" "run" {
+  service            = "run.googleapis.com"
+  disable_on_destroy = false
+}
+
+resource "google_project_service" "eventarc" {
+  service            = "eventarc.googleapis.com"
+  disable_on_destroy = false
+}
+
 # -----------------------------------------------------------------------------
 # VPC Network
 # -----------------------------------------------------------------------------

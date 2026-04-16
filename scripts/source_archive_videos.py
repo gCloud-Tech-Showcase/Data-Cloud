@@ -238,12 +238,19 @@ def download_file(url: str, dest_path: Path) -> bool:
         return False
 
 
-def upload_to_gcs(bucket_name: str, local_path: Path, gcs_path: str) -> bool:
-    """Upload a file to GCS. Returns True on success."""
+def upload_to_gcs(
+    bucket_name: str,
+    local_path: Path,
+    gcs_path: str,
+    custom_metadata: Optional[dict[str, str]] = None,
+) -> bool:
+    """Upload a file to GCS with optional custom metadata. Returns True on success."""
     try:
         client = storage.Client()
         bucket = client.bucket(bucket_name)
         blob = bucket.blob(gcs_path)
+        if custom_metadata:
+            blob.metadata = custom_metadata
         blob.upload_from_filename(str(local_path))
         logger.debug(f"Uploaded: gs://{bucket_name}/{gcs_path}")
         return True
@@ -335,10 +342,18 @@ def process_item(
         if not download_file(download_url, local_path):
             return None
 
-    # Upload to GCS
+    # Upload to GCS with custom metadata for Cloud Function consumption
     gcs_path = f"{GCS_PREFIX}/{video_id}.mp4"
+    gcs_metadata = {
+        "video_id": video_id,
+        "identifier": identifier,
+        "title": title,
+        "year": str(year) if year else "",
+        "source_url": f"https://archive.org/details/{identifier}",
+        "license": "Public Domain",
+    }
     logger.info(f"Uploading to gs://{bucket_name}/{gcs_path}")
-    if not upload_to_gcs(bucket_name, local_path, gcs_path):
+    if not upload_to_gcs(bucket_name, local_path, gcs_path, custom_metadata=gcs_metadata):
         return None
 
     # Clean up local file to save disk space
