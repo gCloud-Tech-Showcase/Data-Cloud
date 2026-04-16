@@ -21,6 +21,6 @@ WITH CONNECTION `US.vertex-ai-connection`
 OPTIONS (
   object_metadata = 'SIMPLE',
   uris = ['gs://gcloud-tech-showcase-video-search/segments/*.mp4'],
-  max_staleness = INTERVAL 1 HOUR,
-  metadata_cache_mode = 'AUTOMATIC'
+  max_staleness = INTERVAL 30 MINUTE,
+  metadata_cache_mode = 'MANUAL'
 )

@@ -1,5 +1,5 @@
 """
-Cloud Function: Video Segmentation
+Cloud Function: Video Segmentation + Embedding
 
 Triggered by GCS object finalization in the video search bucket.
 When a video is uploaded to raw/*.mp4, this function:
@@ -9,6 +9,9 @@ When a video is uploaded to raw/*.mp4, this function:
 4. Writes a per-video metadata CSV to manifests/metadata/{video_id}.csv
 5. Extracts a thumbnail frame to thumbnails/{video_id}.jpg
 6. Attaches parent video metadata to each segment as GCS custom metadata
+7. Refreshes BQ external table metadata cache
+8. Generates multimodal embeddings for the new segments
+9. Rebuilds the gold search table
 
 Only processes files matching raw/*.mp4 — ignores everything else
 to prevent infinite trigger loops from segment uploads.
@@ -25,7 +28,7 @@ from pathlib import Path
 
 import functions_framework
 from cloudevents.http import CloudEvent
-from google.cloud import storage
+from google.cloud import bigquery, storage
 
 SEGMENT_DURATION = 120  # seconds
 
@@ -34,6 +37,9 @@ METADATA_CSV_COLUMNS = [
     "license", "segment_index", "start_seconds", "end_seconds",
     "duration_total_seconds",
 ]
+
+PROJECT_ID = os.environ.get("GCP_PROJECT", "gcloud-tech-showcase")
+DATASET = "video_vector_search"
 
 logger = logging.getLogger(__name__)
 logging.basicConfig(level=logging.INFO)
@@ -82,6 +88,65 @@ def split_video(video_path: Path, output_dir: Path) -> list[Path]:
         return []
 
     return sorted(output_dir.glob("seg_*.mp4"))
+
+
+def generate_embeddings(video_id: str) -> None:
+    """Generate embeddings for a video's segments and update search tables."""
+    client = bigquery.Client(project=PROJECT_ID)
+
+    # Refresh external table cache so new segments are visible
+    logger.info("Refreshing metadata cache...")
+    client.query(
+        f"CALL BQ.REFRESH_EXTERNAL_METADATA_CACHE('{DATASET}.bronze_video_segments')"
+    ).result()
+
+    # Generate embeddings for this video's segments
+    logger.info(f"Generating embeddings for {video_id}...")
+    embed_sql = f"""
+    INSERT INTO `{DATASET}.silver_segment_embeddings`
+      (segment_uri, video_id, segment_index, embedding, status, video_start_sec, video_end_sec)
+    SELECT
+      uri AS segment_uri,
+      REGEXP_EXTRACT(uri, r'/segments/([^/]+)/') AS video_id,
+      CAST(REGEXP_EXTRACT(uri, r'seg_(\\d+)\\.mp4') AS INT64) AS segment_index,
+      embedding,
+      status,
+      video_start_sec,
+      video_end_sec
+    FROM AI.GENERATE_EMBEDDING(
+      MODEL `{DATASET}.multimodal_embedding_model`,
+      (SELECT * FROM `{DATASET}.bronze_video_segments`
+       WHERE uri LIKE '%/segments/{video_id}/%')
+    )
+    """
+    client.query(embed_sql).result()
+    logger.info(f"Embeddings generated for {video_id}")
+
+    # Rebuild gold table
+    logger.info("Rebuilding gold table...")
+    gold_sql = f"""
+    CREATE OR REPLACE TABLE `{DATASET}.gold_searchable_videos` AS
+    SELECT
+      e.segment_uri,
+      e.video_id,
+      e.segment_index,
+      m.title,
+      m.year,
+      m.source_url,
+      m.license,
+      m.duration_total_seconds,
+      m.start_seconds,
+      m.end_seconds,
+      e.video_start_sec,
+      e.video_end_sec,
+      e.embedding
+    FROM `{DATASET}.silver_segment_embeddings` e
+    LEFT JOIN `{DATASET}.bronze_segment_mapping` m
+      ON e.video_id = m.video_id
+      AND e.segment_index = m.segment_index
+    """
+    client.query(gold_sql).result()
+    logger.info("Gold table rebuilt")
 
 
 @functions_framework.cloud_event
@@ -208,6 +273,13 @@ def segment_video(cloud_event: CloudEvent) -> None:
         logger.info(f"  Metadata CSV: gs://{bucket_name}/{csv_path}")
 
     logger.info(
-        f"Done: {video_id} — {len(segments)} segments, "
+        f"Segmentation complete: {video_id} — {len(segments)} segments, "
         f"{duration:.0f}s total duration"
     )
+
+    # Generate embeddings and update search tables
+    try:
+        generate_embeddings(video_id)
+    except Exception as e:
+        logger.error(f"Embedding generation failed for {video_id}: {e}")
+        logger.info("Video is segmented but not yet searchable. Run Dataform to generate embeddings.")

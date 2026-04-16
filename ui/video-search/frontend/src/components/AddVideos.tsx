@@ -55,18 +55,20 @@ export function AddVideos() {
           Search Archive.org for public domain videos to add to your library.
           Videos are automatically segmented and indexed for semantic search.
         </p>
-        <form onSubmit={handleSearch} className="relative">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
-          <Input
-            value={query}
-            onChange={(e) => setQuery(e.target.value)}
-            placeholder="Search Archive.org (e.g. Superman, Betty Boop, health education)..."
-            className="pl-10 pr-10 h-12 text-base"
-            disabled={isSearching}
-          />
-          {isSearching && (
-            <Loader2 className="absolute right-3 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground animate-spin" />
-          )}
+        <form onSubmit={handleSearch} className="flex gap-2">
+          <div className="relative flex-1">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
+            <Input
+              value={query}
+              onChange={(e) => setQuery(e.target.value)}
+              placeholder="Search Archive.org (e.g. Superman, Betty Boop, health education)..."
+              className="pl-10 h-12 text-base"
+              disabled={isSearching}
+            />
+          </div>
+          <Button type="submit" size="lg" className="h-12 w-24" disabled={isSearching || !query.trim()}>
+            {isSearching ? <Loader2 className="w-5 h-5 animate-spin" /> : "Search"}
+          </Button>
         </form>
       </div>
 

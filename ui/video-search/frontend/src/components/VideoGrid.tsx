@@ -36,15 +36,15 @@ export function VideoGrid({
     );
   }
 
-  if (results === null) {
+  if (results === null || (results.length === 0 && !query)) {
     return (
       <div className="text-center py-16 space-y-3">
         <Search className="w-12 h-12 text-muted-foreground/40 mx-auto" />
         <p className="text-muted-foreground">
-          Search for videos by describing what you're looking for
+          No videos in the library yet
         </p>
         <p className="text-xs text-muted-foreground/60">
-          Try concepts like "friendship", "chase scene", or "educational health film"
+          Add videos from Archive.org to get started
         </p>
       </div>
     );

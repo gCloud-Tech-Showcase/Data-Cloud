@@ -12,7 +12,7 @@ interface VideoCardProps {
 }
 
 export function VideoCard({ video, onPlay, onFindSimilar }: VideoCardProps) {
-  const bestSegment = video.top_segments[0];
+  const bestSegment = video.top_segments[0] || { segment_index: 0, start_seconds: 0, end_seconds: 120, distance: 0 };
 
   return (
     <Card className="overflow-hidden hover:shadow-md transition-shadow duration-200 group">
@@ -31,12 +31,14 @@ export function VideoCard({ video, onPlay, onFindSimilar }: VideoCardProps) {
         <div className="absolute inset-0 bg-black/0 group-hover:bg-black/30 transition-colors duration-200 flex items-center justify-center">
           <Play className="w-12 h-12 text-white opacity-0 group-hover:opacity-100 transition-opacity duration-200 drop-shadow-lg" />
         </div>
-        <Badge
-          variant="secondary"
-          className="absolute top-2 right-2 bg-background/80 backdrop-blur-sm"
-        >
-          {video.relevance_pct}% match
-        </Badge>
+        {video.relevance_pct > 0 && (
+          <Badge
+            variant="secondary"
+            className="absolute top-2 right-2 bg-background/80 backdrop-blur-sm"
+          >
+            {video.relevance_pct}% match
+          </Badge>
+        )}
       </div>
 
       <CardContent className="p-4 space-y-2">
@@ -57,7 +59,7 @@ export function VideoCard({ video, onPlay, onFindSimilar }: VideoCardProps) {
           </div>
         </div>
 
-        {bestSegment && (
+        {bestSegment && video.matching_intervals > 0 && (
           <p className="text-xs text-muted-foreground">
             Best match at {formatDuration(bestSegment.start_seconds)}–
             {formatDuration(bestSegment.end_seconds)}

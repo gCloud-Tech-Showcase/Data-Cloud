@@ -218,13 +218,10 @@ def _generate_embeddings(video_id: str) -> None:
     """Generate embeddings for a video's segments and insert into BQ tables."""
     client = bigquery.Client(project="gcloud-tech-showcase")
 
-    # First refresh the external table cache so new segments are visible
-    logger.info(f"Refreshing metadata cache...")
+    # Refresh object table cache so new segments are visible
+    logger.info("Refreshing metadata cache...")
     client.query(
         "CALL BQ.REFRESH_EXTERNAL_METADATA_CACHE('video_vector_search.bronze_video_segments')"
-    ).result()
-    client.query(
-        "CALL BQ.REFRESH_EXTERNAL_METADATA_CACHE('video_vector_search.bronze_segment_mapping')"
     ).result()
 
     # Generate embeddings for this video's segments only and insert into silver table

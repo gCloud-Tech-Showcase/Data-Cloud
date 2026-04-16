@@ -16,8 +16,6 @@ config {
 
 pre_operations {
   CALL BQ.REFRESH_EXTERNAL_METADATA_CACHE('${self().schema}.bronze_video_segments')
-  ---
-  CALL BQ.REFRESH_EXTERNAL_METADATA_CACHE('${self().schema}.bronze_segment_mapping')
 }
 
 SELECT
