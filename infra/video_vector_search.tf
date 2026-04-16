@@ -67,6 +67,30 @@ resource "google_storage_bucket_iam_member" "bq_connection_video_reader" {
 }
 
 # -----------------------------------------------------------------------------
+# Dataform Release Config for feature branch
+# Compiles from video-vector-search branch during development.
+# TODO: Remove after merging to main.
+# -----------------------------------------------------------------------------
+
+resource "google_dataform_repository_release_config" "video_search_dev" {
+  provider   = google-beta
+  project    = var.project_id
+  region     = var.region
+  repository = google_dataform_repository.main.name
+
+  name          = "video-search-dev"
+  git_commitish = "video-vector-search"
+
+  cron_schedule = "0 * * * *"
+  time_zone     = "America/Los_Angeles"
+
+  code_compilation_config {
+    default_database = var.project_id
+    default_location = var.dataset_location
+  }
+}
+
+# -----------------------------------------------------------------------------
 # Cloud Function: Automatic Video Segmentation
 # Triggered when a video is uploaded to raw/*.mp4
 # Splits into 2-minute segments for embedding generation

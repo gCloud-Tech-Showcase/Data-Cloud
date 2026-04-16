@@ -31,7 +31,8 @@ import google.auth.transport.requests
 
 SEGMENT_DURATION = 120  # seconds
 DATAFORM_REPO = "projects/gcloud-tech-showcase/locations/us-central1/repositories/data-cloud"
-DATAFORM_RELEASE_CONFIG = f"{DATAFORM_REPO}/releaseConfigs/production"
+# TODO: Switch to "production" after merging to main
+DATAFORM_RELEASE_CONFIG = f"{DATAFORM_REPO}/releaseConfigs/video-search-dev"
 
 METADATA_CSV_COLUMNS = [
     "video_id", "identifier", "title", "year", "source_url",
