@@ -1,13 +1,14 @@
-"""Archive.org service — search and download public domain videos."""
+"""Archive.org service — search, download, and embed public domain videos."""
 
 import logging
 import re
 import tempfile
+import time
 from pathlib import Path
 from typing import Any, Optional
 
 import requests
-from google.cloud import storage
+from google.cloud import bigquery, storage
 
 ARCHIVE_SEARCH_URL = "https://archive.org/advancedsearch.php"
 ARCHIVE_METADATA_URL = "https://archive.org/metadata"
@@ -181,4 +182,104 @@ def ingest_video(item: dict[str, Any]) -> None:
         }
         blob.upload_from_filename(str(local_path))
 
-    logger.info(f"Ingestion complete: {video_id}. Cloud Function will segment automatically.")
+    logger.info(f"Upload complete: {video_id}. Waiting for Cloud Function to segment...")
+
+    # Wait for Cloud Function to produce segments
+    _wait_for_segments(video_id)
+
+    # Generate embeddings for the new segments
+    _generate_embeddings(video_id)
+
+    logger.info(f"Ingestion complete: {video_id} is now searchable.")
+
+
+def _wait_for_segments(video_id: str, timeout: int = 120, poll_interval: int = 10) -> bool:
+    """Poll GCS until segments appear for a video."""
+    client = storage.Client()
+    bucket = client.bucket(BUCKET_NAME)
+    deadline = time.time() + timeout
+
+    while time.time() < deadline:
+        blobs = list(bucket.list_blobs(prefix=f"segments/{video_id}/", max_results=1))
+        if blobs:
+            # Also check for metadata CSV
+            csv_blob = bucket.blob(f"manifests/metadata/{video_id}.csv")
+            if csv_blob.exists():
+                logger.info(f"Segments and metadata ready for {video_id}")
+                return True
+        logger.info(f"Waiting for segments... ({int(deadline - time.time())}s remaining)")
+        time.sleep(poll_interval)
+
+    logger.warning(f"Timed out waiting for segments for {video_id}")
+    return False
+
+
+def _generate_embeddings(video_id: str) -> None:
+    """Generate embeddings for a video's segments and insert into BQ tables."""
+    client = bigquery.Client(project="gcloud-tech-showcase")
+
+    # First refresh the external table cache so new segments are visible
+    logger.info(f"Refreshing metadata cache...")
+    client.query(
+        "CALL BQ.REFRESH_EXTERNAL_METADATA_CACHE('video_vector_search.bronze_video_segments')"
+    ).result()
+    client.query(
+        "CALL BQ.REFRESH_EXTERNAL_METADATA_CACHE('video_vector_search.bronze_segment_mapping')"
+    ).result()
+
+    # Generate embeddings for this video's segments only and insert into silver table
+    logger.info(f"Generating embeddings for {video_id}...")
+    embed_sql = """
+    INSERT INTO `video_vector_search.silver_segment_embeddings`
+      (segment_uri, video_id, segment_index, embedding, status, video_start_sec, video_end_sec)
+    SELECT
+      uri AS segment_uri,
+      REGEXP_EXTRACT(uri, r'/segments/([^/]+)/') AS video_id,
+      CAST(REGEXP_EXTRACT(uri, r'seg_(\\d+)\\.mp4') AS INT64) AS segment_index,
+      embedding,
+      status,
+      video_start_sec,
+      video_end_sec
+    FROM AI.GENERATE_EMBEDDING(
+      MODEL `video_vector_search.multimodal_embedding_model`,
+      (SELECT * FROM `video_vector_search.bronze_video_segments`
+       WHERE uri LIKE @uri_pattern)
+    )
+    """
+
+    job_config = bigquery.QueryJobConfig(
+        query_parameters=[
+            bigquery.ScalarQueryParameter(
+                "uri_pattern", "STRING", f"%/segments/{video_id}/%"
+            ),
+        ]
+    )
+
+    client.query(embed_sql, job_config=job_config).result()
+    logger.info(f"Embeddings generated for {video_id}")
+
+    # Rebuild gold table (full rebuild since it's a simple join)
+    logger.info(f"Rebuilding gold table...")
+    gold_sql = """
+    CREATE OR REPLACE TABLE `video_vector_search.gold_searchable_videos` AS
+    SELECT
+      e.segment_uri,
+      e.video_id,
+      e.segment_index,
+      m.title,
+      m.year,
+      m.source_url,
+      m.license,
+      m.duration_total_seconds,
+      m.start_seconds,
+      m.end_seconds,
+      e.video_start_sec,
+      e.video_end_sec,
+      e.embedding
+    FROM `video_vector_search.silver_segment_embeddings` e
+    LEFT JOIN `video_vector_search.bronze_segment_mapping` m
+      ON e.video_id = m.video_id
+      AND e.segment_index = m.segment_index
+    """
+    client.query(gold_sql).result()
+    logger.info(f"Gold table rebuilt")

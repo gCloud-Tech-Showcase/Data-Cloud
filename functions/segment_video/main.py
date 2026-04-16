@@ -7,7 +7,8 @@ When a video is uploaded to raw/*.mp4, this function:
 2. Splits it into 2-minute segments using ffmpeg
 3. Uploads segments to segments/{video_id}/seg_NNN.mp4
 4. Writes a per-video metadata CSV to manifests/metadata/{video_id}.csv
-5. Attaches parent video metadata to each segment as GCS custom metadata
+5. Extracts a thumbnail frame to thumbnails/{video_id}.jpg
+6. Attaches parent video metadata to each segment as GCS custom metadata
 
 Only processes files matching raw/*.mp4 — ignores everything else
 to prevent infinite trigger loops from segment uploads.
@@ -23,22 +24,10 @@ import tempfile
 from pathlib import Path
 
 import functions_framework
-import requests as http_requests
 from cloudevents.http import CloudEvent
 from google.cloud import storage
-import google.auth
-import google.auth.transport.requests
 
 SEGMENT_DURATION = 120  # seconds
-DATAFORM_REPO = os.environ.get(
-    "DATAFORM_REPO",
-    "projects/gcloud-tech-showcase/locations/us-central1/repositories/data-cloud",
-)
-DATAFORM_RELEASE_CONFIG = os.environ.get(
-    "DATAFORM_RELEASE_CONFIG",
-    f"{DATAFORM_REPO}/releaseConfigs/video-search-dev",
-)
-DATAFORM_SERVICE_ACCOUNT = os.environ.get("DATAFORM_SERVICE_ACCOUNT", "")
 
 METADATA_CSV_COLUMNS = [
     "video_id", "identifier", "title", "year", "source_url",
@@ -48,53 +37,6 @@ METADATA_CSV_COLUMNS = [
 
 logger = logging.getLogger(__name__)
 logging.basicConfig(level=logging.INFO)
-
-
-def trigger_dataform_pipeline() -> None:
-    """Trigger a Dataform workflow to generate embeddings for new segments.
-
-    Uses the latest compilation result from the production release config
-    and runs only the video_vector_search tagged tables.
-    """
-    try:
-        credentials, _ = google.auth.default()
-        credentials.refresh(google.auth.transport.requests.Request())
-        token = credentials.token
-
-        headers = {
-            "Authorization": f"Bearer {token}",
-            "Content-Type": "application/json",
-        }
-
-        # Get the latest compilation result from the release config
-        release_url = f"https://dataform.googleapis.com/v1beta1/{DATAFORM_RELEASE_CONFIG}"
-        resp = http_requests.get(release_url, headers=headers, timeout=10)
-        resp.raise_for_status()
-        compilation_result = resp.json().get("releaseCompilationResult")
-
-        if not compilation_result:
-            logger.error("No compilation result found in release config")
-            return
-
-        # Create a workflow invocation for video_vector_search tables only
-        invoke_url = f"https://dataform.googleapis.com/v1beta1/{DATAFORM_REPO}/workflowInvocations"
-        body = {
-            "compilationResult": compilation_result,
-            "invocationConfig": {
-                "includedTags": ["video_vector_search"],
-                "transitiveDependenciesIncluded": True,
-                "fullyRefreshIncrementalTablesEnabled": False,
-                "serviceAccount": DATAFORM_SERVICE_ACCOUNT,
-            },
-        }
-        resp = http_requests.post(invoke_url, headers=headers, json=body, timeout=10)
-        resp.raise_for_status()
-
-        invocation = resp.json().get("name", "")
-        logger.info(f"Triggered Dataform pipeline: {invocation}")
-
-    except Exception as e:
-        logger.error(f"Failed to trigger Dataform: {e}")
 
 
 def get_video_duration(video_path: Path) -> float:
@@ -269,6 +211,3 @@ def segment_video(cloud_event: CloudEvent) -> None:
         f"Done: {video_id} — {len(segments)} segments, "
         f"{duration:.0f}s total duration"
     )
-
-    # Trigger Dataform to generate embeddings for the new segments
-    trigger_dataform_pipeline()
