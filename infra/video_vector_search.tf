@@ -109,18 +109,69 @@ resource "google_service_account" "video_segmenter" {
   depends_on = [google_project_service.cloudfunctions]
 }
 
-# Function needs read/write access to the video bucket
+# Function SA: read/write access to the video bucket (runtime)
 resource "google_storage_bucket_iam_member" "segmenter_bucket_admin" {
   bucket = google_storage_bucket.video_search.name
   role   = "roles/storage.objectAdmin"
   member = "serviceAccount:${google_service_account.video_segmenter.email}"
 }
 
-# Function needs to receive Eventarc events
+# Function SA: read function source from source bucket (build)
+resource "google_storage_bucket_iam_member" "segmenter_source_reader" {
+  bucket = google_storage_bucket.function_source.name
+  role   = "roles/storage.objectViewer"
+  member = "serviceAccount:${google_service_account.video_segmenter.email}"
+}
+
+# Function SA: read/write to Cloud Functions internal staging bucket (build)
+resource "google_storage_bucket_iam_member" "segmenter_gcf_sources" {
+  bucket = "gcf-v2-sources-${data.google_project.current.number}-${var.region}"
+  role   = "roles/storage.objectAdmin"
+  member = "serviceAccount:${google_service_account.video_segmenter.email}"
+}
+
+# Function SA: receive Eventarc events (trigger)
 resource "google_project_iam_member" "segmenter_eventarc_receiver" {
   project = var.project_id
   role    = "roles/eventarc.eventReceiver"
   member  = "serviceAccount:${google_service_account.video_segmenter.email}"
+}
+
+# Function SA: write build logs (build)
+resource "google_project_iam_member" "segmenter_log_writer" {
+  project = var.project_id
+  role    = "roles/logging.logWriter"
+  member  = "serviceAccount:${google_service_account.video_segmenter.email}"
+}
+
+# Function SA: push container images (build)
+resource "google_project_iam_member" "segmenter_artifact_registry" {
+  project = var.project_id
+  role    = "roles/artifactregistry.writer"
+  member  = "serviceAccount:${google_service_account.video_segmenter.email}"
+}
+
+# Eventarc service agent needs its own role to route events
+resource "google_project_iam_member" "eventarc_service_agent" {
+  project = var.project_id
+  role    = "roles/eventarc.serviceAgent"
+  member  = "serviceAccount:service-${data.google_project.current.number}@gcp-sa-eventarc.iam.gserviceaccount.com"
+
+  depends_on = [google_project_service.eventarc]
+}
+
+# Ensure GCS service agent exists (lazily created, may not exist in fresh projects)
+data "google_storage_project_service_account" "gcs_account" {
+  project = var.project_id
+}
+
+# GCS service agent needs Pub/Sub publisher to emit object events
+resource "google_project_iam_member" "gcs_pubsub_publisher" {
+  project = var.project_id
+  role    = "roles/pubsub.publisher"
+  member  = "serviceAccount:${data.google_storage_project_service_account.gcs_account.email_address}"
+
+  depends_on = [google_project_service.pubsub]
 }
 
 # Cloud Function (2nd gen)
@@ -129,8 +180,9 @@ resource "google_cloudfunctions2_function" "segment_video" {
   location = var.region
 
   build_config {
-    runtime     = "python312"
-    entry_point = "segment_video"
+    runtime               = "python312"
+    entry_point           = "segment_video"
+    service_account       = google_service_account.video_segmenter.id
 
     source {
       storage_source {
@@ -165,6 +217,12 @@ resource "google_cloudfunctions2_function" "segment_video" {
     google_project_service.run,
     google_project_service.eventarc,
     google_storage_bucket_iam_member.segmenter_bucket_admin,
+    google_storage_bucket_iam_member.segmenter_source_reader,
+    google_storage_bucket_iam_member.segmenter_gcf_sources,
     google_project_iam_member.segmenter_eventarc_receiver,
+    google_project_iam_member.segmenter_log_writer,
+    google_project_iam_member.segmenter_artifact_registry,
+    google_project_iam_member.eventarc_service_agent,
+    google_project_iam_member.gcs_pubsub_publisher,
   ]
 }
