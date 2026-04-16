@@ -12,8 +12,8 @@ Supports two input modes:
 - Local: Reads videos from a local directory (--local-dir), useful for
   testing without the GCS round-trip.
 
-Also builds a segment mapping table and loads it to BigQuery for joining
-segments back to their parent videos at query time.
+Also writes per-video CSV metadata files to GCS for Dataform to read
+via an external table, joining segments back to parent videos at query time.
 
 Usage:
     # Process all videos from GCS (reads manifest for video list)
@@ -33,6 +33,8 @@ Usage:
 """
 
 import argparse
+import csv
+import io
 import json
 import logging
 import os
@@ -45,7 +47,7 @@ from pathlib import Path
 from typing import Any, Optional
 
 from dotenv import load_dotenv
-from google.cloud import bigquery, storage
+from google.cloud import storage
 from tqdm import tqdm
 
 # Configuration
@@ -55,8 +57,11 @@ SEGMENT_CHECKPOINT_FILE = SCRIPT_DIR / "segment_checkpoint.json"
 LOG_FILE = SCRIPT_DIR / "segment_videos.log"
 SEGMENT_DURATION = 120  # seconds
 BUCKET_SUFFIX = "-video-search"
-BQ_DATASET = "video_vector_search"
-BQ_TABLE = "bronze_segment_mapping"
+METADATA_CSV_COLUMNS = [
+    "video_id", "identifier", "title", "year", "source_url",
+    "license", "segment_index", "start_seconds", "end_seconds",
+    "duration_total_seconds",
+]
 
 # Setup logging
 logging.basicConfig(
@@ -212,41 +217,35 @@ def upload_to_gcs(bucket_name: str, local_path: Path, gcs_path: str) -> bool:
 
 
 # ---------------------------------------------------------------------------
-# BigQuery segment mapping
+# Metadata CSV
 # ---------------------------------------------------------------------------
 
-def load_segment_mapping_to_bq(
-    project_id: str, mapping_rows: list[dict[str, Any]]
-) -> None:
-    """Load segment mapping rows to BigQuery."""
-    if not mapping_rows:
-        return
+def upload_metadata_csv(
+    bucket_name: str,
+    video_id: str,
+    rows: list[dict[str, Any]],
+) -> bool:
+    """Write a per-video metadata CSV to GCS.
 
-    client = bigquery.Client(project=project_id)
-    table_ref = f"{project_id}.{BQ_DATASET}.{BQ_TABLE}"
+    One file per video at manifests/metadata/{video_id}.csv.
+    Overwrites on re-processing (idempotent).
+    """
+    buf = io.StringIO()
+    writer = csv.DictWriter(buf, fieldnames=METADATA_CSV_COLUMNS)
+    writer.writeheader()
+    writer.writerows(rows)
 
-    schema = [
-        bigquery.SchemaField("video_id", "STRING"),
-        bigquery.SchemaField("segment_uri", "STRING"),
-        bigquery.SchemaField("segment_index", "INT64"),
-        bigquery.SchemaField("start_seconds", "INT64"),
-        bigquery.SchemaField("end_seconds", "INT64"),
-        bigquery.SchemaField("title", "STRING"),
-        bigquery.SchemaField("year", "INT64"),
-        bigquery.SchemaField("source_url", "STRING"),
-        bigquery.SchemaField("license", "STRING"),
-        bigquery.SchemaField("duration_total_seconds", "INT64"),
-    ]
-
-    job_config = bigquery.LoadJobConfig(
-        schema=schema,
-        write_disposition=bigquery.WriteDisposition.WRITE_APPEND,
-        source_format=bigquery.SourceFormat.NEWLINE_DELIMITED_JSON,
-    )
-
-    job = client.load_table_from_json(mapping_rows, table_ref, job_config=job_config)
-    job.result()
-    logger.info(f"Loaded {len(mapping_rows)} segment mapping rows to {table_ref}")
+    gcs_path = f"manifests/metadata/{video_id}.csv"
+    try:
+        client = storage.Client()
+        bucket = client.bucket(bucket_name)
+        blob = bucket.blob(gcs_path)
+        blob.upload_from_string(buf.getvalue(), content_type="text/csv")
+        logger.info(f"  Metadata CSV: gs://{bucket_name}/{gcs_path}")
+        return True
+    except Exception as e:
+        logger.error(f"CSV upload failed for {gcs_path}: {e}")
+        return False
 
 
 # ---------------------------------------------------------------------------
@@ -259,17 +258,18 @@ def process_video(
     bucket_name: str,
     local_dir: Optional[Path],
     dry_run: bool,
-) -> list[dict[str, Any]]:
-    """Process a single video: download, split, upload segments.
+) -> int:
+    """Process a single video: download, split, upload segments + metadata CSV.
 
-    Returns list of segment mapping rows.
+    Returns the number of segments created.
     """
     title = manifest_entry.get("title", video_id)
     year = manifest_entry.get("year")
+    identifier = manifest_entry.get("identifier", video_id)
 
     if dry_run:
         logger.info(f"[DRY RUN] Would segment: {title} ({year or '?'})")
-        return []
+        return 0
 
     with tempfile.TemporaryDirectory(prefix="video_seg_") as tmpdir:
         tmpdir_path = Path(tmpdir)
@@ -279,13 +279,13 @@ def process_video(
             video_path = local_dir / f"{video_id}.mp4"
             if not video_path.exists():
                 logger.warning(f"Local file not found: {video_path}")
-                return []
+                return 0
         else:
             video_path = tmpdir_path / f"{video_id}.mp4"
             gcs_source = f"raw/{video_id}.mp4"
             logger.info(f"Downloading gs://{bucket_name}/{gcs_source}")
             if not download_from_gcs(bucket_name, gcs_source, video_path):
-                return []
+                return 0
 
         # Get duration
         duration = get_video_duration(video_path)
@@ -298,15 +298,14 @@ def process_video(
 
         if not segments:
             logger.error(f"No segments produced for {video_id}")
-            return []
+            return 0
 
         logger.info(f"Produced {len(segments)} segments")
 
-        # Upload segments and build mapping
-        mapping_rows = []
+        # Upload segments and build metadata rows
+        metadata_rows = []
         for i, seg_path in enumerate(segments):
             gcs_path = f"segments/{video_id}/seg_{i:03d}.mp4"
-            segment_uri = f"gs://{bucket_name}/{gcs_path}"
 
             logger.info(f"  Uploading segment {i}: {gcs_path}")
             if not upload_to_gcs(bucket_name, seg_path, gcs_path):
@@ -315,20 +314,24 @@ def process_video(
             start_seconds = i * SEGMENT_DURATION
             end_seconds = min((i + 1) * SEGMENT_DURATION, int(duration))
 
-            mapping_rows.append({
+            metadata_rows.append({
                 "video_id": video_id,
-                "segment_uri": segment_uri,
+                "identifier": identifier,
+                "title": title,
+                "year": year or "",
+                "source_url": manifest_entry.get("source_url", ""),
+                "license": manifest_entry.get("license", "Public Domain"),
                 "segment_index": i,
                 "start_seconds": start_seconds,
                 "end_seconds": end_seconds,
-                "title": title,
-                "year": year,
-                "source_url": manifest_entry.get("source_url", ""),
-                "license": manifest_entry.get("license", "Public Domain"),
                 "duration_total_seconds": int(duration),
             })
 
-        return mapping_rows
+        # Write per-video metadata CSV to GCS
+        if metadata_rows:
+            upload_metadata_csv(bucket_name, video_id, metadata_rows)
+
+        return len(metadata_rows)
 
 
 # ---------------------------------------------------------------------------
@@ -385,10 +388,6 @@ def main():
         "--status", action="store_true",
         help="Show segmentation status and exit",
     )
-    parser.add_argument(
-        "--skip-bq-load", action="store_true",
-        help="Skip loading segment mapping to BigQuery",
-    )
     args = parser.parse_args()
 
     if args.status:
@@ -444,7 +443,7 @@ def main():
     if args.local_dir:
         logger.info(f"Source:   local ({args.local_dir})")
 
-    all_mapping_rows: list[dict[str, Any]] = []
+    total_segments = 0
 
     try:
         for video_id in tqdm(video_ids, desc="Segmenting", unit="video"):
@@ -455,7 +454,7 @@ def main():
             entry = manifest_lookup[video_id]
             logger.info(f"\nProcessing: {entry['title']} ({entry.get('year', '?')})")
 
-            mapping_rows = process_video(
+            num_segments = process_video(
                 video_id=video_id,
                 manifest_entry=entry,
                 bucket_name=bucket_name,
@@ -463,15 +462,14 @@ def main():
                 dry_run=args.dry_run,
             )
 
-            if mapping_rows:
-                all_mapping_rows.extend(mapping_rows)
+            if num_segments > 0:
+                total_segments += num_segments
                 completed.add(video_id)
                 checkpoint["completed_ids"] = list(completed)
                 save_checkpoint(checkpoint)
 
                 logger.info(
-                    f"Segmented {entry['title']}: "
-                    f"{len(mapping_rows)} segments"
+                    f"Segmented {entry['title']}: {num_segments} segments"
                 )
 
     except KeyboardInterrupt:
@@ -483,25 +481,15 @@ def main():
         save_checkpoint(checkpoint)
         sys.exit(1)
 
-    # Load mapping to BigQuery
-    if all_mapping_rows and not args.dry_run and not args.skip_bq_load:
-        logger.info(f"\nLoading {len(all_mapping_rows)} segment mappings to BigQuery...")
-        try:
-            load_segment_mapping_to_bq(project_id, all_mapping_rows)
-        except Exception as e:
-            logger.error(f"BQ load failed: {e}", exc_info=True)
-            logger.info("Segment files are in GCS. You can retry BQ load later.")
-
     # Summary
     print(f"\n{'='*60}")
     print(f"{'DRY RUN ' if args.dry_run else ''}COMPLETE")
     print(f"{'='*60}")
     print(f"Videos processed:  {len(completed)}")
-    print(f"Segments created:  {len(all_mapping_rows)}")
+    print(f"Segments created:  {total_segments}")
     if not args.dry_run:
         print(f"Segments in GCS:   gs://{bucket_name}/segments/")
-        if not args.skip_bq_load:
-            print(f"Mapping in BQ:     {project_id}.{BQ_DATASET}.{BQ_TABLE}")
+        print(f"Metadata in GCS:   gs://{bucket_name}/manifests/metadata/")
 
 
 if __name__ == "__main__":

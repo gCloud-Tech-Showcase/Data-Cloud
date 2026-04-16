@@ -36,4 +36,5 @@ SELECT
   e.embedding
 FROM ${ref("silver_segment_embeddings")} e
 LEFT JOIN ${ref("bronze_segment_mapping")} m
-  ON e.segment_uri = m.segment_uri
+  ON e.video_id = m.video_id
+  AND e.segment_index = m.segment_index
