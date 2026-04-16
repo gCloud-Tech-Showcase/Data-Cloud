@@ -327,6 +327,24 @@ def process_video(
                 "duration_total_seconds": int(duration),
             })
 
+        # Extract thumbnail from first segment
+        thumbnail_path = tmpdir_path / f"{video_id}.jpg"
+        subprocess.run(
+            [
+                "ffmpeg", "-y",
+                "-i", str(segments[0]),
+                "-ss", "5",
+                "-frames:v", "1",
+                "-q:v", "2",
+                str(thumbnail_path),
+            ],
+            capture_output=True, text=True,
+        )
+        if thumbnail_path.exists():
+            thumb_gcs = f"thumbnails/{video_id}.jpg"
+            if upload_to_gcs(bucket_name, thumbnail_path, thumb_gcs):
+                logger.info(f"  Thumbnail: gs://{bucket_name}/{thumb_gcs}")
+
         # Write per-video metadata CSV to GCS
         if metadata_rows:
             upload_metadata_csv(bucket_name, video_id, metadata_rows)

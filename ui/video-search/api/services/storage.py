@@ -1,6 +1,4 @@
-"""GCS service for signed URLs and media serving."""
-
-from datetime import timedelta
+"""GCS service for media streaming."""
 
 from google.cloud import storage
 
@@ -16,19 +14,8 @@ def _get_client() -> storage.Client:
     return _client
 
 
-def generate_signed_url(blob_path: str, expiration_minutes: int = 30) -> str:
-    """Generate a signed URL for a GCS object."""
-    client = _get_client()
-    bucket = client.bucket(BUCKET_NAME)
-    blob = bucket.blob(blob_path)
-    return blob.generate_signed_url(
-        expiration=timedelta(minutes=expiration_minutes),
-        method="GET",
-    )
-
-
-def get_thumbnail_url(video_id: str) -> str | None:
-    """Get signed URL for a video's thumbnail, or None if it doesn't exist."""
+def get_thumbnail_bytes(video_id: str) -> bytes | None:
+    """Download thumbnail bytes, or None if it doesn't exist."""
     client = _get_client()
     bucket = client.bucket(BUCKET_NAME)
     blob = bucket.blob(f"thumbnails/{video_id}.jpg")
@@ -36,22 +23,25 @@ def get_thumbnail_url(video_id: str) -> str | None:
     if not blob.exists():
         return None
 
-    return blob.generate_signed_url(
-        expiration=timedelta(minutes=60),
-        method="GET",
-    )
+    return blob.download_as_bytes()
 
 
-def get_segment_play_url(video_id: str, segment_index: int) -> str | None:
-    """Get signed URL for a video segment."""
+def get_segment_bytes(video_id: str, segment_index: int) -> bytes | None:
+    """Download segment video bytes, or None if it doesn't exist."""
+    blob_path = f"segments/{video_id}/seg_{segment_index:03d}.mp4"
     client = _get_client()
     bucket = client.bucket(BUCKET_NAME)
-    blob = bucket.blob(f"segments/{video_id}/seg_{segment_index:03d}.mp4")
+    blob = bucket.blob(blob_path)
 
     if not blob.exists():
         return None
 
-    return blob.generate_signed_url(
-        expiration=timedelta(minutes=30),
-        method="GET",
-    )
+    return blob.download_as_bytes()
+
+
+def segment_exists(video_id: str, segment_index: int) -> bool:
+    """Check if a segment exists in GCS."""
+    blob_path = f"segments/{video_id}/seg_{segment_index:03d}.mp4"
+    client = _get_client()
+    bucket = client.bucket(BUCKET_NAME)
+    return bucket.blob(blob_path).exists()

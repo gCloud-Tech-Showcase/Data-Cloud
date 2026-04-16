@@ -1,10 +1,10 @@
 """Videos API router — library listing, thumbnails, and playback."""
 
 from fastapi import APIRouter, HTTPException
-from fastapi.responses import RedirectResponse
+from fastapi.responses import Response
 
 from services.bigquery import list_videos
-from services.storage import get_thumbnail_url, get_segment_play_url
+from services.storage import get_thumbnail_bytes, get_segment_bytes
 
 router = APIRouter()
 
@@ -17,17 +17,21 @@ async def videos():
 
 @router.get("/api/videos/{video_id}/thumbnail")
 async def thumbnail(video_id: str):
-    """Redirect to signed URL for video thumbnail."""
-    url = get_thumbnail_url(video_id)
-    if not url:
+    """Serve video thumbnail image."""
+    data = get_thumbnail_bytes(video_id)
+    if not data:
         raise HTTPException(status_code=404, detail="Thumbnail not found")
-    return RedirectResponse(url=url)
+    return Response(content=data, media_type="image/jpeg")
 
 
 @router.get("/api/videos/{video_id}/segments/{segment_index}/play")
 async def play_segment(video_id: str, segment_index: int):
-    """Get signed URL for video segment playback."""
-    url = get_segment_play_url(video_id, segment_index)
-    if not url:
+    """Stream video segment for playback."""
+    data = get_segment_bytes(video_id, segment_index)
+    if not data:
         raise HTTPException(status_code=404, detail="Segment not found")
-    return {"video_id": video_id, "segment_index": segment_index, "url": url}
+    return Response(
+        content=data,
+        media_type="video/mp4",
+        headers={"Accept-Ranges": "bytes"},
+    )

@@ -177,6 +177,24 @@ def segment_video(cloud_event: CloudEvent) -> None:
                 "duration_total_seconds": int(duration),
             })
 
+        # Extract thumbnail from first segment
+        thumbnail_path = tmpdir_path / f"{video_id}.jpg"
+        subprocess.run(
+            [
+                "ffmpeg", "-y",
+                "-i", str(segments[0]),
+                "-ss", "5",
+                "-frames:v", "1",
+                "-q:v", "2",
+                str(thumbnail_path),
+            ],
+            capture_output=True, text=True,
+        )
+        if thumbnail_path.exists():
+            thumb_blob = bucket.blob(f"thumbnails/{video_id}.jpg")
+            thumb_blob.upload_from_filename(str(thumbnail_path))
+            logger.info(f"  Thumbnail: gs://{bucket_name}/thumbnails/{video_id}.jpg")
+
         # Write metadata CSV
         buf = io.StringIO()
         writer = csv.DictWriter(buf, fieldnames=METADATA_CSV_COLUMNS)

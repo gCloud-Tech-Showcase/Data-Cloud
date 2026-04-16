@@ -1,4 +1,4 @@
-import type { SearchResponse, VideosResponse, PlaybackResponse } from "@/types";
+import type { SearchResponse, VideosResponse } from "@/types";
 
 const BASE = "";
 
@@ -18,15 +18,8 @@ export async function listVideos(): Promise<VideosResponse> {
   return res.json();
 }
 
-export async function getPlaybackUrl(
-  videoId: string,
-  segmentIndex: number
-): Promise<PlaybackResponse> {
-  const res = await fetch(
-    `${BASE}/api/videos/${videoId}/segments/${segmentIndex}/play`
-  );
-  if (!res.ok) throw new Error(`Failed to get playback URL: ${res.statusText}`);
-  return res.json();
+export function getSegmentPlayUrl(videoId: string, segmentIndex: number): string {
+  return `${BASE}/api/videos/${videoId}/segments/${segmentIndex}/play`;
 }
 
 export function formatDuration(seconds: number): string {

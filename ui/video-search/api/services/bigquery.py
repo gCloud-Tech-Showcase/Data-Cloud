@@ -88,7 +88,8 @@ def search_videos(query: str, limit: int = 20) -> dict[str, Any]:
     videos = []
     for row in results:
         best_dist = float(row.best_distance)
-        relevance_pct = round((1 - best_dist) * 100, 1)
+        # Cosine distance ranges 0-2; convert to 0-100% similarity
+        relevance_pct = round((1 - best_dist / 2) * 100, 1)
 
         segments = []
         for seg in row.top_segments:

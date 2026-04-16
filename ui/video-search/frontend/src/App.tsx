@@ -3,7 +3,7 @@ import { Header } from "@/components/Header";
 import { SearchBar } from "@/components/SearchBar";
 import { VideoGrid } from "@/components/VideoGrid";
 import { VideoPlayer } from "@/components/VideoPlayer";
-import { searchVideos, getPlaybackUrl } from "@/lib/api";
+import { searchVideos, getSegmentPlayUrl } from "@/lib/api";
 import type { VideoResult, SearchResponse } from "@/types";
 
 export default function App() {
@@ -31,32 +31,22 @@ export default function App() {
   }, []);
 
   const handlePlay = useCallback(
-    async (videoId: string, segmentIndex: number) => {
+    (videoId: string, segmentIndex: number) => {
       const video = searchResult?.results.find((v) => v.video_id === videoId);
       if (!video) return;
 
-      try {
-        const playback = await getPlaybackUrl(videoId, segmentIndex);
-        setPlayerVideo(video);
-        setPlayerUrl(playback.url);
-        setActiveSegment(segmentIndex);
-      } catch (err) {
-        setError(err instanceof Error ? err.message : "Failed to load video");
-      }
+      setPlayerVideo(video);
+      setPlayerUrl(getSegmentPlayUrl(videoId, segmentIndex));
+      setActiveSegment(segmentIndex);
     },
     [searchResult]
   );
 
   const handleSegmentChange = useCallback(
-    async (segmentIndex: number) => {
+    (segmentIndex: number) => {
       if (!playerVideo) return;
-      try {
-        const playback = await getPlaybackUrl(playerVideo.video_id, segmentIndex);
-        setPlayerUrl(playback.url);
-        setActiveSegment(segmentIndex);
-      } catch (err) {
-        setError(err instanceof Error ? err.message : "Failed to load segment");
-      }
+      setPlayerUrl(getSegmentPlayUrl(playerVideo.video_id, segmentIndex));
+      setActiveSegment(segmentIndex);
     },
     [playerVideo]
   );
