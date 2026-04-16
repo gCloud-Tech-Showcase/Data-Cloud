@@ -1,0 +1,39 @@
+config {
+  type: "table",
+  schema: "video_vector_search",
+  description: "GOLD: Search-ready video embeddings with parent video metadata. Joins segment embeddings with the segment mapping table to enrich each embedding row with title, year, source URL, and timing information. Use with VECTOR_SEARCH to find videos by natural language query.",
+  columns: {
+    segment_uri: "GCS URI of the video segment",
+    video_id: "Parent video identifier",
+    segment_index: "Zero-based segment index within the parent video",
+    title: "Original video title",
+    year: "Production year",
+    source_url: "Archive.org source URL",
+    license: "License type (Public Domain)",
+    duration_total_seconds: "Total duration of the parent video in seconds",
+    start_seconds: "Start offset of this segment in the parent video",
+    end_seconds: "End offset of this segment in the parent video",
+    video_start_sec: "Start second of the embedding interval within the segment",
+    video_end_sec: "End second of the embedding interval within the segment",
+    embedding: "1408-dimensional multimodal embedding vector"
+  },
+  tags: ["video_vector_search", "gold", "marts"]
+}
+
+SELECT
+  e.segment_uri,
+  e.video_id,
+  e.segment_index,
+  m.title,
+  m.year,
+  m.source_url,
+  m.license,
+  m.duration_total_seconds,
+  m.start_seconds,
+  m.end_seconds,
+  e.video_start_sec,
+  e.video_end_sec,
+  e.embedding
+FROM ${ref("silver_segment_embeddings")} e
+LEFT JOIN ${ref("bronze_segment_mapping")} m
+  ON e.segment_uri = m.segment_uri

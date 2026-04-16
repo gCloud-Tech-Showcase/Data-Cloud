@@ -1,0 +1,29 @@
+config {
+  type: "table",
+  schema: "video_vector_search",
+  description: "SILVER: Multimodal embeddings for video segments. Each segment is sampled at 16-second intervals by multimodalembedding@001, producing multiple 1408-dimensional embeddings per segment for fine-grained semantic matching.",
+  columns: {
+    segment_uri: "GCS URI of the video segment",
+    video_id: "Parent video identifier extracted from the GCS path",
+    segment_index: "Zero-based index of this segment within the parent video",
+    embedding: "1408-dimensional multimodal vector representation",
+    status: "Embedding generation status (empty string on success)",
+    video_start_sec: "Start second of the interval within the segment",
+    video_end_sec: "End second of the interval within the segment"
+  },
+  tags: ["video_vector_search", "silver", "staging", "embeddings"]
+}
+
+SELECT
+  uri AS segment_uri,
+  REGEXP_EXTRACT(uri, r'/segments/([^/]+)/') AS video_id,
+  CAST(REGEXP_EXTRACT(uri, r'seg_(\d+)\.mp4') AS INT64) AS segment_index,
+  embedding,
+  status,
+  video_start_sec,
+  video_end_sec
+FROM
+  AI.GENERATE_EMBEDDING(
+    MODEL ${ref("multimodal_embedding_model")},
+    TABLE ${ref("bronze_video_segments")}
+  )

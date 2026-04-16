@@ -1,0 +1,6 @@
+config {
+  type: "declaration",
+  schema: "video_vector_search",
+  name: "bronze_segment_mapping",
+  description: "BRONZE: Mapping of video segments to parent videos with metadata. Loaded by scripts/segment_videos.py."
+}
