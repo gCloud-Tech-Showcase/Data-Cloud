@@ -22,6 +22,9 @@ google-cloud-spanner==3.49.1
 # Data generation
 faker==24.0.0
 
+# Video sourcing (Archive.org downloads)
+requests==2.32.5
+
 # Utilities
 python-dotenv==1.0.0
 tqdm==4.66.1

@@ -93,6 +93,20 @@ output "multimodal_data_bucket" {
 }
 
 # -----------------------------------------------------------------------------
+# Video Vector Search
+# -----------------------------------------------------------------------------
+
+output "video_vector_search_dataset_id" {
+  description = "The video vector search BigQuery dataset ID"
+  value       = google_bigquery_dataset.video_vector_search.dataset_id
+}
+
+output "video_search_bucket" {
+  description = "GCS bucket for video data (raw + segments)"
+  value       = google_storage_bucket.video_search.name
+}
+
+# -----------------------------------------------------------------------------
 # Campaign Intelligence
 # -----------------------------------------------------------------------------
 

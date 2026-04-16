@@ -25,6 +25,7 @@ github_token = "your-github-personal-access-token"
 #   - Sentiment Analysis (BQ dataset, GCS bucket)
 #   - Campaign Intelligence (BQ dataset)
 #   - Security Logs (BQ dataset, GCS bucket, log sink)
+#   - Video Vector Search (BQ dataset, GCS bucket)
 # =============================================================================
 
 # Vertica-to-BigQuery ingestion demo

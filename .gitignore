@@ -25,6 +25,7 @@ Thumbs.db
 !*.json.example
 !package.json
 !package-lock.json
+!scripts/video_sources.json
 
 # Node.js (Dataform)
 node_modules/
@@ -36,6 +37,9 @@ scripts/venv/
 scripts/__pycache__/
 scripts/*.pyc
 scripts/checkpoint.json
+scripts/video_checkpoint.json
+scripts/video_manifest.json
+scripts/video_staging/
 scripts/*.log
 scripts/.env
 scripts/service-account-key.json
