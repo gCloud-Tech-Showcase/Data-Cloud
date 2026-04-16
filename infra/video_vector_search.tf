@@ -137,6 +137,13 @@ resource "google_project_iam_member" "segmenter_eventarc_receiver" {
   member  = "serviceAccount:${google_service_account.video_segmenter.email}"
 }
 
+# Function SA: invoke the Cloud Run service backing the function (trigger)
+resource "google_project_iam_member" "segmenter_run_invoker" {
+  project = var.project_id
+  role    = "roles/run.invoker"
+  member  = "serviceAccount:${google_service_account.video_segmenter.email}"
+}
+
 # Function SA: write build logs (build)
 resource "google_project_iam_member" "segmenter_log_writer" {
   project = var.project_id
