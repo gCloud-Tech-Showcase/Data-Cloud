@@ -3,7 +3,7 @@
 from fastapi import APIRouter, HTTPException
 from fastapi.responses import Response
 
-from services.bigquery import list_videos
+from services.bigquery import list_videos, find_similar, get_library_stats
 from services.storage import get_thumbnail_bytes, get_segment_bytes
 
 router = APIRouter()
@@ -13,6 +13,18 @@ router = APIRouter()
 async def videos():
     """List all videos in the library."""
     return {"videos": list_videos()}
+
+
+@router.get("/api/videos/stats")
+async def stats():
+    """Get library collection stats."""
+    return get_library_stats()
+
+
+@router.get("/api/videos/{video_id}/similar")
+async def similar(video_id: str, limit: int = 10):
+    """Find videos similar to a given video."""
+    return find_similar(video_id, limit=limit)
 
 
 @router.get("/api/videos/{video_id}/thumbnail")

@@ -1,4 +1,4 @@
-import { Play, ExternalLink, Clock } from "lucide-react";
+import { Play, ExternalLink, Clock, Sparkles } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -8,9 +8,10 @@ import { formatDuration } from "@/lib/api";
 interface VideoCardProps {
   video: VideoResult;
   onPlay: (videoId: string, segmentIndex: number) => void;
+  onFindSimilar?: (videoId: string) => void;
 }
 
-export function VideoCard({ video, onPlay }: VideoCardProps) {
+export function VideoCard({ video, onPlay, onFindSimilar }: VideoCardProps) {
   const bestSegment = video.top_segments[0];
 
   return (
@@ -76,6 +77,17 @@ export function VideoCard({ video, onPlay }: VideoCardProps) {
             >
               <Play className="w-3.5 h-3.5" />
               Play segment
+            </Button>
+          )}
+          {onFindSimilar && (
+            <Button
+              size="sm"
+              variant="secondary"
+              className="gap-1.5"
+              onClick={() => onFindSimilar(video.video_id)}
+            >
+              <Sparkles className="w-3.5 h-3.5" />
+              Similar
             </Button>
           )}
           {video.source_url && (

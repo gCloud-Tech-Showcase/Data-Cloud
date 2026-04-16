@@ -1,7 +1,7 @@
 import { Search, Loader2 } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
-import { useState, type FormEvent } from "react";
+import { useState, useEffect, type FormEvent } from "react";
 
 const EXPLORE_CHIPS = [
   "friendship",
@@ -17,10 +17,15 @@ const EXPLORE_CHIPS = [
 interface SearchBarProps {
   onSearch: (query: string) => void;
   isLoading: boolean;
+  externalQuery?: string;
 }
 
-export function SearchBar({ onSearch, isLoading }: SearchBarProps) {
+export function SearchBar({ onSearch, isLoading, externalQuery }: SearchBarProps) {
   const [query, setQuery] = useState("");
+
+  useEffect(() => {
+    if (externalQuery !== undefined) setQuery(externalQuery);
+  }, [externalQuery]);
 
   function handleSubmit(e: FormEvent) {
     e.preventDefault();

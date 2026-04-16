@@ -9,6 +9,7 @@ interface VideoGridProps {
   searchTime?: number;
   query?: string;
   onPlay: (videoId: string, segmentIndex: number) => void;
+  onFindSimilar?: (videoId: string) => void;
 }
 
 export function VideoGrid({
@@ -17,6 +18,7 @@ export function VideoGrid({
   searchTime,
   query,
   onPlay,
+  onFindSimilar,
 }: VideoGridProps) {
   if (isLoading) {
     return (
@@ -74,7 +76,7 @@ export function VideoGrid({
       )}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
         {results.map((video) => (
-          <VideoCard key={video.video_id} video={video} onPlay={onPlay} />
+          <VideoCard key={video.video_id} video={video} onPlay={onPlay} onFindSimilar={onFindSimilar} />
         ))}
       </div>
     </div>

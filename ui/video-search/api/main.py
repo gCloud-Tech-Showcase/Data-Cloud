@@ -9,7 +9,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 import os
 
-from routers import search, videos
+from routers import search, videos, archive
 
 app = FastAPI(
     title="Video Library Intelligence",
@@ -27,6 +27,7 @@ app.add_middleware(
 # API routes
 app.include_router(search.router)
 app.include_router(videos.router)
+app.include_router(archive.router)
 
 
 @app.get("/api/health")

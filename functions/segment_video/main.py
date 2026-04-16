@@ -23,10 +23,15 @@ import tempfile
 from pathlib import Path
 
 import functions_framework
+import requests as http_requests
 from cloudevents.http import CloudEvent
 from google.cloud import storage
+import google.auth
+import google.auth.transport.requests
 
 SEGMENT_DURATION = 120  # seconds
+DATAFORM_REPO = "projects/gcloud-tech-showcase/locations/us-central1/repositories/data-cloud"
+DATAFORM_RELEASE_CONFIG = f"{DATAFORM_REPO}/releaseConfigs/production"
 
 METADATA_CSV_COLUMNS = [
     "video_id", "identifier", "title", "year", "source_url",
@@ -36,6 +41,52 @@ METADATA_CSV_COLUMNS = [
 
 logger = logging.getLogger(__name__)
 logging.basicConfig(level=logging.INFO)
+
+
+def trigger_dataform_pipeline() -> None:
+    """Trigger a Dataform workflow to generate embeddings for new segments.
+
+    Uses the latest compilation result from the production release config
+    and runs only the video_vector_search tagged tables.
+    """
+    try:
+        credentials, _ = google.auth.default()
+        credentials.refresh(google.auth.transport.requests.Request())
+        token = credentials.token
+
+        headers = {
+            "Authorization": f"Bearer {token}",
+            "Content-Type": "application/json",
+        }
+
+        # Get the latest compilation result from the release config
+        release_url = f"https://dataform.googleapis.com/v1beta1/{DATAFORM_RELEASE_CONFIG}"
+        resp = http_requests.get(release_url, headers=headers, timeout=10)
+        resp.raise_for_status()
+        compilation_result = resp.json().get("releaseCompilationResult")
+
+        if not compilation_result:
+            logger.error("No compilation result found in release config")
+            return
+
+        # Create a workflow invocation for video_vector_search tables only
+        invoke_url = f"https://dataform.googleapis.com/v1beta1/{DATAFORM_REPO}/workflowInvocations"
+        body = {
+            "compilationResult": compilation_result,
+            "invocationConfig": {
+                "includedTags": ["video_vector_search"],
+                "transitiveDependenciesIncluded": True,
+                "fullyRefreshIncrementalTablesEnabled": False,
+            },
+        }
+        resp = http_requests.post(invoke_url, headers=headers, json=body, timeout=10)
+        resp.raise_for_status()
+
+        invocation = resp.json().get("name", "")
+        logger.info(f"Triggered Dataform pipeline: {invocation}")
+
+    except Exception as e:
+        logger.error(f"Failed to trigger Dataform: {e}")
 
 
 def get_video_duration(video_path: Path) -> float:
@@ -210,3 +261,6 @@ def segment_video(cloud_event: CloudEvent) -> None:
         f"Done: {video_id} — {len(segments)} segments, "
         f"{duration:.0f}s total duration"
     )
+
+    # Trigger Dataform to generate embeddings for the new segments
+    trigger_dataform_pipeline()
