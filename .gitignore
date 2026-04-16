@@ -30,6 +30,12 @@ Thumbs.db
 # Cloud Function build artifacts
 functions/*.zip
 
+# UI apps
+ui/*/frontend/node_modules/
+ui/*/frontend/dist/
+ui/*/api/.venv/
+ui/*/api/__pycache__/
+
 # Node.js (Dataform)
 node_modules/
 .df/
