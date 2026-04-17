@@ -38,11 +38,11 @@ export function VideoCard({ video, onPlay, onFindSimilar, onShowDetails, isSelec
           <Play className="w-12 h-12 text-white opacity-0 group-hover:opacity-100 transition-opacity duration-200 drop-shadow-lg" />
         </div>
 
-        {/* Selection checkbox — top left */}
+        {/* Selection checkbox — bottom left */}
         {onToggleSelect && (
           <button
             type="button"
-            className={`absolute top-2 left-2 z-10 w-5 h-5 rounded border-2 flex items-center justify-center transition-all ${
+            className={`absolute bottom-2 left-2 z-10 w-5 h-5 rounded border-2 flex items-center justify-center transition-all ${
               isSelected
                 ? "bg-primary border-primary text-primary-foreground"
                 : "border-white/70 bg-black/30 opacity-0 group-hover:opacity-100"
@@ -62,7 +62,7 @@ export function VideoCard({ video, onPlay, onFindSimilar, onShowDetails, isSelec
 
         {/* Category badge */}
         {video.category && (
-          <span className={`absolute ${onToggleSelect ? "top-2 left-9" : "top-2 left-2"} bg-black/60 text-white text-[10px] px-1.5 py-0.5 rounded capitalize backdrop-blur-sm`}>
+          <span className="absolute top-2 left-2 bg-black/60 text-white text-[10px] px-1.5 py-0.5 rounded capitalize backdrop-blur-sm">
             {video.category}
           </span>
         )}
