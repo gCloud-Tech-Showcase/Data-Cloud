@@ -256,17 +256,16 @@ def get_library_stats() -> dict[str, Any]:
     """
     row = next(client.query(sql).result())
 
-    # Get filter dimensions from AI-generated metadata
-    METADATA_TABLE = f"{PROJECT_ID}.{DATASET}.silver_video_metadata"
+    # Get filter dimensions from gold table (already normalized)
     filters: dict[str, list] = {}
     filter_fields = ["category", "mood", "color_mode", "style"]
     for field in filter_fields:
         try:
             sql = f"""
-            SELECT REPLACE(LOWER(TRIM({field})), '_', ' ') AS value, COUNT(DISTINCT video_id) AS count
-            FROM `{METADATA_TABLE}`
+            SELECT {field} AS value, COUNT(DISTINCT video_id) AS count
+            FROM `{GOLD_TABLE}`
             WHERE {field} IS NOT NULL
-            GROUP BY value
+            GROUP BY {field}
             ORDER BY count DESC
             """
             filters[field] = [
