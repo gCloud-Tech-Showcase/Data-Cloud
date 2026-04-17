@@ -18,7 +18,7 @@ export function VideoCard({ video, onPlay, onFindSimilar, onShowDetails, isSelec
   const bestSegment = video.top_segments[0] || { segment_index: 0, start_seconds: 0, end_seconds: 120, distance: 0 };
 
   return (
-    <Card className={`overflow-hidden group shadow-sm hover:shadow-lg transition-all duration-200 bg-background flex flex-col ${isSelected ? "ring-2 ring-primary" : ""}`}>
+    <Card className={`overflow-hidden group shadow-sm hover:shadow-lg transition-all duration-200 bg-background flex flex-col pt-0 gap-0 ${isSelected ? "ring-2 ring-primary" : ""}`}>
       {/* Thumbnail — 16:9 aspect ratio */}
       <div
         className="relative aspect-video bg-muted cursor-pointer flex-shrink-0"
