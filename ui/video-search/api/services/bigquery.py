@@ -36,6 +36,9 @@ def search_videos(query: str, limit: int = 20) -> dict[str, Any]:
         base.source_url,
         base.duration_total_seconds,
         base.category,
+        base.mood,
+        base.color_mode,
+        base.style,
         base.ai_description,
         distance
       FROM VECTOR_SEARCH(
@@ -156,6 +159,9 @@ def find_similar(video_id: str, limit: int = 10) -> dict[str, Any]:
         base.source_url,
         base.duration_total_seconds,
         base.category,
+        base.mood,
+        base.color_mode,
+        base.style,
         base.ai_description,
         distance
       FROM VECTOR_SEARCH(
