@@ -125,6 +125,20 @@ def generate_embeddings(video_id: str) -> None:
     client.query(embed_sql).result()
     log(f"Embeddings generated for {video_id}")
 
+    # Ensure metadata table exists (Dataform creates it normally, but first video may arrive before Dataform runs)
+    client.query(f"""
+    CREATE TABLE IF NOT EXISTS `{DATASET}.silver_video_metadata` (
+      video_id STRING,
+      category STRING,
+      mood STRING,
+      color_mode STRING,
+      style STRING,
+      description STRING,
+      themes ARRAY<STRING>,
+      characters ARRAY<STRING>
+    )
+    """).result()
+
     # Extract metadata using Gemini 2.5 Flash via AI.GENERATE + OBJ.GET_ACCESS_URL
     log(f"Extracting metadata for {video_id}...")
     meta_sql = f"""
