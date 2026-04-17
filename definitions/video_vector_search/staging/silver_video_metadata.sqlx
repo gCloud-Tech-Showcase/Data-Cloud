@@ -1,34 +1,29 @@
 config {
   type: "table",
   schema: "video_vector_search",
-  description: "SILVER: AI-extracted video metadata using Gemini multimodal analysis via AI.GENERATE_TABLE. Each video is analyzed by Gemini 2.0 Flash to extract structured metadata with proper SQL types — no JSON parsing needed. Uses segment 1 (skips intros) or segment 0 for short videos.",
+  description: "SILVER: Combined AI-extracted video metadata from two-pass Gemini analysis. Pass 1 extracts visual facts (category, color, style). Pass 2 extracts content analysis (mood, description, themes, characters). Split into two passes for better accuracy — fewer fields per prompt reduces hallucination.",
   columns: {
     video_id: "Parent video identifier",
-    category: "AI-detected category: cartoon, educational, documentary, newsreel, or other",
-    mood: "AI-detected mood: humorous, dramatic, educational, suspenseful, lighthearted, or serious",
-    color_mode: "AI-detected: color or black_and_white",
-    style: "AI-detected style: hand-drawn animation, stop motion, live action, or mixed",
-    description: "AI-generated one-sentence description of the video content",
-    themes: "AI-detected themes as ARRAY<STRING>",
-    characters: "AI-detected characters as ARRAY<STRING>"
+    category: "AI-detected content type",
+    color_mode: "AI-detected color mode",
+    style: "AI-detected production style",
+    mood: "AI-detected mood",
+    description: "AI-generated one-sentence description",
+    themes: "AI-detected themes",
+    characters: "AI-detected character names"
   },
-  tags: ["video_vector_search", "silver", "staging", "metadata"],
-  dependencies: ["silver_segment_embeddings"]
+  tags: ["video_vector_search", "silver", "staging", "metadata"]
 }
 
-SELECT video_id, category, mood, color_mode, style, description, themes, characters
-FROM AI.GENERATE_TABLE(
-  MODEL ${ref("gemini_video_model")},
-  (
-    SELECT
-      *,
-      REGEXP_EXTRACT(uri, r'/segments/([^/]+)/') AS video_id,
-      'Watch this video carefully and fill in every field. category must be one of: cartoon, educational, documentary, newsreel, other. mood must be one of: humorous, dramatic, educational, suspenseful, lighthearted, serious. color_mode must be: color or black_and_white. style must be one of: hand-drawn animation, stop motion, live action, mixed. description should be one sentence about what happens. themes should list 2-4 themes. characters should list the actual character names you see in the video.' AS prompt
-    FROM ${ref("bronze_video_segments")}
-    WHERE uri LIKE '%/seg_000.mp4'
-  ),
-  STRUCT(
-    'category STRING, mood STRING, color_mode STRING, style STRING, description STRING, themes ARRAY<STRING>, characters ARRAY<STRING>' AS output_schema,
-    1024 AS max_output_tokens
-  )
-)
+SELECT
+  COALESCE(v.video_id, c.video_id) AS video_id,
+  v.category,
+  v.color_mode,
+  v.style,
+  c.mood,
+  c.description,
+  c.themes,
+  c.characters
+FROM ${ref("silver_video_visuals")} v
+FULL OUTER JOIN ${ref("silver_video_content")} c
+  ON v.video_id = c.video_id
