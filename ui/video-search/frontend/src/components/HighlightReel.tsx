@@ -2,7 +2,7 @@ import { useState, useRef, useEffect } from "react";
 import { X, SkipForward, SkipBack, Sparkles } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { getFullVideoUrl, formatDuration } from "@/lib/api";
+import { getSegmentPlayUrl, formatDuration } from "@/lib/api";
 import type { VideoResult } from "@/types";
 
 interface HighlightReelProps {
@@ -48,34 +48,20 @@ export function HighlightReel({ videos, query, onClose }: HighlightReelProps) {
     return () => clearTimeout(timer);
   }, [currentIndex]);
 
-  // Seek to segment start when video loads
+  // Auto-advance when segment file ends
   useEffect(() => {
     if (!current || showTitle) return;
     const video = videoRef.current;
     if (!video) return;
 
-    const handleCanPlay = () => {
-      video.currentTime = current.startSeconds;
-      video.play();
-    };
-    video.addEventListener("canplay", handleCanPlay, { once: true });
-
-    // Auto-advance when segment ends
-    const handleTimeUpdate = () => {
-      if (video.currentTime >= current.endSeconds) {
-        if (currentIndex < reel.length - 1) {
-          setCurrentIndex((i) => i + 1);
-        } else {
-          video.pause();
-        }
+    const handleEnded = () => {
+      if (currentIndex < reel.length - 1) {
+        setCurrentIndex((i) => i + 1);
       }
     };
-    video.addEventListener("timeupdate", handleTimeUpdate);
+    video.addEventListener("ended", handleEnded);
 
-    return () => {
-      video.removeEventListener("canplay", handleCanPlay);
-      video.removeEventListener("timeupdate", handleTimeUpdate);
-    };
+    return () => video.removeEventListener("ended", handleEnded);
   }, [current, currentIndex, reel.length, showTitle]);
 
   if (reel.length === 0) return null;
@@ -126,8 +112,9 @@ export function HighlightReel({ videos, query, onClose }: HighlightReelProps) {
             key={`${current.video.video_id}-${currentIndex}`}
             className="max-h-full max-w-full"
             controls
+            autoPlay
           >
-            <source src={getFullVideoUrl(current.video.video_id)} type="video/mp4" />
+            <source src={getSegmentPlayUrl(current.video.video_id, current.segmentIndex)} type="video/mp4" />
           </video>
         )}
 
