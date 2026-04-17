@@ -305,6 +305,71 @@ def get_library_stats() -> dict[str, Any]:
     }
 
 
+def get_video_details(video_id: str) -> dict[str, Any] | None:
+    """Get full AI-generated metadata for a single video."""
+    client = _get_client()
+
+    sql = f"""
+    SELECT
+      video_id,
+      ANY_VALUE(title) AS title,
+      ANY_VALUE(year) AS year,
+      ANY_VALUE(source_url) AS source_url,
+      ANY_VALUE(duration_total_seconds) AS duration_total_seconds,
+      ANY_VALUE(category) AS category,
+      ANY_VALUE(mood) AS mood,
+      ANY_VALUE(color_mode) AS color_mode,
+      ANY_VALUE(style) AS style,
+      ANY_VALUE(ai_description) AS ai_description,
+      ANY_VALUE(themes) AS themes,
+      ANY_VALUE(characters) AS characters,
+      ANY_VALUE(language) AS language,
+      ANY_VALUE(has_dialogue) AS has_dialogue,
+      ANY_VALUE(has_music) AS has_music,
+      ANY_VALUE(target_audience) AS target_audience,
+      ANY_VALUE(setting) AS setting,
+      ANY_VALUE(pacing) AS pacing,
+      ANY_VALUE(content_warnings) AS content_warnings
+    FROM `{GOLD_TABLE}`
+    WHERE video_id = @video_id
+    GROUP BY video_id
+    """
+
+    job_config = bigquery.QueryJobConfig(
+        query_parameters=[
+            bigquery.ScalarQueryParameter("video_id", "STRING", video_id),
+        ]
+    )
+
+    rows = list(client.query(sql, job_config=job_config).result())
+    if not rows:
+        return None
+
+    row = rows[0]
+    return {
+        "video_id": row.video_id,
+        "title": row.title,
+        "year": row.year,
+        "source_url": row.source_url,
+        "duration_total_seconds": row.duration_total_seconds,
+        "category": row.category,
+        "mood": row.mood,
+        "color_mode": row.color_mode,
+        "style": row.style,
+        "ai_description": row.ai_description,
+        "themes": list(row.themes) if row.themes else [],
+        "characters": list(row.characters) if row.characters else [],
+        "language": row.language,
+        "has_dialogue": row.has_dialogue,
+        "has_music": row.has_music,
+        "target_audience": row.target_audience,
+        "setting": row.setting,
+        "pacing": row.pacing,
+        "content_warnings": list(row.content_warnings) if row.content_warnings else [],
+        "thumbnail_url": f"/api/videos/{row.video_id}/thumbnail",
+    }
+
+
 def list_videos() -> list[dict[str, Any]]:
     """List all unique videos in the library with metadata."""
     client = _get_client()

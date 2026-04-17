@@ -8,6 +8,7 @@ import { AddVideos } from "@/components/AddVideos";
 import { FilterSidebar } from "@/components/FilterSidebar";
 import { ResultsBar } from "@/components/ResultsBar";
 import { SelectionBar } from "@/components/SelectionBar";
+import { VideoDetailPanel } from "@/components/VideoDetailPanel";
 import { Footer } from "@/components/Footer";
 import { ArrowLeft } from "lucide-react";
 import {
@@ -40,6 +41,9 @@ export default function App() {
 
   // Selection state
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
+
+  // Detail panel state
+  const [detailVideoId, setDetailVideoId] = useState<string | null>(null);
 
   // Player state
   const [playerVideo, setPlayerVideo] = useState<VideoResult | null>(null);
@@ -270,6 +274,7 @@ export default function App() {
                   onPlay={handlePlay}
                   onFindSimilar={handleFindSimilar}
                   onClearFilters={hasActiveFilters ? handleClearAllFilters : undefined}
+                  onShowDetails={(id) => setDetailVideoId(id)}
                   selectedIds={selectedIds}
                   onToggleSelect={handleToggleSelect}
                 />
@@ -304,6 +309,25 @@ export default function App() {
       />
 
       <Footer />
+
+      {detailVideoId && (
+        <VideoDetailPanel
+          videoId={detailVideoId}
+          onClose={() => setDetailVideoId(null)}
+          onPlay={(id) => {
+            setDetailVideoId(null);
+            const video = (displayedVideos ?? allVideos).find((v) => v.video_id === id);
+            if (video) {
+              setPlayerVideo(video);
+              setActiveSegment(0);
+            }
+          }}
+          onFindSimilar={(id) => {
+            setDetailVideoId(null);
+            handleFindSimilar(id);
+          }}
+        />
+      )}
 
       {playerVideo && (
         <VideoPlayer

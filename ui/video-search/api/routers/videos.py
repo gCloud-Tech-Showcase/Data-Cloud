@@ -27,6 +27,16 @@ async def similar(video_id: str, limit: int = 10):
     return find_similar(video_id, limit=limit)
 
 
+@router.get("/api/videos/{video_id}/details")
+async def video_details(video_id: str):
+    """Get full AI-generated metadata for a single video."""
+    from services.bigquery import get_video_details
+    details = get_video_details(video_id)
+    if not details:
+        raise HTTPException(status_code=404, detail="Video not found")
+    return details
+
+
 @router.get("/api/videos/{video_id}/thumbnail")
 async def thumbnail(video_id: str):
     """Serve video thumbnail image."""

@@ -9,11 +9,12 @@ interface VideoCardProps {
   video: VideoResult;
   onPlay: (videoId: string, segmentIndex: number) => void;
   onFindSimilar?: (videoId: string) => void;
+  onShowDetails?: (videoId: string) => void;
   isSelected?: boolean;
   onToggleSelect?: (videoId: string) => void;
 }
 
-export function VideoCard({ video, onPlay, onFindSimilar, isSelected, onToggleSelect }: VideoCardProps) {
+export function VideoCard({ video, onPlay, onFindSimilar, onShowDetails, isSelected, onToggleSelect }: VideoCardProps) {
   const bestSegment = video.top_segments[0] || { segment_index: 0, start_seconds: 0, end_seconds: 120, distance: 0 };
 
   return (
@@ -87,7 +88,10 @@ export function VideoCard({ video, onPlay, onFindSimilar, isSelected, onToggleSe
       {/* Content — always visible */}
       <CardContent className="p-3 flex flex-col flex-1 justify-between gap-2">
         <div className="space-y-1">
-          <h3 className="text-sm font-medium text-foreground line-clamp-1">
+          <h3
+            className={`text-sm font-medium text-foreground line-clamp-1 ${onShowDetails ? "cursor-pointer hover:text-primary transition-colors" : ""}`}
+            onClick={(e) => { e.stopPropagation(); onShowDetails?.(video.video_id); }}
+          >
             {video.title}
           </h3>
           {video.year && (

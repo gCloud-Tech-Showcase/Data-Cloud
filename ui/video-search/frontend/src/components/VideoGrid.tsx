@@ -13,6 +13,7 @@ interface VideoGridProps {
   onPlay: (videoId: string, segmentIndex: number) => void;
   onFindSimilar?: (videoId: string) => void;
   onClearFilters?: () => void;
+  onShowDetails?: (videoId: string) => void;
   selectedIds?: Set<string>;
   onToggleSelect?: (videoId: string) => void;
 }
@@ -23,6 +24,7 @@ export function VideoGrid({
   onPlay,
   onFindSimilar,
   onClearFilters,
+  onShowDetails,
   selectedIds,
   onToggleSelect,
 }: VideoGridProps) {
@@ -91,6 +93,7 @@ export function VideoGrid({
             video={video}
             onPlay={onPlay}
             onFindSimilar={onFindSimilar}
+            onShowDetails={onShowDetails}
             isSelected={selectedIds?.has(video.video_id)}
             onToggleSelect={onToggleSelect}
           />

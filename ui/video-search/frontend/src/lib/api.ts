@@ -1,4 +1,4 @@
-import type { SearchResponse, VideosResponse, LibraryStats, SimilarResponse, ArchiveSearchResponse, IngestResponse } from "@/types";
+import type { SearchResponse, VideosResponse, LibraryStats, SimilarResponse, ArchiveSearchResponse, IngestResponse, VideoDetails } from "@/types";
 
 const BASE = "";
 
@@ -59,6 +59,12 @@ export async function ingestFromArchive(
     method: "POST",
   });
   if (!res.ok) throw new Error(`Ingest failed: ${res.statusText}`);
+  return res.json();
+}
+
+export async function getVideoDetails(videoId: string): Promise<VideoDetails> {
+  const res = await fetch(`${BASE}/api/videos/${videoId}/details`);
+  if (!res.ok) throw new Error(`Failed to get details: ${res.statusText}`);
   return res.json();
 }
 

@@ -100,6 +100,29 @@ export interface IngestResponse {
   message: string;
 }
 
+export interface VideoDetails {
+  video_id: string;
+  title: string;
+  year: number | null;
+  source_url: string;
+  duration_total_seconds: number | null;
+  category: string | null;
+  mood: string | null;
+  color_mode: string | null;
+  style: string | null;
+  ai_description: string | null;
+  themes: string[];
+  characters: string[];
+  language: string | null;
+  has_dialogue: boolean | null;
+  has_music: boolean | null;
+  target_audience: string | null;
+  setting: string | null;
+  pacing: string | null;
+  content_warnings: string[];
+  thumbnail_url: string;
+}
+
 export interface SimilarResponse {
   source_video_id: string;
   results: VideoResult[];
