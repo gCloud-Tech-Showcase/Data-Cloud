@@ -12,11 +12,8 @@ config {
     themes: "AI-detected themes as JSON array (e.g. friendship, adventure, comedy)",
     characters: "AI-detected characters as JSON array (e.g. Popeye, Olive Oyl)"
   },
-  tags: ["video_vector_search", "silver", "staging", "metadata"]
-}
-
-pre_operations {
-  CALL BQ.REFRESH_EXTERNAL_METADATA_CACHE('video_vector_search.bronze_video_segments')
+  tags: ["video_vector_search", "silver", "staging", "metadata"],
+  dependencies: ["silver_segment_embeddings"]
 }
 
 SELECT
