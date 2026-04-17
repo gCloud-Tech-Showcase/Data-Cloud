@@ -53,6 +53,15 @@ SELECT
   REPLACE(LOWER(TRIM(vm.color_mode)), '_', ' ') AS color_mode,
   REPLACE(LOWER(TRIM(vm.style)), '_', ' ') AS style,
   vm.description AS ai_description,
+  vm.themes,
+  vm.characters,
+  REPLACE(LOWER(TRIM(vm.language)), '_', ' ') AS language,
+  vm.has_dialogue,
+  vm.has_music,
+  REPLACE(LOWER(TRIM(vm.target_audience)), '_', ' ') AS target_audience,
+  REPLACE(LOWER(TRIM(vm.setting)), '_', ' ') AS setting,
+  REPLACE(LOWER(TRIM(vm.pacing)), '_', ' ') AS pacing,
+  vm.content_warnings,
   e.embedding
 FROM ${ref("silver_segment_embeddings")} e
 LEFT JOIN segment_metadata sm
