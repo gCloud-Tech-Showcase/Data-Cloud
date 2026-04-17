@@ -1,5 +1,6 @@
-import { Film, Plus, Bell } from "lucide-react";
+import { Film, Plus, Bell, Moon, Sun } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { useEffect, useState } from "react";
 
 interface HeaderProps {
   onAddVideos?: () => void;
@@ -8,6 +9,18 @@ interface HeaderProps {
 }
 
 export function Header({ onAddVideos, isAddView, onBackToLibrary }: HeaderProps) {
+  const [dark, setDark] = useState(() =>
+    document.documentElement.classList.contains("dark")
+  );
+
+  useEffect(() => {
+    if (dark) {
+      document.documentElement.classList.add("dark");
+    } else {
+      document.documentElement.classList.remove("dark");
+    }
+  }, [dark]);
+
   return (
     <header className="bg-primary text-primary-foreground">
       <div className="max-w-7xl mx-auto px-4 md:px-6 lg:px-8 py-3 flex items-center justify-between">
@@ -48,6 +61,15 @@ export function Header({ onAddVideos, isAddView, onBackToLibrary }: HeaderProps)
               <span className="hidden sm:inline">Add videos</span>
             </Button>
           )}
+
+          <button
+            type="button"
+            className="p-1.5 rounded-md hover:bg-white/10 transition-colors"
+            onClick={() => setDark(!dark)}
+            title={dark ? "Switch to light mode" : "Switch to dark mode"}
+          >
+            {dark ? <Sun className="w-4 h-4" /> : <Moon className="w-4 h-4" />}
+          </button>
 
           <button
             type="button"

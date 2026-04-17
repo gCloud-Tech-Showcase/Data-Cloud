@@ -54,6 +54,30 @@ export default function App() {
     loadAllVideos();
   }, []);
 
+  // Global keyboard shortcuts
+  useEffect(() => {
+    function handleKeyDown(e: KeyboardEvent) {
+      // Escape: close modals/panels in order
+      if (e.key === "Escape") {
+        if (playerVideo) {
+          setPlayerVideo(null);
+        } else if (detailVideoId) {
+          setDetailVideoId(null);
+        } else if (view === "add") {
+          setView("library");
+        }
+      }
+      // Ctrl/Cmd+K: focus search
+      if ((e.metaKey || e.ctrlKey) && e.key === "k") {
+        e.preventDefault();
+        const searchInput = document.querySelector<HTMLInputElement>('input[placeholder*="Search"]');
+        searchInput?.focus();
+      }
+    }
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [playerVideo, detailVideoId, view]);
+
   async function loadAllVideos() {
     try {
       const { videos } = await listVideos();

@@ -56,7 +56,7 @@ export function SearchBar({
             className="pl-10 pr-9 h-12 text-base"
             disabled={isLoading}
           />
-          {query && !isLoading && (
+          {query && !isLoading ? (
             <button
               type="button"
               className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
@@ -67,6 +67,10 @@ export function SearchBar({
             >
               <X className="w-4 h-4" />
             </button>
+          ) : !isLoading && (
+            <kbd className="absolute right-3 top-1/2 -translate-y-1/2 text-[10px] text-muted-foreground/50 bg-muted px-1.5 py-0.5 rounded border border-border hidden sm:inline">
+              Ctrl+K
+            </kbd>
           )}
         </div>
         <Button type="submit" size="lg" className="h-12 w-24" disabled={isLoading || !query.trim()}>
