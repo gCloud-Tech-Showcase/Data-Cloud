@@ -14,10 +14,6 @@ config {
   tags: ["video_vector_search", "silver", "staging", "embeddings"]
 }
 
-pre_operations {
-  CALL BQ.REFRESH_EXTERNAL_METADATA_CACHE('video_vector_search.bronze_video_segments')
-}
-
 SELECT
   uri AS segment_uri,
   REGEXP_EXTRACT(uri, r'/segments/([^/]+)/') AS video_id,

@@ -183,25 +183,6 @@ resource "google_project_iam_member" "segmenter_artifact_registry" {
 }
 
 
-# Function SA: BQ permissions for embedding generation after segmentation
-resource "google_project_iam_member" "segmenter_bq_job_user" {
-  project = var.project_id
-  role    = "roles/bigquery.jobUser"
-  member  = "serviceAccount:${google_service_account.video_segmenter.email}"
-}
-
-resource "google_project_iam_member" "segmenter_bq_data_editor" {
-  project = var.project_id
-  role    = "roles/bigquery.dataEditor"
-  member  = "serviceAccount:${google_service_account.video_segmenter.email}"
-}
-
-resource "google_project_iam_member" "segmenter_bq_connection_user" {
-  project = var.project_id
-  role    = "roles/bigquery.connectionUser"
-  member  = "serviceAccount:${google_service_account.video_segmenter.email}"
-}
-
 # Eventarc service agent needs its own role to route events
 resource "google_project_iam_member" "eventarc_service_agent" {
   project = var.project_id

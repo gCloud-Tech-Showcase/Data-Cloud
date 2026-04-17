@@ -1,17 +1,17 @@
 """
-Cloud Function: Video Segmentation + Embedding
+Cloud Function: Video Segmentation
 
 Triggered by GCS object finalization in the video search bucket.
 When a video is uploaded to raw/*.mp4, this function:
 1. Downloads the video to /tmp
 2. Splits it into 2-minute segments using ffmpeg
-3. Uploads segments to segments/{video_id}/seg_NNN.mp4
-4. Writes a per-video metadata CSV to manifests/metadata/{video_id}.csv
-5. Extracts a thumbnail frame to thumbnails/{video_id}.jpg
-6. Attaches parent video metadata to each segment as GCS custom metadata
-7. Refreshes BQ external table metadata cache
-8. Generates multimodal embeddings for the new segments
-9. Rebuilds the gold search table
+3. Uploads segments with full metadata (title, year, timing, etc.)
+4. Extracts a thumbnail frame
+5. Writes a per-video metadata CSV
+
+Embedding generation and AI metadata extraction are handled by the
+scheduled Dataform pipeline — not by this function. This keeps the
+function fast and focused on media processing only.
 
 Only processes files matching raw/*.mp4 — ignores everything else
 to prevent infinite trigger loops from segment uploads.
@@ -22,18 +22,12 @@ import io
 import json
 import os
 import subprocess
-import sys
 import tempfile
 from pathlib import Path
 
 import functions_framework
 from cloudevents.http import CloudEvent
-from google.cloud import bigquery, storage
-
-
-def log(message: str) -> None:
-    """Write log to stdout for Cloud Logging to capture."""
-    print(message, flush=True)
+from google.cloud import storage
 
 SEGMENT_DURATION = 120  # seconds
 
@@ -43,9 +37,10 @@ METADATA_CSV_COLUMNS = [
     "duration_total_seconds",
 ]
 
-PROJECT_ID = os.environ.get("GCP_PROJECT", "gcloud-tech-showcase")
-DATASET = "video_vector_search"
 
+def log(message: str) -> None:
+    """Write log to stdout for Cloud Logging to capture."""
+    print(message, flush=True)
 
 
 def get_video_duration(video_path: Path) -> float:
@@ -91,172 +86,6 @@ def split_video(video_path: Path, output_dir: Path) -> list[Path]:
         return []
 
     return sorted(output_dir.glob("seg_*.mp4"))
-
-
-def generate_embeddings(video_id: str) -> None:
-    """Generate embeddings for a video's segments and update search tables."""
-    client = bigquery.Client(project=PROJECT_ID)
-
-    # Refresh external table cache so new segments are visible
-    log("Refreshing metadata cache...")
-    client.query(
-        f"CALL BQ.REFRESH_EXTERNAL_METADATA_CACHE('{DATASET}.bronze_video_segments')"
-    ).result()
-
-    # Generate embeddings for this video's segments
-    log(f"Generating embeddings for {video_id}...")
-    embed_sql = f"""
-    INSERT INTO `{DATASET}.silver_segment_embeddings`
-      (segment_uri, video_id, segment_index, embedding, status, video_start_sec, video_end_sec)
-    SELECT
-      uri AS segment_uri,
-      REGEXP_EXTRACT(uri, r'/segments/([^/]+)/') AS video_id,
-      CAST(REGEXP_EXTRACT(uri, r'seg_(\\d+)\\.mp4') AS INT64) AS segment_index,
-      embedding,
-      status,
-      video_start_sec,
-      video_end_sec
-    FROM AI.GENERATE_EMBEDDING(
-      MODEL `{DATASET}.multimodal_embedding_model`,
-      (SELECT * FROM `{DATASET}.bronze_video_segments`
-       WHERE uri LIKE '%/segments/{video_id}/%')
-    )
-    """
-    client.query(embed_sql).result()
-    log(f"Embeddings generated for {video_id}")
-
-    # Ensure metadata table exists (Dataform creates it normally, but first video may arrive before Dataform runs)
-    client.query(f"""
-    CREATE TABLE IF NOT EXISTS `{DATASET}.silver_video_metadata` (
-      video_id STRING,
-      category STRING,
-      mood STRING,
-      color_mode STRING,
-      style STRING,
-      description STRING,
-      themes ARRAY<STRING>,
-      characters ARRAY<STRING>,
-      language STRING,
-      has_dialogue BOOL,
-      has_music BOOL,
-      target_audience STRING,
-      setting STRING,
-      pacing STRING,
-      content_warnings ARRAY<STRING>
-    )
-    """).result()
-
-    # Extract metadata using Gemini 2.5 Flash via AI.GENERATE + OBJ.GET_ACCESS_URL
-    log(f"Extracting metadata for {video_id}...")
-    prompt_parts = [
-        'Classify this video. ',
-        'category: cartoon, educational, documentary, newsreel, or other. ',
-        'mood: humorous, dramatic, educational, suspenseful, lighthearted, or serious. ',
-        'color_mode: color or black_and_white. ',
-        'style: hand-drawn animation, stop motion, live action, or mixed. ',
-        'description: one sentence about the main action. ',
-        'themes: 2-4 themes. characters: character names if identifiable. ',
-        'language: english, silent, or other. ',
-        'has_dialogue: true or false. has_music: true or false. ',
-        'target_audience: children, adults, or general. ',
-        'setting: where the action takes place. ',
-        'pacing: fast, moderate, or slow. ',
-        'content_warnings: list any dated stereotypes, violence, or sensitive content, or empty if none.',
-    ]
-    prompt_concat = "CONCAT(" + ", ".join(f"'{p}'" for p in prompt_parts) + ")"
-    output_schema = (
-        "category STRING, mood STRING, color_mode STRING, style STRING, "
-        "description STRING, themes ARRAY<STRING>, characters ARRAY<STRING>, "
-        "language STRING, has_dialogue BOOL, has_music BOOL, "
-        "target_audience STRING, setting STRING, pacing STRING, "
-        "content_warnings ARRAY<STRING>"
-    )
-    all_fields = (
-        "category, mood, color_mode, style, description, themes, characters, "
-        "language, has_dialogue, has_music, target_audience, setting, pacing, content_warnings"
-    )
-    meta_sql = f"""
-    MERGE INTO `{DATASET}.silver_video_metadata` T
-    USING (
-      SELECT
-        REGEXP_EXTRACT(uri, r'/segments/([^/]+)/') AS video_id,
-        r.{', r.'.join(all_fields.split(', '))}
-      FROM `{DATASET}.bronze_video_segments`,
-      UNNEST([
-        AI.GENERATE(
-          (OBJ.GET_ACCESS_URL(ref, 'r'), {prompt_concat}),
-          connection_id => 'us.vertex-ai-connection',
-          endpoint => 'gemini-2.5-flash',
-          output_schema => '{output_schema}'
-        )
-      ]) AS r
-      WHERE uri LIKE '%/segments/{video_id}/seg_000.mp4'
-    ) S
-    ON T.video_id = S.video_id
-    WHEN MATCHED THEN UPDATE SET
-      {', '.join(f'{f} = S.{f}' for f in all_fields.split(', '))}
-    WHEN NOT MATCHED THEN INSERT
-      (video_id, {all_fields})
-      VALUES (S.video_id, {', '.join(f'S.{f}' for f in all_fields.split(', '))})
-    """
-    try:
-        client.query(meta_sql).result()
-        log(f"Metadata extracted for {video_id}")
-    except Exception as e:
-        log(f"Metadata extraction failed (non-fatal): {e}")
-
-    # Rebuild gold table using object metadata + AI metadata
-    log("Rebuilding gold table...")
-    gold_sql = f"""
-    CREATE OR REPLACE TABLE `{DATASET}.gold_searchable_videos` AS
-    WITH segment_metadata AS (
-      SELECT
-        uri,
-        (SELECT value FROM UNNEST(metadata) WHERE name = 'title') AS title,
-        SAFE_CAST((SELECT value FROM UNNEST(metadata) WHERE name = 'year') AS INT64) AS year,
-        (SELECT value FROM UNNEST(metadata) WHERE name = 'source_url') AS source_url,
-        (SELECT value FROM UNNEST(metadata) WHERE name = 'license') AS license,
-        SAFE_CAST((SELECT value FROM UNNEST(metadata) WHERE name = 'start_seconds') AS INT64) AS start_seconds,
-        SAFE_CAST((SELECT value FROM UNNEST(metadata) WHERE name = 'end_seconds') AS INT64) AS end_seconds,
-        SAFE_CAST((SELECT value FROM UNNEST(metadata) WHERE name = 'duration_total_seconds') AS INT64) AS duration_total_seconds
-      FROM `{DATASET}.bronze_video_segments`
-    )
-    SELECT
-      e.segment_uri,
-      e.video_id,
-      e.segment_index,
-      COALESCE(sm.title, e.video_id) AS title,
-      sm.year,
-      sm.source_url,
-      sm.license,
-      sm.duration_total_seconds,
-      sm.start_seconds,
-      sm.end_seconds,
-      e.video_start_sec,
-      e.video_end_sec,
-      REPLACE(LOWER(TRIM(vm.category)), '_', ' ') AS category,
-      REPLACE(LOWER(TRIM(vm.mood)), '_', ' ') AS mood,
-      REPLACE(LOWER(TRIM(vm.color_mode)), '_', ' ') AS color_mode,
-      REPLACE(LOWER(TRIM(vm.style)), '_', ' ') AS style,
-      vm.description AS ai_description,
-      vm.themes,
-      vm.characters,
-      REPLACE(LOWER(TRIM(vm.language)), '_', ' ') AS language,
-      vm.has_dialogue,
-      vm.has_music,
-      REPLACE(LOWER(TRIM(vm.target_audience)), '_', ' ') AS target_audience,
-      REPLACE(LOWER(TRIM(vm.setting)), '_', ' ') AS setting,
-      REPLACE(LOWER(TRIM(vm.pacing)), '_', ' ') AS pacing,
-      vm.content_warnings,
-      e.embedding
-    FROM `{DATASET}.silver_segment_embeddings` e
-    LEFT JOIN segment_metadata sm
-      ON e.segment_uri = sm.uri
-    LEFT JOIN `{DATASET}.silver_video_metadata` vm
-      ON e.video_id = vm.video_id
-    """
-    client.query(gold_sql).result()
-    log("Gold table rebuilt")
 
 
 @functions_framework.cloud_event
@@ -319,7 +148,7 @@ def segment_video(cloud_event: CloudEvent) -> None:
 
         log(f"Produced {len(segments)} segments")
 
-        # Upload segments with full metadata attached per segment
+        # Upload segments with full metadata per segment
         metadata_rows = []
         for i, seg_path in enumerate(segments):
             start_seconds = i * SEGMENT_DURATION
@@ -387,13 +216,6 @@ def segment_video(cloud_event: CloudEvent) -> None:
         log(f"  Metadata CSV: gs://{bucket_name}/{csv_path}")
 
     log(
-        f"Segmentation complete: {video_id} — {len(segments)} segments, "
+        f"Done: {video_id} — {len(segments)} segments, "
         f"{duration:.0f}s total duration"
     )
-
-    # Generate embeddings and update search tables
-    try:
-        generate_embeddings(video_id)
-    except Exception as e:
-        log(f"Embedding generation failed for {video_id}: {e}")
-        log("Video is segmented but not yet searchable. Run Dataform to generate embeddings.")

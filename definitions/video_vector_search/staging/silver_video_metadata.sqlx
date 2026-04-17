@@ -23,10 +23,6 @@ config {
   dependencies: ["silver_segment_embeddings"]
 }
 
-pre_operations {
-  CALL BQ.REFRESH_EXTERNAL_METADATA_CACHE('video_vector_search.bronze_video_segments')
-}
-
 SELECT
   REGEXP_EXTRACT(uri, r'/segments/([^/]+)/') AS video_id,
   r.category, r.mood, r.color_mode, r.style, r.description,
