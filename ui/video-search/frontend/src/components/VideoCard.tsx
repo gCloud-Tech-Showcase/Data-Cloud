@@ -59,6 +59,12 @@ export function VideoCard({ video, onPlay, onFindSimilar }: VideoCardProps) {
           </div>
         </div>
 
+        {video.ai_description && (
+          <p className="text-xs text-muted-foreground line-clamp-2">
+            {video.ai_description}
+          </p>
+        )}
+
         {bestSegment && video.matching_intervals > 0 && (
           <p className="text-xs text-muted-foreground">
             Best match at {formatDuration(bestSegment.start_seconds)}–

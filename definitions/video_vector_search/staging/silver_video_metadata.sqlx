@@ -25,15 +25,7 @@ FROM AI.GENERATE_TABLE(
       REGEXP_EXTRACT(uri, r'/segments/([^/]+)/') AS video_id,
       'Watch this video carefully and fill in every field. category must be one of: cartoon, educational, documentary, newsreel, other. mood must be one of: humorous, dramatic, educational, suspenseful, lighthearted, serious. color_mode must be: color or black_and_white. style must be one of: hand-drawn animation, stop motion, live action, mixed. description should be one sentence about what happens. themes should list 2-4 themes. characters should list the actual character names you see in the video.' AS prompt
     FROM ${ref("bronze_video_segments")}
-    WHERE uri LIKE '%/seg_001.mp4'
-      OR (
-        uri LIKE '%/seg_000.mp4'
-        AND REGEXP_EXTRACT(uri, r'/segments/([^/]+)/') NOT IN (
-          SELECT REGEXP_EXTRACT(uri, r'/segments/([^/]+)/')
-          FROM ${ref("bronze_video_segments")}
-          WHERE uri LIKE '%/seg_001.mp4'
-        )
-      )
+    WHERE uri LIKE '%/seg_000.mp4'
   ),
   STRUCT(
     'category STRING, mood STRING, color_mode STRING, style STRING, description STRING, themes ARRAY<STRING>, characters ARRAY<STRING>' AS output_schema,

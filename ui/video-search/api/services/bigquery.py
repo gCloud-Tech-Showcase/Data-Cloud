@@ -35,6 +35,8 @@ def search_videos(query: str, limit: int = 20) -> dict[str, Any]:
         base.end_seconds,
         base.source_url,
         base.duration_total_seconds,
+        base.category,
+        base.ai_description,
         distance
       FROM VECTOR_SEARCH(
         TABLE `{gold_table}`, 'embedding',
@@ -147,6 +149,8 @@ def find_similar(video_id: str, limit: int = 10) -> dict[str, Any]:
         base.end_seconds,
         base.source_url,
         base.duration_total_seconds,
+        base.category,
+        base.ai_description,
         distance
       FROM VECTOR_SEARCH(
         (SELECT * FROM `{gold_table}` WHERE video_id != @video_id),
@@ -240,29 +244,32 @@ def get_library_stats() -> dict[str, Any]:
     """
     row = next(client.query(sql).result())
 
-    # Get categories from AI-generated metadata
-    cat_sql = f"""
-    SELECT category, COUNT(DISTINCT video_id) AS count
-    FROM `{GOLD_TABLE}`
-    WHERE category IS NOT NULL
-    GROUP BY category
-    ORDER BY count DESC
-    """
-    categories = []
-    try:
-        categories = [
-            {"name": r.category, "count": r.count}
-            for r in client.query(cat_sql).result()
-        ]
-    except Exception:
-        pass  # Table may not exist yet
+    # Get filter dimensions from AI-generated metadata
+    filters: dict[str, list] = {}
+    filter_fields = ["category", "mood", "color_mode", "style"]
+    for field in filter_fields:
+        try:
+            sql = f"""
+            SELECT {field} AS value, COUNT(DISTINCT video_id) AS count
+            FROM `{GOLD_TABLE}`
+            WHERE {field} IS NOT NULL
+            GROUP BY {field}
+            ORDER BY count DESC
+            """
+            filters[field] = [
+                {"name": r.value, "count": r.count}
+                for r in client.query(sql).result()
+            ]
+        except Exception:
+            filters[field] = []
 
     return {
         "total_videos": row.total_videos,
         "total_embeddings": row.total_embeddings,
         "earliest_year": row.earliest_year,
         "latest_year": row.latest_year,
-        "categories": categories,
+        "categories": filters.get("category", []),
+        "filters": filters,
     }
 
 

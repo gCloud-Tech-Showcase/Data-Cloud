@@ -5,7 +5,7 @@ import { VideoGrid } from "@/components/VideoGrid";
 import { VideoPlayer } from "@/components/VideoPlayer";
 import { LibraryStats } from "@/components/LibraryStats";
 import { AddVideos } from "@/components/AddVideos";
-import { FilterBar } from "@/components/FilterBar";
+import { FilterSidebar } from "@/components/FilterSidebar";
 import { Button } from "@/components/ui/button";
 import { Search, Plus } from "lucide-react";
 import {
@@ -34,7 +34,7 @@ export default function App() {
   const [statsLoading, setStatsLoading] = useState(true);
   const [searchLabel, setSearchLabel] = useState<string | undefined>();
   const [externalQuery, setExternalQuery] = useState<string | undefined>();
-  const [activeFilter, setActiveFilter] = useState<string | null>(null);
+  const [activeFilters, setActiveFilters] = useState<Record<string, string | null>>({});
 
   // Player state
   const [playerVideo, setPlayerVideo] = useState<VideoResult | null>(null);
@@ -62,7 +62,7 @@ export default function App() {
         }))
       );
     } catch {
-      // silently fail — browse just won't show
+      // silently fail
     }
   }
 
@@ -136,6 +136,14 @@ export default function App() {
     [playerVideo]
   );
 
+  const handleFilterChange = useCallback((field: string, value: string | null) => {
+    setActiveFilters((prev) => ({ ...prev, [field]: value }));
+  }, []);
+
+  const handleClearAllFilters = useCallback(() => {
+    setActiveFilters({});
+  }, []);
+
   // Show search results if searched, otherwise show all videos
   const unfilteredVideos = hasSearched
     ? searchResult?.results ?? null
@@ -143,10 +151,19 @@ export default function App() {
       ? allVideos
       : null;
 
-  // Apply category filter (uses AI-generated category from Gemini)
-  const displayedVideos = unfilteredVideos && activeFilter
-    ? unfilteredVideos.filter((v) => v.category === activeFilter)
-    : unfilteredVideos;
+  // Apply multi-field filters
+  const displayedVideos = unfilteredVideos
+    ? unfilteredVideos.filter((v) => {
+        for (const [field, value] of Object.entries(activeFilters)) {
+          if (value === null) continue;
+          const videoValue = (v as unknown as Record<string, unknown>)[field];
+          if (videoValue !== value) return false;
+        }
+        return true;
+      })
+    : null;
+
+  const hasFilters = stats?.filters && Object.values(stats.filters).some((f) => f.length > 0);
 
   return (
     <div className="min-h-screen bg-background text-foreground flex flex-col">
@@ -178,7 +195,7 @@ export default function App() {
           </Button>
         </div>
 
-        {/* Library view: search + results (or all videos when no search) */}
+        {/* Library view */}
         {view === "library" && (
           <div className="space-y-6">
             <SearchBar
@@ -200,23 +217,29 @@ export default function App() {
               </div>
             )}
 
-            {stats?.categories && stats.categories.length > 0 && (
-              <FilterBar
-                categories={stats.categories}
-                activeFilter={activeFilter}
-                onFilterChange={setActiveFilter}
-                totalResults={unfilteredVideos?.length}
-              />
-            )}
+            <div className={`flex gap-6 ${hasFilters ? "" : ""}`}>
+              {/* Filter sidebar */}
+              {hasFilters && stats?.filters && (
+                <FilterSidebar
+                  filters={stats.filters}
+                  activeFilters={activeFilters}
+                  onFilterChange={handleFilterChange}
+                  onClearAll={handleClearAllFilters}
+                />
+              )}
 
-            <VideoGrid
-              results={displayedVideos}
-              isLoading={isLoading}
-              searchTime={hasSearched ? searchResult?.search_time_ms : undefined}
-              query={hasSearched ? searchResult?.query : undefined}
-              onPlay={handlePlay}
-              onFindSimilar={handleFindSimilar}
-            />
+              {/* Video grid */}
+              <div className="flex-1 min-w-0">
+                <VideoGrid
+                  results={displayedVideos}
+                  isLoading={isLoading}
+                  searchTime={hasSearched ? searchResult?.search_time_ms : undefined}
+                  query={hasSearched ? searchResult?.query : undefined}
+                  onPlay={handlePlay}
+                  onFindSimilar={handleFindSimilar}
+                />
+              </div>
+            </div>
           </div>
         )}
 

@@ -42,12 +42,18 @@ export interface VideosResponse {
   videos: VideoListItem[];
 }
 
+export interface FilterOption {
+  name: string;
+  count: number;
+}
+
 export interface LibraryStats {
   total_videos: number;
   total_embeddings: number;
   earliest_year: number | null;
   latest_year: number | null;
-  categories: { name: string; count: number }[];
+  categories: FilterOption[];
+  filters: Record<string, FilterOption[]>;
 }
 
 export interface ArchiveItem {
