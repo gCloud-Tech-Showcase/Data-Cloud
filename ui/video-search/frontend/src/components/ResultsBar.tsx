@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Link, Check } from "lucide-react";
+import { Link, Check, Clapperboard } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
 interface ResultsBarProps {
@@ -8,6 +8,8 @@ interface ResultsBarProps {
   query?: string;
   sortBy: string;
   onSortChange: (sort: string) => void;
+  hasSearchResults?: boolean;
+  onHighlightReel?: () => void;
 }
 
 const SORT_OPTIONS = [
@@ -24,6 +26,8 @@ export function ResultsBar({
   query,
   sortBy,
   onSortChange,
+  hasSearchResults,
+  onHighlightReel,
 }: ResultsBarProps) {
   const [copied, setCopied] = useState(false);
 
@@ -69,6 +73,18 @@ export function ResultsBar({
                 Share
               </>
             )}
+          </Button>
+        )}
+
+        {hasSearchResults && onHighlightReel && (
+          <Button
+            variant="ghost"
+            size="sm"
+            className="h-7 text-xs gap-1 text-muted-foreground"
+            onClick={onHighlightReel}
+          >
+            <Clapperboard className="w-3 h-3" />
+            Highlight reel
           </Button>
         )}
       </div>

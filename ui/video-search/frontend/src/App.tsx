@@ -9,6 +9,7 @@ import { FilterSidebar } from "@/components/FilterSidebar";
 import { ResultsBar } from "@/components/ResultsBar";
 import { SelectionBar } from "@/components/SelectionBar";
 import { VideoDetailPanel } from "@/components/VideoDetailPanel";
+import { HighlightReel } from "@/components/HighlightReel";
 import { Footer } from "@/components/Footer";
 import { ArrowLeft } from "lucide-react";
 import {
@@ -44,6 +45,7 @@ export default function App() {
 
   // Detail panel state
   const [detailVideoId, setDetailVideoId] = useState<string | null>(null);
+  const [showHighlightReel, setShowHighlightReel] = useState(false);
 
   // Player state
   const [playerVideo, setPlayerVideo] = useState<VideoResult | null>(null);
@@ -97,7 +99,9 @@ export default function App() {
     function handleKeyDown(e: KeyboardEvent) {
       // Escape: close modals/panels in order
       if (e.key === "Escape") {
-        if (playerVideo) {
+        if (showHighlightReel) {
+          setShowHighlightReel(false);
+        } else if (playerVideo) {
           setPlayerVideo(null);
         } else if (detailVideoId) {
           setDetailVideoId(null);
@@ -114,7 +118,7 @@ export default function App() {
     }
     window.addEventListener("keydown", handleKeyDown);
     return () => window.removeEventListener("keydown", handleKeyDown);
-  }, [playerVideo, detailVideoId, view]);
+  }, [playerVideo, detailVideoId, showHighlightReel, view]);
 
   async function loadAllVideos() {
     try {
@@ -328,6 +332,8 @@ export default function App() {
                     query={hasSearched ? searchResult?.query : undefined}
                     sortBy={sortBy}
                     onSortChange={setSortBy}
+                    hasSearchResults={hasSearched && (searchResult?.results?.length ?? 0) > 0}
+                    onHighlightReel={() => setShowHighlightReel(true)}
                   />
                 )}
 
@@ -372,6 +378,14 @@ export default function App() {
       />
 
       <Footer />
+
+      {showHighlightReel && searchResult && (
+        <HighlightReel
+          videos={searchResult.results}
+          query={searchResult.query}
+          onClose={() => setShowHighlightReel(false)}
+        />
+      )}
 
       {detailVideoId && (
         <VideoDetailPanel
