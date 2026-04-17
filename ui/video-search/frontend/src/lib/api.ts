@@ -22,6 +22,10 @@ export function getSegmentPlayUrl(videoId: string, segmentIndex: number): string
   return `${BASE}/api/videos/${videoId}/segments/${segmentIndex}/play`;
 }
 
+export function getFullVideoUrl(videoId: string): string {
+  return `${BASE}/api/videos/${videoId}/play`;
+}
+
 export async function getLibraryStats(): Promise<LibraryStats> {
   const res = await fetch(`${BASE}/api/videos/stats`);
   if (!res.ok) throw new Error(`Failed to get stats: ${res.statusText}`);

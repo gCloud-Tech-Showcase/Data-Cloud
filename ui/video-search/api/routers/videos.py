@@ -4,7 +4,7 @@ from fastapi import APIRouter, HTTPException
 from fastapi.responses import Response
 
 from services.bigquery import list_videos, find_similar, get_library_stats
-from services.storage import get_thumbnail_bytes, get_segment_bytes
+from services.storage import get_thumbnail_bytes, get_segment_bytes, get_raw_video_bytes
 
 router = APIRouter()
 
@@ -42,6 +42,19 @@ async def play_segment(video_id: str, segment_index: int):
     data = get_segment_bytes(video_id, segment_index)
     if not data:
         raise HTTPException(status_code=404, detail="Segment not found")
+    return Response(
+        content=data,
+        media_type="video/mp4",
+        headers={"Accept-Ranges": "bytes"},
+    )
+
+
+@router.get("/api/videos/{video_id}/play")
+async def play_full(video_id: str):
+    """Stream full raw video for playback."""
+    data = get_raw_video_bytes(video_id)
+    if not data:
+        raise HTTPException(status_code=404, detail="Video not found")
     return Response(
         content=data,
         media_type="video/mp4",

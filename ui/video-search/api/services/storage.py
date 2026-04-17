@@ -39,6 +39,18 @@ def get_segment_bytes(video_id: str, segment_index: int) -> bytes | None:
     return blob.download_as_bytes()
 
 
+def get_raw_video_bytes(video_id: str) -> bytes | None:
+    """Download raw video bytes."""
+    client = _get_client()
+    bucket = client.bucket(BUCKET_NAME)
+    blob = bucket.blob(f"raw/{video_id}.mp4")
+
+    if not blob.exists():
+        return None
+
+    return blob.download_as_bytes()
+
+
 def segment_exists(video_id: str, segment_index: int) -> bool:
     """Check if a segment exists in GCS."""
     blob_path = f"segments/{video_id}/seg_{segment_index:03d}.mp4"

@@ -11,7 +11,6 @@ import { Footer } from "@/components/Footer";
 import { ArrowLeft } from "lucide-react";
 import {
   searchVideos,
-  getSegmentPlayUrl,
   getLibraryStats,
   listVideos,
   findSimilar,
@@ -40,7 +39,6 @@ export default function App() {
 
   // Player state
   const [playerVideo, setPlayerVideo] = useState<VideoResult | null>(null);
-  const [playerUrl, setPlayerUrl] = useState<string | null>(null);
   const [activeSegment, setActiveSegment] = useState(0);
 
   useEffect(() => {
@@ -127,19 +125,9 @@ export default function App() {
       const video = results?.find((v) => v.video_id === videoId);
       if (!video) return;
       setPlayerVideo(video);
-      setPlayerUrl(getSegmentPlayUrl(videoId, segmentIndex));
       setActiveSegment(segmentIndex);
     },
     [hasSearched, allVideos, searchResult]
-  );
-
-  const handleSegmentChange = useCallback(
-    (segmentIndex: number) => {
-      if (!playerVideo) return;
-      setPlayerUrl(getSegmentPlayUrl(playerVideo.video_id, segmentIndex));
-      setActiveSegment(segmentIndex);
-    },
-    [playerVideo]
   );
 
   // Multi-select filter toggle
@@ -289,19 +277,14 @@ export default function App() {
 
       <Footer />
 
-      {playerVideo && playerUrl && (
+      {playerVideo && (
         <VideoPlayer
           videoId={playerVideo.video_id}
           title={playerVideo.title}
-          videoUrl={playerUrl}
           segments={playerVideo.top_segments}
-          activeSegment={activeSegment}
           totalDuration={playerVideo.duration_total_seconds}
-          onSegmentChange={handleSegmentChange}
-          onClose={() => {
-            setPlayerVideo(null);
-            setPlayerUrl(null);
-          }}
+          initialSeek={activeSegment * 120}
+          onClose={() => setPlayerVideo(null)}
         />
       )}
     </div>
