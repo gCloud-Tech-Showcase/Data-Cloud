@@ -1,0 +1,52 @@
+config {
+  type: "table",
+  schema: "video_vector_search",
+  description: "SILVER: AI-extracted video metadata using Gemini multimodal analysis. Each video is analyzed by Gemini 2.0 Flash to extract category, themes, characters, mood, color mode, style, and a short description. Uses segment 1 (skips intros) or segment 0 for short videos.",
+  columns: {
+    video_id: "Parent video identifier",
+    category: "AI-detected category: cartoon, educational, documentary, newsreel, or other",
+    mood: "AI-detected mood: humorous, dramatic, educational, suspenseful, lighthearted, or serious",
+    color_mode: "AI-detected: color or black_and_white",
+    style: "AI-detected style: hand-drawn animation, stop motion, live action, or mixed",
+    description: "AI-generated one-sentence description of the video content",
+    themes: "AI-detected themes as JSON array (e.g. friendship, adventure, comedy)",
+    characters: "AI-detected characters as JSON array (e.g. Popeye, Olive Oyl)"
+  },
+  tags: ["video_vector_search", "silver", "staging", "metadata"]
+}
+
+pre_operations {
+  CALL BQ.REFRESH_EXTERNAL_METADATA_CACHE('video_vector_search.bronze_video_segments')
+}
+
+SELECT
+  REGEXP_EXTRACT(uri, r'/segments/([^/]+)/') AS video_id,
+  JSON_EXTRACT_SCALAR(ml_generate_text_llm_result, '$.category') AS category,
+  JSON_EXTRACT_SCALAR(ml_generate_text_llm_result, '$.mood') AS mood,
+  JSON_EXTRACT_SCALAR(ml_generate_text_llm_result, '$.color_mode') AS color_mode,
+  JSON_EXTRACT_SCALAR(ml_generate_text_llm_result, '$.style') AS style,
+  JSON_EXTRACT_SCALAR(ml_generate_text_llm_result, '$.description') AS description,
+  JSON_EXTRACT_ARRAY(ml_generate_text_llm_result, '$.themes') AS themes,
+  JSON_EXTRACT_ARRAY(ml_generate_text_llm_result, '$.characters') AS characters
+FROM AI.GENERATE_TEXT(
+  MODEL ${ref("gemini_video_model")},
+  (
+    SELECT *
+    FROM ${ref("bronze_video_segments")}
+    WHERE uri LIKE '%/seg_001.mp4'
+      OR (
+        uri LIKE '%/seg_000.mp4'
+        AND REGEXP_EXTRACT(uri, r'/segments/([^/]+)/') NOT IN (
+          SELECT REGEXP_EXTRACT(uri, r'/segments/([^/]+)/')
+          FROM ${ref("bronze_video_segments")}
+          WHERE uri LIKE '%/seg_001.mp4'
+        )
+      )
+  ),
+  STRUCT(
+    'Analyze this video and return ONLY a raw JSON object with no markdown formatting, no code fences, no explanation. Return exactly this structure: {"category": "cartoon|educational|documentary|newsreel|other", "mood": "humorous|dramatic|educational|suspenseful|lighthearted|serious", "color_mode": "color|black_and_white", "style": "hand-drawn animation|stop motion|live action|mixed", "description": "<one sentence describing what happens in this video>", "themes": ["<theme1>", "<theme2>"], "characters": ["<character1>", "<character2>"]}' AS prompt,
+    0.2 AS temperature,
+    1024 AS max_output_tokens,
+    TRUE AS flatten_json_output
+  )
+)

@@ -15,6 +15,8 @@ config {
     end_seconds: "End offset of this segment in the parent video",
     video_start_sec: "Start second of the embedding interval within the segment",
     video_end_sec: "End second of the embedding interval within the segment",
+    category: "AI-detected category (cartoon, educational, documentary, etc.)",
+    ai_description: "AI-generated one-sentence description of the video",
     embedding: "1408-dimensional multimodal embedding vector"
   },
   tags: ["video_vector_search", "gold", "marts"]
@@ -46,7 +48,11 @@ SELECT
   sm.end_seconds,
   e.video_start_sec,
   e.video_end_sec,
+  vm.category,
+  vm.description AS ai_description,
   e.embedding
 FROM ${ref("silver_segment_embeddings")} e
 LEFT JOIN segment_metadata sm
   ON e.segment_uri = sm.uri
+LEFT JOIN ${ref("silver_video_metadata")} vm
+  ON e.video_id = vm.video_id

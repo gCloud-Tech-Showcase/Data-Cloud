@@ -55,6 +55,8 @@ def search_videos(query: str, limit: int = 20) -> dict[str, Any]:
       ANY_VALUE(year) AS year,
       ANY_VALUE(source_url) AS source_url,
       ANY_VALUE(duration_total_seconds) AS duration_total_seconds,
+      ANY_VALUE(category) AS category,
+      ANY_VALUE(ai_description) AS ai_description,
       ROUND(MIN(distance), 4) AS best_distance,
       COUNT(*) AS matching_intervals,
       ARRAY_AGG(
@@ -106,6 +108,8 @@ def search_videos(query: str, limit: int = 20) -> dict[str, Any]:
             "year": row.year,
             "source_url": row.source_url,
             "duration_total_seconds": row.duration_total_seconds,
+            "category": row.category,
+            "ai_description": row.ai_description,
             "thumbnail_url": f"/api/videos/{row.video_id}/thumbnail",
             "best_distance": best_dist,
             "relevance_pct": relevance_pct,
@@ -158,6 +162,8 @@ def find_similar(video_id: str, limit: int = 10) -> dict[str, Any]:
       ANY_VALUE(year) AS year,
       ANY_VALUE(source_url) AS source_url,
       ANY_VALUE(duration_total_seconds) AS duration_total_seconds,
+      ANY_VALUE(category) AS category,
+      ANY_VALUE(ai_description) AS ai_description,
       ROUND(MIN(distance), 4) AS best_distance,
       COUNT(*) AS matching_intervals,
       ARRAY_AGG(
@@ -202,6 +208,8 @@ def find_similar(video_id: str, limit: int = 10) -> dict[str, Any]:
             "year": row.year,
             "source_url": row.source_url,
             "duration_total_seconds": row.duration_total_seconds,
+            "category": row.category,
+            "ai_description": row.ai_description,
             "thumbnail_url": f"/api/videos/{row.video_id}/thumbnail",
             "best_distance": best_dist,
             "relevance_pct": relevance_pct,
@@ -232,25 +240,22 @@ def get_library_stats() -> dict[str, Any]:
     """
     row = next(client.query(sql).result())
 
-    # Get per-category counts from the mapping table
+    # Get categories from AI-generated metadata
     cat_sql = f"""
-    SELECT
-      CASE
-        WHEN title LIKE '%Popeye%' THEN 'Popeye'
-        WHEN title LIKE '%Betty Boop%' THEN 'Betty Boop'
-        WHEN title LIKE '%Bugs Bunny%' OR title LIKE '%Merrie Melodies%' THEN 'Looney Tunes'
-        WHEN title LIKE '%Superman%' THEN 'Superman'
-        ELSE 'Other'
-      END AS category,
-      COUNT(DISTINCT video_id) AS count
+    SELECT category, COUNT(DISTINCT video_id) AS count
     FROM `{GOLD_TABLE}`
+    WHERE category IS NOT NULL
     GROUP BY category
     ORDER BY count DESC
     """
-    categories = [
-        {"name": r.category, "count": r.count}
-        for r in client.query(cat_sql).result()
-    ]
+    categories = []
+    try:
+        categories = [
+            {"name": r.category, "count": r.count}
+            for r in client.query(cat_sql).result()
+        ]
+    except Exception:
+        pass  # Table may not exist yet
 
     return {
         "total_videos": row.total_videos,
@@ -266,13 +271,16 @@ def list_videos() -> list[dict[str, Any]]:
     client = _get_client()
 
     sql = f"""
-    SELECT DISTINCT
+    SELECT
       video_id,
-      title,
-      year,
-      source_url,
-      duration_total_seconds
+      ANY_VALUE(title) AS title,
+      ANY_VALUE(year) AS year,
+      ANY_VALUE(source_url) AS source_url,
+      ANY_VALUE(duration_total_seconds) AS duration_total_seconds,
+      ANY_VALUE(category) AS category,
+      ANY_VALUE(ai_description) AS ai_description
     FROM `{GOLD_TABLE}`
+    GROUP BY video_id
     ORDER BY title
     """
 
@@ -285,6 +293,8 @@ def list_videos() -> list[dict[str, Any]]:
             "year": row.year,
             "source_url": row.source_url,
             "duration_total_seconds": row.duration_total_seconds,
+            "category": row.category,
+            "ai_description": row.ai_description,
             "thumbnail_url": f"/api/videos/{row.video_id}/thumbnail",
         }
         for row in results

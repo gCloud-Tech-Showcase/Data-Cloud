@@ -12,6 +12,8 @@ export interface VideoResult {
   source_url: string;
   duration_total_seconds: number | null;
   thumbnail_url: string;
+  category: string | null;
+  ai_description: string | null;
   best_distance: number;
   relevance_pct: number;
   matching_intervals: number;
@@ -31,6 +33,8 @@ export interface VideoListItem {
   year: number | null;
   source_url: string;
   duration_total_seconds: number | null;
+  category: string | null;
+  ai_description: string | null;
   thumbnail_url: string;
 }
 

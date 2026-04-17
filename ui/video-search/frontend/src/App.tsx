@@ -53,6 +53,8 @@ export default function App() {
       setAllVideos(
         videos.map((v) => ({
           ...v,
+          category: v.category ?? null,
+          ai_description: v.ai_description ?? null,
           best_distance: 0,
           relevance_pct: 0,
           matching_intervals: 0,
@@ -141,21 +143,9 @@ export default function App() {
       ? allVideos
       : null;
 
-  // Apply category filter
+  // Apply category filter (uses AI-generated category from Gemini)
   const displayedVideos = unfilteredVideos && activeFilter
-    ? unfilteredVideos.filter((v) => {
-        const title = v.title?.toLowerCase() || "";
-        const filter = activeFilter.toLowerCase();
-        if (filter === "other") {
-          return !["popeye", "betty boop", "looney tunes", "bugs bunny", "merrie melodies", "superman"].some(
-            (k) => title.includes(k)
-          );
-        }
-        if (filter === "looney tunes") {
-          return title.includes("bugs bunny") || title.includes("merrie melodies") || title.includes("looney");
-        }
-        return title.includes(filter);
-      })
+    ? unfilteredVideos.filter((v) => v.category === activeFilter)
     : unfilteredVideos;
 
   return (

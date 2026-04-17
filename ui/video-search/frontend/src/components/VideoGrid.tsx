@@ -1,7 +1,11 @@
+import { useState, useEffect } from "react";
 import { Search } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
+import { Button } from "@/components/ui/button";
 import { VideoCard } from "./VideoCard";
 import type { VideoResult } from "@/types";
+
+const PAGE_SIZE = 12;
 
 interface VideoGridProps {
   results: VideoResult[] | null;
@@ -20,6 +24,13 @@ export function VideoGrid({
   onPlay,
   onFindSimilar,
 }: VideoGridProps) {
+  const [visibleCount, setVisibleCount] = useState(PAGE_SIZE);
+
+  // Reset visible count when results change
+  useEffect(() => {
+    setVisibleCount(PAGE_SIZE);
+  }, [results]);
+
   if (isLoading) {
     return (
       <div className="space-y-4">
@@ -64,6 +75,9 @@ export function VideoGrid({
     );
   }
 
+  const visibleResults = results.slice(0, visibleCount);
+  const hasMore = results.length > visibleCount;
+
   return (
     <div className="space-y-4">
       {searchTime !== undefined && (
@@ -75,10 +89,20 @@ export function VideoGrid({
         </p>
       )}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-        {results.map((video) => (
+        {visibleResults.map((video) => (
           <VideoCard key={video.video_id} video={video} onPlay={onPlay} onFindSimilar={onFindSimilar} />
         ))}
       </div>
+      {hasMore && (
+        <div className="flex justify-center pt-4">
+          <Button
+            variant="outline"
+            onClick={() => setVisibleCount((prev) => prev + PAGE_SIZE)}
+          >
+            Load more ({results.length - visibleCount} remaining)
+          </Button>
+        </div>
+      )}
     </div>
   );
 }
