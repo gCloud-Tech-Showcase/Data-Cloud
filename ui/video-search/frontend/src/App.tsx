@@ -7,6 +7,7 @@ import { LibraryStats } from "@/components/LibraryStats";
 import { AddVideos } from "@/components/AddVideos";
 import { FilterSidebar } from "@/components/FilterSidebar";
 import { ResultsBar } from "@/components/ResultsBar";
+import { Footer } from "@/components/Footer";
 import { ArrowLeft } from "lucide-react";
 import {
   searchVideos,
@@ -285,6 +286,8 @@ export default function App() {
           </div>
         )}
       </main>
+
+      <Footer />
 
       {playerVideo && playerUrl && (
         <VideoPlayer
