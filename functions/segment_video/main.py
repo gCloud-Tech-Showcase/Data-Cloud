@@ -135,37 +135,69 @@ def generate_embeddings(video_id: str) -> None:
       style STRING,
       description STRING,
       themes ARRAY<STRING>,
-      characters ARRAY<STRING>
+      characters ARRAY<STRING>,
+      language STRING,
+      has_dialogue BOOL,
+      has_music BOOL,
+      target_audience STRING,
+      setting STRING,
+      pacing STRING,
+      content_warnings ARRAY<STRING>
     )
     """).result()
 
     # Extract metadata using Gemini 2.5 Flash via AI.GENERATE + OBJ.GET_ACCESS_URL
     log(f"Extracting metadata for {video_id}...")
+    prompt_parts = [
+        'Classify this video. ',
+        'category: cartoon, educational, documentary, newsreel, or other. ',
+        'mood: humorous, dramatic, educational, suspenseful, lighthearted, or serious. ',
+        'color_mode: color or black_and_white. ',
+        'style: hand-drawn animation, stop motion, live action, or mixed. ',
+        'description: one sentence about the main action. ',
+        'themes: 2-4 themes. characters: character names if identifiable. ',
+        'language: english, silent, or other. ',
+        'has_dialogue: true or false. has_music: true or false. ',
+        'target_audience: children, adults, or general. ',
+        'setting: where the action takes place. ',
+        'pacing: fast, moderate, or slow. ',
+        'content_warnings: list any dated stereotypes, violence, or sensitive content, or empty if none.',
+    ]
+    prompt_concat = "CONCAT(" + ", ".join(f"'{p}'" for p in prompt_parts) + ")"
+    output_schema = (
+        "category STRING, mood STRING, color_mode STRING, style STRING, "
+        "description STRING, themes ARRAY<STRING>, characters ARRAY<STRING>, "
+        "language STRING, has_dialogue BOOL, has_music BOOL, "
+        "target_audience STRING, setting STRING, pacing STRING, "
+        "content_warnings ARRAY<STRING>"
+    )
+    all_fields = (
+        "category, mood, color_mode, style, description, themes, characters, "
+        "language, has_dialogue, has_music, target_audience, setting, pacing, content_warnings"
+    )
     meta_sql = f"""
     MERGE INTO `{DATASET}.silver_video_metadata` T
     USING (
       SELECT
         REGEXP_EXTRACT(uri, r'/segments/([^/]+)/') AS video_id,
-        r.category, r.mood, r.color_mode, r.style, r.description, r.themes, r.characters
+        r.{', r.'.join(all_fields.split(', '))}
       FROM `{DATASET}.bronze_video_segments`,
       UNNEST([
         AI.GENERATE(
-          (OBJ.GET_ACCESS_URL(ref, 'r'),
-           'Classify this video. category: cartoon, educational, documentary, newsreel, or other. mood: humorous, dramatic, educational, suspenseful, lighthearted, or serious. color_mode: color or black_and_white. style: hand-drawn animation, stop motion, live action, or mixed. description: one sentence about the main action. themes: 2-4 themes. characters: character names if identifiable.'),
+          (OBJ.GET_ACCESS_URL(ref, 'r'), {prompt_concat}),
           connection_id => 'us.vertex-ai-connection',
           endpoint => 'gemini-2.5-flash',
-          output_schema => 'category STRING, mood STRING, color_mode STRING, style STRING, description STRING, themes ARRAY<STRING>, characters ARRAY<STRING>'
+          output_schema => '{output_schema}'
         )
       ]) AS r
       WHERE uri LIKE '%/segments/{video_id}/seg_000.mp4'
     ) S
     ON T.video_id = S.video_id
     WHEN MATCHED THEN UPDATE SET
-      category = S.category, mood = S.mood, color_mode = S.color_mode,
-      style = S.style, description = S.description, themes = S.themes, characters = S.characters
+      {', '.join(f'{f} = S.{f}' for f in all_fields.split(', '))}
     WHEN NOT MATCHED THEN INSERT
-      (video_id, category, mood, color_mode, style, description, themes, characters)
-      VALUES (S.video_id, S.category, S.mood, S.color_mode, S.style, S.description, S.themes, S.characters)
+      (video_id, {all_fields})
+      VALUES (S.video_id, {', '.join(f'S.{f}' for f in all_fields.split(', '))})
     """
     try:
         client.query(meta_sql).result()

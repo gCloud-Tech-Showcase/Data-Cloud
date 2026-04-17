@@ -1,16 +1,23 @@
 config {
   type: "table",
   schema: "video_vector_search",
-  description: "SILVER: AI-extracted video metadata using Gemini 2.5 Flash via AI.GENERATE with OBJ.GET_ACCESS_URL. Single-pass extraction with high accuracy — correct character identification, plot descriptions, and visual classification. No JSON parsing needed.",
+  description: "SILVER: Comprehensive AI-extracted video metadata using Gemini 2.5 Flash via AI.GENERATE. Single-pass extraction of visual, content, and contextual metadata from each video's first segment.",
   columns: {
     video_id: "Parent video identifier",
-    category: "AI-detected content type: cartoon, educational, documentary, newsreel, or other",
-    mood: "AI-detected mood: humorous, dramatic, educational, suspenseful, lighthearted, or serious",
-    color_mode: "AI-detected: color or black_and_white",
-    style: "AI-detected production style: hand-drawn animation, stop motion, live action, or mixed",
-    description: "AI-generated one-sentence description of the video content",
-    themes: "AI-detected themes as ARRAY<STRING>",
-    characters: "AI-detected character names as ARRAY<STRING>"
+    category: "AI-detected content type",
+    mood: "AI-detected emotional tone",
+    color_mode: "Color or black and white",
+    style: "Production technique",
+    description: "One-sentence description",
+    themes: "Topical themes",
+    characters: "Character names if identifiable",
+    language: "Spoken language or silent",
+    has_dialogue: "Whether the video contains speech",
+    has_music: "Whether the video contains music",
+    target_audience: "Intended audience: children, adults, or general",
+    setting: "Where the action takes place",
+    pacing: "Speed of action: fast, moderate, or slow",
+    content_warnings: "Any dated or sensitive content flags"
   },
   tags: ["video_vector_search", "silver", "staging", "metadata"],
   dependencies: ["silver_segment_embeddings"]
@@ -22,21 +29,31 @@ pre_operations {
 
 SELECT
   REGEXP_EXTRACT(uri, r'/segments/([^/]+)/') AS video_id,
-  r.category,
-  r.mood,
-  r.color_mode,
-  r.style,
-  r.description,
-  r.themes,
-  r.characters
+  r.category, r.mood, r.color_mode, r.style, r.description,
+  r.themes, r.characters, r.language, r.has_dialogue, r.has_music,
+  r.target_audience, r.setting, r.pacing, r.content_warnings
 FROM ${ref("bronze_video_segments")},
 UNNEST([
   AI.GENERATE(
     (OBJ.GET_ACCESS_URL(ref, 'r'),
-     'Classify this video. category: cartoon, educational, documentary, newsreel, or other. mood: humorous, dramatic, educational, suspenseful, lighthearted, or serious. color_mode: color or black_and_white. style: hand-drawn animation, stop motion, live action, or mixed. description: one sentence about the main action. themes: 2-4 themes. characters: character names if identifiable.'),
+     CONCAT(
+       'Classify this video. ',
+       'category: cartoon, educational, documentary, newsreel, or other. ',
+       'mood: humorous, dramatic, educational, suspenseful, lighthearted, or serious. ',
+       'color_mode: color or black_and_white. ',
+       'style: hand-drawn animation, stop motion, live action, or mixed. ',
+       'description: one sentence about the main action. ',
+       'themes: 2-4 themes. characters: character names if identifiable. ',
+       'language: english, silent, or other. ',
+       'has_dialogue: true or false. has_music: true or false. ',
+       'target_audience: children, adults, or general. ',
+       'setting: where the action takes place. ',
+       'pacing: fast, moderate, or slow. ',
+       'content_warnings: list any dated stereotypes, violence, or sensitive content, or empty if none.'
+     )),
     connection_id => 'us.vertex-ai-connection',
     endpoint => 'gemini-2.5-flash',
-    output_schema => 'category STRING, mood STRING, color_mode STRING, style STRING, description STRING, themes ARRAY<STRING>, characters ARRAY<STRING>'
+    output_schema => 'category STRING, mood STRING, color_mode STRING, style STRING, description STRING, themes ARRAY<STRING>, characters ARRAY<STRING>, language STRING, has_dialogue BOOL, has_music BOOL, target_audience STRING, setting STRING, pacing STRING, content_warnings ARRAY<STRING>'
   )
 ]) AS r
 WHERE uri LIKE '%/seg_000.mp4'
