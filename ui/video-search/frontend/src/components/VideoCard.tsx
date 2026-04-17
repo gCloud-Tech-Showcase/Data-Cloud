@@ -15,10 +15,10 @@ export function VideoCard({ video, onPlay, onFindSimilar }: VideoCardProps) {
   const bestSegment = video.top_segments[0] || { segment_index: 0, start_seconds: 0, end_seconds: 120, distance: 0 };
 
   return (
-    <Card className="overflow-hidden group shadow-sm hover:shadow-lg transition-all duration-200 bg-background">
+    <Card className="overflow-hidden group shadow-sm hover:shadow-lg transition-all duration-200 bg-background flex flex-col">
       {/* Thumbnail — 16:9 aspect ratio */}
       <div
-        className="relative aspect-video bg-muted cursor-pointer"
+        className="relative aspect-video bg-muted cursor-pointer flex-shrink-0"
         onClick={() => onPlay(video.video_id, bestSegment.segment_index)}
       >
         <img
@@ -35,7 +35,14 @@ export function VideoCard({ video, onPlay, onFindSimilar }: VideoCardProps) {
           <Play className="w-12 h-12 text-white opacity-0 group-hover:opacity-100 transition-opacity duration-200 drop-shadow-lg" />
         </div>
 
-        {/* Match badge — only when searching */}
+        {/* Category badge — top left */}
+        {video.category && (
+          <span className="absolute top-2 left-2 bg-black/60 text-white text-[10px] px-1.5 py-0.5 rounded capitalize backdrop-blur-sm">
+            {video.category}
+          </span>
+        )}
+
+        {/* Match badge — top right, only when searching */}
         {video.relevance_pct > 0 && (
           <Badge
             variant="secondary"
@@ -45,14 +52,7 @@ export function VideoCard({ video, onPlay, onFindSimilar }: VideoCardProps) {
           </Badge>
         )}
 
-        {/* Category badge — top left of thumbnail */}
-        {video.category && (
-          <span className="absolute top-2 left-2 bg-black/60 text-white text-[10px] px-1.5 py-0.5 rounded capitalize backdrop-blur-sm">
-            {video.category}
-          </span>
-        )}
-
-        {/* Duration badge — bottom right of thumbnail */}
+        {/* Duration badge — bottom right */}
         {video.duration_total_seconds && (
           <span className="absolute bottom-2 right-2 bg-black/70 text-white text-xs px-1.5 py-0.5 rounded">
             {formatDuration(video.duration_total_seconds)}
@@ -60,35 +60,35 @@ export function VideoCard({ video, onPlay, onFindSimilar }: VideoCardProps) {
         )}
       </div>
 
-      <CardContent className="p-3 space-y-1">
-        {/* Title + year — always visible */}
-        <h3 className="text-sm font-medium text-foreground line-clamp-1">
-          {video.title}
-        </h3>
-        {video.year && (
-          <p className="text-xs text-muted-foreground">{video.year}</p>
-        )}
+      {/* Content — always visible */}
+      <CardContent className="p-3 flex flex-col flex-1 justify-between gap-2">
+        <div className="space-y-1">
+          <h3 className="text-sm font-medium text-foreground line-clamp-1">
+            {video.title}
+          </h3>
+          {video.year && (
+            <p className="text-xs text-muted-foreground">{video.year}</p>
+          )}
+          {video.ai_description && (
+            <p className="text-xs text-muted-foreground/80 line-clamp-2 leading-relaxed">
+              {video.ai_description}
+            </p>
+          )}
 
-        {/* Description — visible on hover */}
-        {video.ai_description && (
-          <p className="text-xs text-muted-foreground line-clamp-2 opacity-0 group-hover:opacity-100 transition-opacity duration-200">
-            {video.ai_description}
-          </p>
-        )}
+          {/* Match info — only when searching */}
+          {video.matching_intervals > 0 && (
+            <p className="text-[11px] text-primary/70">
+              Best match at {formatDuration(bestSegment.start_seconds)}–{formatDuration(bestSegment.end_seconds)}
+            </p>
+          )}
+        </div>
 
-        {/* Match info — only when searching */}
-        {video.matching_intervals > 0 && (
-          <p className="text-[11px] text-muted-foreground/70">
-            Best match at {formatDuration(bestSegment.start_seconds)}–{formatDuration(bestSegment.end_seconds)}
-          </p>
-        )}
-
-        {/* Actions — visible on hover */}
-        <div className="flex gap-1.5 pt-1 opacity-0 group-hover:opacity-100 transition-opacity duration-200">
+        {/* Actions — always visible, enhanced on hover */}
+        <div className="flex gap-1.5 pt-1">
           <Button
             size="sm"
-            variant="default"
-            className="h-7 text-xs gap-1"
+            variant="ghost"
+            className="h-7 text-xs gap-1 text-muted-foreground group-hover:bg-primary group-hover:text-primary-foreground transition-colors"
             onClick={(e) => {
               e.stopPropagation();
               onPlay(video.video_id, bestSegment.segment_index);
@@ -100,8 +100,8 @@ export function VideoCard({ video, onPlay, onFindSimilar }: VideoCardProps) {
           {onFindSimilar && (
             <Button
               size="sm"
-              variant="secondary"
-              className="h-7 text-xs gap-1"
+              variant="ghost"
+              className="h-7 text-xs gap-1 text-muted-foreground group-hover:bg-secondary group-hover:text-secondary-foreground transition-colors"
               onClick={(e) => {
                 e.stopPropagation();
                 onFindSimilar(video.video_id);
@@ -117,8 +117,9 @@ export function VideoCard({ video, onPlay, onFindSimilar }: VideoCardProps) {
               target="_blank"
               rel="noopener noreferrer"
               onClick={(e) => e.stopPropagation()}
+              className="ml-auto"
             >
-              <Button size="sm" variant="ghost" className="h-7 text-xs gap-1">
+              <Button size="sm" variant="ghost" className="h-7 text-xs text-muted-foreground hover:text-foreground">
                 <ExternalLink className="w-3 h-3" />
               </Button>
             </a>
