@@ -1,3 +1,7 @@
+import { useState } from "react";
+import { Link, Check } from "lucide-react";
+import { Button } from "@/components/ui/button";
+
 interface ResultsBarProps {
   totalResults: number;
   searchTime?: number;
@@ -21,20 +25,53 @@ export function ResultsBar({
   sortBy,
   onSortChange,
 }: ResultsBarProps) {
+  const [copied, setCopied] = useState(false);
+
+  function handleCopyLink() {
+    navigator.clipboard.writeText(window.location.href);
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2000);
+  }
+
+  const hasShareableState = query || window.location.search;
+
   return (
     <div className="flex items-center justify-between py-2">
-      <p className="text-sm text-muted-foreground">
-        <span className="font-medium text-foreground">{totalResults}</span>
-        {" "}video{totalResults !== 1 ? "s" : ""}
-        {query && !query.startsWith("similar:") && (
-          <span> for &ldquo;{query}&rdquo;</span>
+      <div className="flex items-center gap-3">
+        <p className="text-sm text-muted-foreground">
+          <span className="font-medium text-foreground">{totalResults}</span>
+          {" "}video{totalResults !== 1 ? "s" : ""}
+          {query && !query.startsWith("similar:") && (
+            <span> for &ldquo;{query}&rdquo;</span>
+          )}
+          {searchTime !== undefined && (
+            <span className="text-muted-foreground/60 ml-1">
+              ({searchTime}ms)
+            </span>
+          )}
+        </p>
+
+        {hasShareableState && (
+          <Button
+            variant="ghost"
+            size="sm"
+            className="h-7 text-xs gap-1 text-muted-foreground"
+            onClick={handleCopyLink}
+          >
+            {copied ? (
+              <>
+                <Check className="w-3 h-3 text-emerald-500" />
+                Copied!
+              </>
+            ) : (
+              <>
+                <Link className="w-3 h-3" />
+                Share
+              </>
+            )}
+          </Button>
         )}
-        {searchTime !== undefined && (
-          <span className="text-muted-foreground/60 ml-1">
-            ({searchTime}ms)
-          </span>
-        )}
-      </p>
+      </div>
 
       <select
         value={sortBy}

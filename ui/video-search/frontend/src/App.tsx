@@ -49,10 +49,48 @@ export default function App() {
   const [playerVideo, setPlayerVideo] = useState<VideoResult | null>(null);
   const [activeSegment, setActiveSegment] = useState(0);
 
+  // Load initial state from URL params
   useEffect(() => {
     getLibraryStats().then(setStats).catch(() => {}).finally(() => setStatsLoading(false));
     loadAllVideos();
+
+    const params = new URLSearchParams(window.location.search);
+    const q = params.get("q");
+    if (q) {
+      setExternalQuery(q);
+      // Delay search to let stats/videos load first
+      setTimeout(() => handleSearch(q), 500);
+    }
+
+    // Restore filters from URL
+    const filterFields = ["category", "mood", "color_mode", "style"];
+    const restoredFilters: Record<string, Set<string>> = {};
+    for (const field of filterFields) {
+      const values = params.getAll(field);
+      if (values.length > 0) {
+        restoredFilters[field] = new Set(values);
+      }
+    }
+    if (Object.keys(restoredFilters).length > 0) {
+      setActiveFilters(restoredFilters);
+    }
   }, []);
+
+  // Sync URL with search state
+  useEffect(() => {
+    const params = new URLSearchParams();
+    if (hasSearched && searchResult?.query && !searchResult.query.startsWith("similar:")) {
+      params.set("q", searchResult.query);
+    }
+    for (const [field, values] of Object.entries(activeFilters)) {
+      for (const value of values) {
+        params.append(field, value);
+      }
+    }
+    const search = params.toString();
+    const url = search ? `${window.location.pathname}?${search}` : window.location.pathname;
+    window.history.replaceState(null, "", url);
+  }, [hasSearched, searchResult, activeFilters]);
 
   // Global keyboard shortcuts
   useEffect(() => {
