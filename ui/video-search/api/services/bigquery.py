@@ -65,6 +65,7 @@ def search_videos(query: str, limit: int = 20) -> dict[str, Any]:
       ANY_VALUE(color_mode) AS color_mode,
       ANY_VALUE(style) AS style,
       ANY_VALUE(ai_description) AS ai_description,
+      ANY_VALUE(CASE WHEN ARRAY_LENGTH(content_warnings) > 0 THEN 'has warnings' ELSE 'no warnings' END) AS content_warnings_status,
       ROUND(MIN(distance), 4) AS best_distance,
       COUNT(*) AS matching_intervals,
       ARRAY_AGG(
@@ -121,6 +122,7 @@ def search_videos(query: str, limit: int = 20) -> dict[str, Any]:
             "color_mode": row.color_mode,
             "style": row.style,
             "ai_description": row.ai_description,
+            "content_warnings": row.content_warnings_status,
             "thumbnail_url": f"/api/videos/{row.video_id}/thumbnail",
             "best_distance": best_dist,
             "relevance_pct": relevance_pct,
@@ -183,6 +185,7 @@ def find_similar(video_id: str, limit: int = 10) -> dict[str, Any]:
       ANY_VALUE(color_mode) AS color_mode,
       ANY_VALUE(style) AS style,
       ANY_VALUE(ai_description) AS ai_description,
+      ANY_VALUE(CASE WHEN ARRAY_LENGTH(content_warnings) > 0 THEN 'has warnings' ELSE 'no warnings' END) AS content_warnings_status,
       ROUND(MIN(distance), 4) AS best_distance,
       COUNT(*) AS matching_intervals,
       ARRAY_AGG(
@@ -232,6 +235,7 @@ def find_similar(video_id: str, limit: int = 10) -> dict[str, Any]:
             "color_mode": row.color_mode,
             "style": row.style,
             "ai_description": row.ai_description,
+            "content_warnings": row.content_warnings_status,
             "thumbnail_url": f"/api/videos/{row.video_id}/thumbnail",
             "best_distance": best_dist,
             "relevance_pct": relevance_pct,
@@ -292,6 +296,22 @@ def get_library_stats() -> dict[str, Any]:
 
     total_minutes = int(row.total_duration_seconds / 60) if row.total_duration_seconds else 0
     total_hours = round(total_minutes / 60, 1)
+
+    # Count videos with/without content warnings
+    warnings_sql = f"""
+    SELECT
+      CASE WHEN ARRAY_LENGTH(content_warnings) > 0 THEN 'has warnings' ELSE 'no warnings' END AS value,
+      COUNT(DISTINCT video_id) AS count
+    FROM `{GOLD_TABLE}`
+    GROUP BY value
+    """
+    try:
+        filters["content_warnings"] = [
+            {"name": r.value, "count": r.count}
+            for r in client.query(warnings_sql).result()
+        ]
+    except Exception:
+        filters["content_warnings"] = []
 
     return {
         "total_videos": row.total_videos,
@@ -385,7 +405,8 @@ def list_videos() -> list[dict[str, Any]]:
       ANY_VALUE(mood) AS mood,
       ANY_VALUE(color_mode) AS color_mode,
       ANY_VALUE(style) AS style,
-      ANY_VALUE(ai_description) AS ai_description
+      ANY_VALUE(ai_description) AS ai_description,
+      ANY_VALUE(CASE WHEN ARRAY_LENGTH(content_warnings) > 0 THEN 'has warnings' ELSE 'no warnings' END) AS content_warnings_status
     FROM `{GOLD_TABLE}`
     GROUP BY video_id
     ORDER BY title
@@ -405,6 +426,7 @@ def list_videos() -> list[dict[str, Any]]:
             "color_mode": row.color_mode,
             "style": row.style,
             "ai_description": row.ai_description,
+            "content_warnings": row.content_warnings_status,
             "thumbnail_url": f"/api/videos/{row.video_id}/thumbnail",
         }
         for row in results

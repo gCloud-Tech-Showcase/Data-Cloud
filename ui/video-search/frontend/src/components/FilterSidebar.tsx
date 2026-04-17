@@ -9,10 +9,11 @@ const FILTER_LABELS: Record<string, string> = {
   mood: "Mood",
   color_mode: "Color",
   style: "Style",
+  content_warnings: "Content Warnings",
 };
 
 // All expanded by default
-const DEFAULT_EXPANDED = new Set(["category", "mood", "color_mode", "style"]);
+const DEFAULT_EXPANDED = new Set(["category", "mood", "color_mode", "style", "content_warnings"]);
 
 interface FilterSidebarProps {
   filters: Record<string, FilterOption[]>;

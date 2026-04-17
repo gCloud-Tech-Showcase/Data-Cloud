@@ -127,6 +127,7 @@ export default function App() {
           color_mode: v.color_mode ?? null,
           style: v.style ?? null,
           ai_description: v.ai_description ?? null,
+          content_warnings: (v as any).content_warnings ?? null,
           best_distance: 0,
           relevance_pct: 0,
           matching_intervals: 0,
