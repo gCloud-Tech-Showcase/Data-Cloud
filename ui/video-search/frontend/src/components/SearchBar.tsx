@@ -1,4 +1,4 @@
-import { Search, Loader2 } from "lucide-react";
+import { Search, Loader2, X } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { useState, useEffect, type FormEvent } from "react";
@@ -53,9 +53,21 @@ export function SearchBar({
               if (e.target.value === "" && onClear) onClear();
             }}
             placeholder="Search videos by describing what you're looking for..."
-            className="pl-10 h-12 text-base"
+            className="pl-10 pr-9 h-12 text-base"
             disabled={isLoading}
           />
+          {query && !isLoading && (
+            <button
+              type="button"
+              className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
+              onClick={() => {
+                setQuery("");
+                if (onClear) onClear();
+              }}
+            >
+              <X className="w-4 h-4" />
+            </button>
+          )}
         </div>
         <Button type="submit" size="lg" className="h-12 w-24" disabled={isLoading || !query.trim()}>
           {isLoading ? <Loader2 className="w-5 h-5 animate-spin" /> : "Search"}
