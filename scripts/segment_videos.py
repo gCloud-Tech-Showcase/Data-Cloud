@@ -203,12 +203,19 @@ def download_from_gcs(bucket_name: str, gcs_path: str, local_path: Path) -> bool
         return False
 
 
-def upload_to_gcs(bucket_name: str, local_path: Path, gcs_path: str) -> bool:
-    """Upload a file to GCS."""
+def upload_to_gcs(
+    bucket_name: str,
+    local_path: Path,
+    gcs_path: str,
+    custom_metadata: Optional[dict[str, str]] = None,
+) -> bool:
+    """Upload a file to GCS with optional custom metadata."""
     try:
         client = storage.Client()
         bucket = client.bucket(bucket_name)
         blob = bucket.blob(gcs_path)
+        if custom_metadata:
+            blob.metadata = custom_metadata
         blob.upload_from_filename(str(local_path))
         return True
     except Exception as e:
@@ -302,25 +309,39 @@ def process_video(
 
         logger.info(f"Produced {len(segments)} segments")
 
-        # Upload segments and build metadata rows
+        # Upload segments with full metadata attached per segment
+        source_url = manifest_entry.get("source_url", "")
+        license_str = manifest_entry.get("license", "Public Domain")
         metadata_rows = []
         for i, seg_path in enumerate(segments):
-            gcs_path = f"segments/{video_id}/seg_{i:03d}.mp4"
-
-            logger.info(f"  Uploading segment {i}: {gcs_path}")
-            if not upload_to_gcs(bucket_name, seg_path, gcs_path):
-                continue
-
             start_seconds = i * SEGMENT_DURATION
             end_seconds = min((i + 1) * SEGMENT_DURATION, int(duration))
+
+            segment_metadata = {
+                "video_id": video_id,
+                "identifier": identifier,
+                "title": title,
+                "year": str(year) if year else "",
+                "source_url": source_url,
+                "license": license_str,
+                "segment_index": str(i),
+                "start_seconds": str(start_seconds),
+                "end_seconds": str(end_seconds),
+                "duration_total_seconds": str(int(duration)),
+            }
+
+            gcs_path = f"segments/{video_id}/seg_{i:03d}.mp4"
+            logger.info(f"  Uploading segment {i}: {gcs_path}")
+            if not upload_to_gcs(bucket_name, seg_path, gcs_path, custom_metadata=segment_metadata):
+                continue
 
             metadata_rows.append({
                 "video_id": video_id,
                 "identifier": identifier,
                 "title": title,
                 "year": year or "",
-                "source_url": manifest_entry.get("source_url", ""),
-                "license": manifest_entry.get("license", "Public Domain"),
+                "source_url": source_url,
+                "license": license_str,
                 "segment_index": i,
                 "start_seconds": start_seconds,
                 "end_seconds": end_seconds,

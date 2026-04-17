@@ -20,15 +20,20 @@ to prevent infinite trigger loops from segment uploads.
 import csv
 import io
 import json
-import logging
 import os
 import subprocess
+import sys
 import tempfile
 from pathlib import Path
 
 import functions_framework
 from cloudevents.http import CloudEvent
 from google.cloud import bigquery, storage
+
+
+def log(message: str) -> None:
+    """Write log to stdout for Cloud Logging to capture."""
+    print(message, flush=True)
 
 SEGMENT_DURATION = 120  # seconds
 
@@ -41,8 +46,6 @@ METADATA_CSV_COLUMNS = [
 PROJECT_ID = os.environ.get("GCP_PROJECT", "gcloud-tech-showcase")
 DATASET = "video_vector_search"
 
-logger = logging.getLogger(__name__)
-logging.basicConfig(level=logging.INFO)
 
 
 def get_video_duration(video_path: Path) -> float:
@@ -57,7 +60,7 @@ def get_video_duration(video_path: Path) -> float:
         capture_output=True, text=True,
     )
     if result.returncode != 0:
-        logger.error(f"ffprobe failed: {result.stderr}")
+        log(f"ffprobe failed: {result.stderr}")
         return 0.0
 
     data = json.loads(result.stdout)
@@ -84,7 +87,7 @@ def split_video(video_path: Path, output_dir: Path) -> list[Path]:
     )
 
     if result.returncode != 0:
-        logger.error(f"ffmpeg failed: {result.stderr}")
+        log(f"ffmpeg failed: {result.stderr}")
         return []
 
     return sorted(output_dir.glob("seg_*.mp4"))
@@ -95,13 +98,13 @@ def generate_embeddings(video_id: str) -> None:
     client = bigquery.Client(project=PROJECT_ID)
 
     # Refresh external table cache so new segments are visible
-    logger.info("Refreshing metadata cache...")
+    log("Refreshing metadata cache...")
     client.query(
         f"CALL BQ.REFRESH_EXTERNAL_METADATA_CACHE('{DATASET}.bronze_video_segments')"
     ).result()
 
     # Generate embeddings for this video's segments
-    logger.info(f"Generating embeddings for {video_id}...")
+    log(f"Generating embeddings for {video_id}...")
     embed_sql = f"""
     INSERT INTO `{DATASET}.silver_segment_embeddings`
       (segment_uri, video_id, segment_index, embedding, status, video_start_sec, video_end_sec)
@@ -120,33 +123,44 @@ def generate_embeddings(video_id: str) -> None:
     )
     """
     client.query(embed_sql).result()
-    logger.info(f"Embeddings generated for {video_id}")
+    log(f"Embeddings generated for {video_id}")
 
-    # Rebuild gold table
-    logger.info("Rebuilding gold table...")
+    # Rebuild gold table using object metadata from segments
+    log("Rebuilding gold table...")
     gold_sql = f"""
     CREATE OR REPLACE TABLE `{DATASET}.gold_searchable_videos` AS
+    WITH segment_metadata AS (
+      SELECT
+        uri,
+        (SELECT value FROM UNNEST(metadata) WHERE name = 'title') AS title,
+        SAFE_CAST((SELECT value FROM UNNEST(metadata) WHERE name = 'year') AS INT64) AS year,
+        (SELECT value FROM UNNEST(metadata) WHERE name = 'source_url') AS source_url,
+        (SELECT value FROM UNNEST(metadata) WHERE name = 'license') AS license,
+        SAFE_CAST((SELECT value FROM UNNEST(metadata) WHERE name = 'start_seconds') AS INT64) AS start_seconds,
+        SAFE_CAST((SELECT value FROM UNNEST(metadata) WHERE name = 'end_seconds') AS INT64) AS end_seconds,
+        SAFE_CAST((SELECT value FROM UNNEST(metadata) WHERE name = 'duration_total_seconds') AS INT64) AS duration_total_seconds
+      FROM `{DATASET}.bronze_video_segments`
+    )
     SELECT
       e.segment_uri,
       e.video_id,
       e.segment_index,
-      m.title,
-      m.year,
-      m.source_url,
-      m.license,
-      m.duration_total_seconds,
-      m.start_seconds,
-      m.end_seconds,
+      COALESCE(sm.title, e.video_id) AS title,
+      sm.year,
+      sm.source_url,
+      sm.license,
+      sm.duration_total_seconds,
+      sm.start_seconds,
+      sm.end_seconds,
       e.video_start_sec,
       e.video_end_sec,
       e.embedding
     FROM `{DATASET}.silver_segment_embeddings` e
-    LEFT JOIN `{DATASET}.bronze_segment_mapping` m
-      ON e.video_id = m.video_id
-      AND e.segment_index = m.segment_index
+    LEFT JOIN segment_metadata sm
+      ON e.segment_uri = sm.uri
     """
     client.query(gold_sql).result()
-    logger.info("Gold table rebuilt")
+    log("Gold table rebuilt")
 
 
 @functions_framework.cloud_event
@@ -159,12 +173,12 @@ def segment_video(cloud_event: CloudEvent) -> None:
 
     # Only process raw/*.mp4 files — ignore everything else
     if not object_name.startswith("raw/") or not object_name.lower().endswith(".mp4"):
-        logger.info(f"Ignoring non-raw-video object: {object_name}")
+        log(f"Ignoring non-raw-video object: {object_name}")
         return
 
     # Extract video_id from filename: raw/{video_id}.mp4
     video_id = Path(object_name).stem
-    logger.info(f"Processing video: {video_id} from {object_name}")
+    log(f"Processing video: {video_id} from {object_name}")
 
     client = storage.Client()
     bucket = client.bucket(bucket_name)
@@ -180,55 +194,59 @@ def segment_video(cloud_event: CloudEvent) -> None:
     source_url = custom_metadata.get("source_url", "")
     license_str = custom_metadata.get("license", "Public Domain")
 
-    logger.info(f"Metadata: title={title}, year={year}, identifier={identifier}")
+    log(f"Metadata: title={title}, year={year}, identifier={identifier}")
 
     with tempfile.TemporaryDirectory() as tmpdir:
         tmpdir_path = Path(tmpdir)
 
         # Download video
         video_path = tmpdir_path / f"{video_id}.mp4"
-        logger.info(f"Downloading gs://{bucket_name}/{object_name}")
+        log(f"Downloading gs://{bucket_name}/{object_name}")
         blob.download_to_filename(str(video_path))
 
         # Get duration
         duration = get_video_duration(video_path)
-        logger.info(f"Duration: {duration:.1f}s ({duration / 60:.1f} min)")
+        log(f"Duration: {duration:.1f}s ({duration / 60:.1f} min)")
 
         if duration == 0:
-            logger.error(f"Could not determine duration for {video_id}")
+            log(f"Could not determine duration for {video_id}")
             return
 
         # Split
         segments_dir = tmpdir_path / "segments"
-        logger.info(f"Splitting into {SEGMENT_DURATION}s segments...")
+        log(f"Splitting into {SEGMENT_DURATION}s segments...")
         segments = split_video(video_path, segments_dir)
 
         if not segments:
-            logger.error(f"No segments produced for {video_id}")
+            log(f"No segments produced for {video_id}")
             return
 
-        logger.info(f"Produced {len(segments)} segments")
+        log(f"Produced {len(segments)} segments")
 
-        # Upload segments with parent metadata attached
-        segment_metadata = {
-            "video_id": video_id,
-            "identifier": identifier,
-            "title": title,
-            "year": year,
-            "source_url": source_url,
-            "license": license_str,
-        }
-
+        # Upload segments with full metadata attached per segment
         metadata_rows = []
         for i, seg_path in enumerate(segments):
+            start_seconds = i * SEGMENT_DURATION
+            end_seconds = min((i + 1) * SEGMENT_DURATION, int(duration))
+
+            segment_metadata = {
+                "video_id": video_id,
+                "identifier": identifier,
+                "title": title,
+                "year": year,
+                "source_url": source_url,
+                "license": license_str,
+                "segment_index": str(i),
+                "start_seconds": str(start_seconds),
+                "end_seconds": str(end_seconds),
+                "duration_total_seconds": str(int(duration)),
+            }
+
             gcs_path = f"segments/{video_id}/seg_{i:03d}.mp4"
             seg_blob = bucket.blob(gcs_path)
             seg_blob.metadata = segment_metadata
             seg_blob.upload_from_filename(str(seg_path))
-            logger.info(f"  Uploaded segment {i}: {gcs_path}")
-
-            start_seconds = i * SEGMENT_DURATION
-            end_seconds = min((i + 1) * SEGMENT_DURATION, int(duration))
+            log(f"  Uploaded segment {i}: {gcs_path}")
 
             metadata_rows.append({
                 "video_id": video_id,
@@ -259,7 +277,7 @@ def segment_video(cloud_event: CloudEvent) -> None:
         if thumbnail_path.exists():
             thumb_blob = bucket.blob(f"thumbnails/{video_id}.jpg")
             thumb_blob.upload_from_filename(str(thumbnail_path))
-            logger.info(f"  Thumbnail: gs://{bucket_name}/thumbnails/{video_id}.jpg")
+            log(f"  Thumbnail: gs://{bucket_name}/thumbnails/{video_id}.jpg")
 
         # Write metadata CSV
         buf = io.StringIO()
@@ -270,9 +288,9 @@ def segment_video(cloud_event: CloudEvent) -> None:
         csv_path = f"manifests/metadata/{video_id}.csv"
         csv_blob = bucket.blob(csv_path)
         csv_blob.upload_from_string(buf.getvalue(), content_type="text/csv")
-        logger.info(f"  Metadata CSV: gs://{bucket_name}/{csv_path}")
+        log(f"  Metadata CSV: gs://{bucket_name}/{csv_path}")
 
-    logger.info(
+    log(
         f"Segmentation complete: {video_id} — {len(segments)} segments, "
         f"{duration:.0f}s total duration"
     )
@@ -281,5 +299,5 @@ def segment_video(cloud_event: CloudEvent) -> None:
     try:
         generate_embeddings(video_id)
     except Exception as e:
-        logger.error(f"Embedding generation failed for {video_id}: {e}")
-        logger.info("Video is segmented but not yet searchable. Run Dataform to generate embeddings.")
+        log(f"Embedding generation failed for {video_id}: {e}")
+        log("Video is segmented but not yet searchable. Run Dataform to generate embeddings.")

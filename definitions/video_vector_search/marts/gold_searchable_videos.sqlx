@@ -1,15 +1,15 @@
 config {
   type: "table",
   schema: "video_vector_search",
-  description: "GOLD: Search-ready video embeddings with parent video metadata. Joins segment embeddings with the segment mapping table to enrich each embedding row with title, year, source URL, and timing information. Use with VECTOR_SEARCH to find videos by natural language query.",
+  description: "GOLD: Search-ready video embeddings with metadata extracted directly from GCS object custom metadata on each segment. No external mapping table needed. Use with VECTOR_SEARCH to find videos by natural language query.",
   columns: {
     segment_uri: "GCS URI of the video segment",
     video_id: "Parent video identifier",
     segment_index: "Zero-based segment index within the parent video",
-    title: "Original video title",
-    year: "Production year",
-    source_url: "Archive.org source URL",
-    license: "License type (Public Domain)",
+    title: "Original video title (from GCS custom metadata)",
+    year: "Production year (from GCS custom metadata)",
+    source_url: "Archive.org source URL (from GCS custom metadata)",
+    license: "License type (from GCS custom metadata)",
     duration_total_seconds: "Total duration of the parent video in seconds",
     start_seconds: "Start offset of this segment in the parent video",
     end_seconds: "End offset of this segment in the parent video",
@@ -20,21 +20,33 @@ config {
   tags: ["video_vector_search", "gold", "marts"]
 }
 
+WITH segment_metadata AS (
+  SELECT
+    uri,
+    (SELECT value FROM UNNEST(metadata) WHERE name = 'title') AS title,
+    SAFE_CAST((SELECT value FROM UNNEST(metadata) WHERE name = 'year') AS INT64) AS year,
+    (SELECT value FROM UNNEST(metadata) WHERE name = 'source_url') AS source_url,
+    (SELECT value FROM UNNEST(metadata) WHERE name = 'license') AS license,
+    SAFE_CAST((SELECT value FROM UNNEST(metadata) WHERE name = 'start_seconds') AS INT64) AS start_seconds,
+    SAFE_CAST((SELECT value FROM UNNEST(metadata) WHERE name = 'end_seconds') AS INT64) AS end_seconds,
+    SAFE_CAST((SELECT value FROM UNNEST(metadata) WHERE name = 'duration_total_seconds') AS INT64) AS duration_total_seconds
+  FROM ${ref("bronze_video_segments")}
+)
+
 SELECT
   e.segment_uri,
   e.video_id,
   e.segment_index,
-  m.title,
-  m.year,
-  m.source_url,
-  m.license,
-  m.duration_total_seconds,
-  m.start_seconds,
-  m.end_seconds,
+  COALESCE(sm.title, e.video_id) AS title,
+  sm.year,
+  sm.source_url,
+  sm.license,
+  sm.duration_total_seconds,
+  sm.start_seconds,
+  sm.end_seconds,
   e.video_start_sec,
   e.video_end_sec,
   e.embedding
 FROM ${ref("silver_segment_embeddings")} e
-LEFT JOIN ${ref("bronze_segment_mapping")} m
-  ON e.video_id = m.video_id
-  AND e.segment_index = m.segment_index
+LEFT JOIN segment_metadata sm
+  ON e.segment_uri = sm.uri

@@ -255,28 +255,39 @@ def _generate_embeddings(video_id: str) -> None:
     client.query(embed_sql, job_config=job_config).result()
     logger.info(f"Embeddings generated for {video_id}")
 
-    # Rebuild gold table (full rebuild since it's a simple join)
-    logger.info(f"Rebuilding gold table...")
+    # Rebuild gold table using object metadata from segments
+    logger.info("Rebuilding gold table...")
     gold_sql = """
     CREATE OR REPLACE TABLE `video_vector_search.gold_searchable_videos` AS
+    WITH segment_metadata AS (
+      SELECT
+        uri,
+        (SELECT value FROM UNNEST(metadata) WHERE name = 'title') AS title,
+        SAFE_CAST((SELECT value FROM UNNEST(metadata) WHERE name = 'year') AS INT64) AS year,
+        (SELECT value FROM UNNEST(metadata) WHERE name = 'source_url') AS source_url,
+        (SELECT value FROM UNNEST(metadata) WHERE name = 'license') AS license,
+        SAFE_CAST((SELECT value FROM UNNEST(metadata) WHERE name = 'start_seconds') AS INT64) AS start_seconds,
+        SAFE_CAST((SELECT value FROM UNNEST(metadata) WHERE name = 'end_seconds') AS INT64) AS end_seconds,
+        SAFE_CAST((SELECT value FROM UNNEST(metadata) WHERE name = 'duration_total_seconds') AS INT64) AS duration_total_seconds
+      FROM `video_vector_search.bronze_video_segments`
+    )
     SELECT
       e.segment_uri,
       e.video_id,
       e.segment_index,
-      m.title,
-      m.year,
-      m.source_url,
-      m.license,
-      m.duration_total_seconds,
-      m.start_seconds,
-      m.end_seconds,
+      COALESCE(sm.title, e.video_id) AS title,
+      sm.year,
+      sm.source_url,
+      sm.license,
+      sm.duration_total_seconds,
+      sm.start_seconds,
+      sm.end_seconds,
       e.video_start_sec,
       e.video_end_sec,
       e.embedding
     FROM `video_vector_search.silver_segment_embeddings` e
-    LEFT JOIN `video_vector_search.bronze_segment_mapping` m
-      ON e.video_id = m.video_id
-      AND e.segment_index = m.segment_index
+    LEFT JOIN segment_metadata sm
+      ON e.segment_uri = sm.uri
     """
     client.query(gold_sql).result()
-    logger.info(f"Gold table rebuilt")
+    logger.info("Gold table rebuilt")
