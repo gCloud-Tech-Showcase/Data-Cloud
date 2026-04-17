@@ -84,7 +84,7 @@ export function SearchBar({
           <span key={chip}>
             <button
               type="button"
-              className="text-primary/70 hover:text-primary hover:underline transition-colors"
+              className="text-primary hover:text-primary hover:underline transition-colors opacity-80 hover:opacity-100"
               onClick={() => handleChipClick(chip)}
             >
               {chip}

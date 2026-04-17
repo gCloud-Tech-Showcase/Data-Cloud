@@ -68,7 +68,7 @@ export function FilterSidebar({
           </Button>
         )}
       </div>
-      <p className="flex items-center gap-1 text-[10px] text-primary/60 mb-3">
+      <p className="flex items-center gap-1 text-[10px] text-primary opacity-70 mb-3">
         <Sparkles className="w-3 h-3" />
         Gemini-extracted video attributes
       </p>
@@ -103,7 +103,7 @@ export function FilterSidebar({
             >
               <span className="flex items-center gap-1.5 text-xs text-muted-foreground uppercase tracking-wider">
                 {FILTER_LABELS[field] || field}
-                <Sparkles className="w-2.5 h-2.5 text-primary/40" />
+                <Sparkles className="w-2.5 h-2.5 text-primary opacity-50" />
               </span>
               {isExpanded ? (
                 <ChevronDown className="w-3.5 h-3.5 text-muted-foreground" />
