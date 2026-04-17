@@ -125,7 +125,45 @@ def generate_embeddings(video_id: str) -> None:
     client.query(embed_sql).result()
     log(f"Embeddings generated for {video_id}")
 
-    # Rebuild gold table using object metadata from segments
+    # Extract metadata using Gemini via AI.GENERATE_TABLE
+    log(f"Extracting metadata for {video_id}...")
+    meta_sql = f"""
+    MERGE INTO `{DATASET}.silver_video_metadata` T
+    USING (
+      SELECT video_id, category, mood, color_mode, style, description, themes, characters
+      FROM AI.GENERATE_TABLE(
+        MODEL `{DATASET}.gemini_video_model`,
+        (
+          SELECT
+            *,
+            REGEXP_EXTRACT(uri, r'/segments/([^/]+)/') AS video_id,
+            'Watch this video carefully and fill in every field. category must be one of: cartoon, educational, documentary, newsreel, other. mood must be one of: humorous, dramatic, educational, suspenseful, lighthearted, serious. color_mode must be: color or black_and_white. style must be one of: hand-drawn animation, stop motion, live action, mixed. description should be one sentence about what happens. themes should list 2-4 themes. characters should list the actual character names you see in the video.' AS prompt
+          FROM `{DATASET}.bronze_video_segments`
+          WHERE uri LIKE '%/segments/{video_id}/seg_001.mp4'
+             OR (uri LIKE '%/segments/{video_id}/seg_000.mp4'
+                 AND NOT EXISTS (SELECT 1 FROM `{DATASET}.bronze_video_segments` WHERE uri LIKE '%/segments/{video_id}/seg_001.mp4'))
+        ),
+        STRUCT(
+          'category STRING, mood STRING, color_mode STRING, style STRING, description STRING, themes ARRAY<STRING>, characters ARRAY<STRING>' AS output_schema,
+          1024 AS max_output_tokens
+        )
+      )
+    ) S
+    ON T.video_id = S.video_id
+    WHEN MATCHED THEN UPDATE SET
+      category = S.category, mood = S.mood, color_mode = S.color_mode,
+      style = S.style, description = S.description, themes = S.themes, characters = S.characters
+    WHEN NOT MATCHED THEN INSERT
+      (video_id, category, mood, color_mode, style, description, themes, characters)
+      VALUES (S.video_id, S.category, S.mood, S.color_mode, S.style, S.description, S.themes, S.characters)
+    """
+    try:
+        client.query(meta_sql).result()
+        log(f"Metadata extracted for {video_id}")
+    except Exception as e:
+        log(f"Metadata extraction failed (non-fatal): {e}")
+
+    # Rebuild gold table using object metadata + AI metadata
     log("Rebuilding gold table...")
     gold_sql = f"""
     CREATE OR REPLACE TABLE `{DATASET}.gold_searchable_videos` AS
@@ -154,10 +192,14 @@ def generate_embeddings(video_id: str) -> None:
       sm.end_seconds,
       e.video_start_sec,
       e.video_end_sec,
+      vm.category,
+      vm.description AS ai_description,
       e.embedding
     FROM `{DATASET}.silver_segment_embeddings` e
     LEFT JOIN segment_metadata sm
       ON e.segment_uri = sm.uri
+    LEFT JOIN `{DATASET}.silver_video_metadata` vm
+      ON e.video_id = vm.video_id
     """
     client.query(gold_sql).result()
     log("Gold table rebuilt")
