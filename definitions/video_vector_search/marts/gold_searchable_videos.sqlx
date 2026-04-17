@@ -48,10 +48,10 @@ SELECT
   sm.end_seconds,
   e.video_start_sec,
   e.video_end_sec,
-  LOWER(TRIM(vm.category)) AS category,
-  LOWER(TRIM(vm.mood)) AS mood,
-  LOWER(TRIM(vm.color_mode)) AS color_mode,
-  LOWER(TRIM(vm.style)) AS style,
+  REPLACE(LOWER(TRIM(vm.category)), '_', ' ') AS category,
+  REPLACE(LOWER(TRIM(vm.mood)), '_', ' ') AS mood,
+  REPLACE(LOWER(TRIM(vm.color_mode)), '_', ' ') AS color_mode,
+  REPLACE(LOWER(TRIM(vm.style)), '_', ' ') AS style,
   vm.description AS ai_description,
   e.embedding
 FROM ${ref("silver_segment_embeddings")} e
