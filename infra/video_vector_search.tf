@@ -90,6 +90,28 @@ resource "google_dataform_repository_release_config" "video_search_dev" {
   }
 }
 
+# Scheduled workflow for video vector search pipeline
+# Runs hourly — incremental, so near-zero cost when no new videos
+resource "google_dataform_repository_workflow_config" "video_search" {
+  provider       = google-beta
+  project        = var.project_id
+  region         = var.region
+  repository     = google_dataform_repository.main.name
+  release_config = google_dataform_repository_release_config.video_search_dev.id
+
+  name = "video-search-pipeline"
+
+  cron_schedule = "0 * * * *"
+  time_zone     = "America/Los_Angeles"
+
+  invocation_config {
+    included_tags                           = ["video_vector_search"]
+    transitive_dependencies_included        = true
+    fully_refresh_incremental_tables_enabled = false
+    service_account                         = google_service_account.video_segmenter.email
+  }
+}
+
 # -----------------------------------------------------------------------------
 # Cloud Function: Automatic Video Segmentation
 # Triggered when a video is uploaded to raw/*.mp4
@@ -182,6 +204,33 @@ resource "google_project_iam_member" "segmenter_artifact_registry" {
   member  = "serviceAccount:${google_service_account.video_segmenter.email}"
 }
 
+
+# Function SA also serves as Dataform execution SA (strict act-as mode)
+# These roles are for scheduled Dataform workflow execution, not the Cloud Function
+resource "google_project_iam_member" "segmenter_bq_job_user" {
+  project = var.project_id
+  role    = "roles/bigquery.jobUser"
+  member  = "serviceAccount:${google_service_account.video_segmenter.email}"
+}
+
+resource "google_project_iam_member" "segmenter_bq_data_editor" {
+  project = var.project_id
+  role    = "roles/bigquery.dataEditor"
+  member  = "serviceAccount:${google_service_account.video_segmenter.email}"
+}
+
+resource "google_project_iam_member" "segmenter_bq_connection_user" {
+  project = var.project_id
+  role    = "roles/bigquery.connectionUser"
+  member  = "serviceAccount:${google_service_account.video_segmenter.email}"
+}
+
+# Dataform service agent needs Token Creator to impersonate the SA
+resource "google_service_account_iam_member" "dataform_token_creator" {
+  service_account_id = google_service_account.video_segmenter.name
+  role               = "roles/iam.serviceAccountTokenCreator"
+  member             = "serviceAccount:${google_project_service_identity.dataform.email}"
+}
 
 # Eventarc service agent needs its own role to route events
 resource "google_project_iam_member" "eventarc_service_agent" {
