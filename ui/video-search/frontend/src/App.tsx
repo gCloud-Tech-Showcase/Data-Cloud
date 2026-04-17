@@ -1,4 +1,4 @@
-import { useState, useCallback, useEffect } from "react";
+import { useState, useCallback, useEffect, useMemo } from "react";
 import { Header } from "@/components/Header";
 import { SearchBar } from "@/components/SearchBar";
 import { VideoGrid } from "@/components/VideoGrid";
@@ -6,6 +6,7 @@ import { VideoPlayer } from "@/components/VideoPlayer";
 import { LibraryStats } from "@/components/LibraryStats";
 import { AddVideos } from "@/components/AddVideos";
 import { FilterSidebar } from "@/components/FilterSidebar";
+import { ResultsBar } from "@/components/ResultsBar";
 import { Button } from "@/components/ui/button";
 import { Search, Plus } from "lucide-react";
 import {
@@ -34,14 +35,14 @@ export default function App() {
   const [statsLoading, setStatsLoading] = useState(true);
   const [searchLabel, setSearchLabel] = useState<string | undefined>();
   const [externalQuery, setExternalQuery] = useState<string | undefined>();
-  const [activeFilters, setActiveFilters] = useState<Record<string, string | null>>({});
+  const [activeFilters, setActiveFilters] = useState<Record<string, Set<string>>>({});
+  const [sortBy, setSortBy] = useState("title");
 
   // Player state
   const [playerVideo, setPlayerVideo] = useState<VideoResult | null>(null);
   const [playerUrl, setPlayerUrl] = useState<string | null>(null);
   const [activeSegment, setActiveSegment] = useState(0);
 
-  // Load stats and all videos on mount
   useEffect(() => {
     getLibraryStats().then(setStats).catch(() => {}).finally(() => setStatsLoading(false));
     loadAllVideos();
@@ -75,6 +76,7 @@ export default function App() {
     setError(null);
     setSearchLabel(undefined);
     setHasSearched(true);
+    setSortBy("relevance");
     try {
       const result = await searchVideos(query);
       setSearchResult(result);
@@ -91,6 +93,7 @@ export default function App() {
     setHasSearched(false);
     setSearchLabel(undefined);
     setExternalQuery("");
+    setSortBy("title");
   }, []);
 
   const handleFindSimilar = useCallback(async (videoId: string) => {
@@ -98,6 +101,7 @@ export default function App() {
     setIsLoading(true);
     setError(null);
     setHasSearched(true);
+    setSortBy("relevance");
     const video = allVideos.find((v) => v.video_id === videoId);
     setSearchLabel(`Videos similar to "${video?.title || videoId}"`);
     setExternalQuery("");
@@ -122,7 +126,6 @@ export default function App() {
       const results = hasSearched ? searchResult?.results : allVideos;
       const video = results?.find((v) => v.video_id === videoId);
       if (!video) return;
-
       setPlayerVideo(video);
       setPlayerUrl(getSegmentPlayUrl(videoId, segmentIndex));
       setActiveSegment(segmentIndex);
@@ -139,44 +142,75 @@ export default function App() {
     [playerVideo]
   );
 
-  const handleFilterChange = useCallback((field: string, value: string | null) => {
-    setActiveFilters((prev) => ({ ...prev, [field]: value }));
+  // Multi-select filter toggle
+  const handleFilterChange = useCallback((field: string, value: string) => {
+    setActiveFilters((prev) => {
+      const current = prev[field] || new Set<string>();
+      const next = new Set(current);
+      if (next.has(value)) next.delete(value);
+      else next.add(value);
+      return { ...prev, [field]: next };
+    });
   }, []);
 
   const handleClearAllFilters = useCallback(() => {
     setActiveFilters({});
   }, []);
 
-  // Show search results if searched, otherwise show all videos
+  // Unfiltered results
   const unfilteredVideos = hasSearched
     ? searchResult?.results ?? null
     : allVideos.length > 0
       ? allVideos
       : null;
 
-  // Apply multi-field filters
-  const displayedVideos = unfilteredVideos
-    ? unfilteredVideos.filter((v) => {
-        for (const [field, value] of Object.entries(activeFilters)) {
-          if (value === null) continue;
-          const videoValue = (v as unknown as Record<string, unknown>)[field];
-          if (videoValue !== value) return false;
-        }
-        return true;
-      })
-    : null;
+  // Apply multi-select filters
+  const filteredVideos = useMemo(() => {
+    if (!unfilteredVideos) return null;
+    return unfilteredVideos.filter((v) => {
+      for (const [field, values] of Object.entries(activeFilters)) {
+        if (values.size === 0) continue;
+        const videoValue = (v as unknown as Record<string, unknown>)[field];
+        if (typeof videoValue !== "string" || !values.has(videoValue)) return false;
+      }
+      return true;
+    });
+  }, [unfilteredVideos, activeFilters]);
+
+  // Sort
+  const displayedVideos = useMemo(() => {
+    if (!filteredVideos) return null;
+    const sorted = [...filteredVideos];
+    switch (sortBy) {
+      case "title":
+        sorted.sort((a, b) => (a.title || "").localeCompare(b.title || ""));
+        break;
+      case "title-desc":
+        sorted.sort((a, b) => (b.title || "").localeCompare(a.title || ""));
+        break;
+      case "year-desc":
+        sorted.sort((a, b) => (b.year || 0) - (a.year || 0));
+        break;
+      case "year-asc":
+        sorted.sort((a, b) => (a.year || 0) - (b.year || 0));
+        break;
+      case "relevance":
+        sorted.sort((a, b) => a.best_distance - b.best_distance);
+        break;
+    }
+    return sorted;
+  }, [filteredVideos, sortBy]);
 
   const hasFilters = stats?.filters && Object.values(stats.filters).some((f) => f.length > 0);
+  const hasActiveFilters = Object.values(activeFilters).some((s) => s.size > 0);
 
   return (
     <div className="min-h-screen bg-background text-foreground flex flex-col">
       <Header />
 
       <main className="flex-1 w-full max-w-7xl mx-auto p-4 md:p-6 lg:p-8 space-y-6">
-        {/* Stats */}
         <LibraryStats stats={stats} isLoading={statsLoading} />
 
-        {/* View tabs */}
         <div className="flex items-center gap-2 border-b border-border pb-2">
           <Button
             variant={view === "library" ? "default" : "ghost"}
@@ -198,9 +232,8 @@ export default function App() {
           </Button>
         </div>
 
-        {/* Library view */}
         {view === "library" && (
-          <div className="space-y-6">
+          <div className="space-y-4">
             <SearchBar
               onSearch={handleSearch}
               onClear={handleClearSearch}
@@ -220,8 +253,7 @@ export default function App() {
               </div>
             )}
 
-            <div className={`flex gap-6 ${hasFilters ? "" : ""}`}>
-              {/* Filter sidebar */}
+            <div className="flex gap-6">
               {hasFilters && stats?.filters && (
                 <FilterSidebar
                   filters={stats.filters}
@@ -231,22 +263,29 @@ export default function App() {
                 />
               )}
 
-              {/* Video grid */}
-              <div className="flex-1 min-w-0">
+              <div className="flex-1 min-w-0 space-y-4">
+                {displayedVideos && (
+                  <ResultsBar
+                    totalResults={displayedVideos.length}
+                    searchTime={hasSearched ? searchResult?.search_time_ms : undefined}
+                    query={hasSearched ? searchResult?.query : undefined}
+                    sortBy={sortBy}
+                    onSortChange={setSortBy}
+                  />
+                )}
+
                 <VideoGrid
                   results={displayedVideos}
                   isLoading={isLoading}
-                  searchTime={hasSearched ? searchResult?.search_time_ms : undefined}
-                  query={hasSearched ? searchResult?.query : undefined}
                   onPlay={handlePlay}
                   onFindSimilar={handleFindSimilar}
+                  onClearFilters={hasActiveFilters ? handleClearAllFilters : undefined}
                 />
               </div>
             </div>
           </div>
         )}
 
-        {/* Add videos view */}
         {view === "add" && <AddVideos />}
       </main>
 

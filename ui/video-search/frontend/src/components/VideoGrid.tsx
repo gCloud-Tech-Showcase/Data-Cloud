@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { Search } from "lucide-react";
+import { Search, SlidersHorizontal } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Button } from "@/components/ui/button";
 import { VideoCard } from "./VideoCard";
@@ -10,44 +10,39 @@ const PAGE_SIZE = 12;
 interface VideoGridProps {
   results: VideoResult[] | null;
   isLoading: boolean;
-  searchTime?: number;
-  query?: string;
   onPlay: (videoId: string, segmentIndex: number) => void;
   onFindSimilar?: (videoId: string) => void;
+  onClearFilters?: () => void;
 }
 
 export function VideoGrid({
   results,
   isLoading,
-  searchTime,
-  query,
   onPlay,
   onFindSimilar,
+  onClearFilters,
 }: VideoGridProps) {
   const [visibleCount, setVisibleCount] = useState(PAGE_SIZE);
 
-  // Reset visible count when results change
   useEffect(() => {
     setVisibleCount(PAGE_SIZE);
   }, [results]);
 
   if (isLoading) {
     return (
-      <div className="space-y-4">
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-          {Array.from({ length: 6 }).map((_, i) => (
-            <div key={i} className="space-y-2">
-              <Skeleton className="aspect-video rounded-lg" />
-              <Skeleton className="h-5 w-3/4" />
-              <Skeleton className="h-4 w-1/2" />
-            </div>
-          ))}
-        </div>
+      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4">
+        {Array.from({ length: 8 }).map((_, i) => (
+          <div key={i} className="space-y-2">
+            <Skeleton className="aspect-video rounded-lg" />
+            <Skeleton className="h-4 w-3/4" />
+            <Skeleton className="h-3 w-1/2" />
+          </div>
+        ))}
       </div>
     );
   }
 
-  if (results === null || (results.length === 0 && !query)) {
+  if (results === null || (results.length === 0 && !onClearFilters)) {
     return (
       <div className="text-center py-16 space-y-3">
         <Search className="w-12 h-12 text-muted-foreground/40 mx-auto" />
@@ -64,13 +59,18 @@ export function VideoGrid({
   if (results.length === 0) {
     return (
       <div className="text-center py-16 space-y-3">
-        <Search className="w-12 h-12 text-muted-foreground/40 mx-auto" />
+        <SlidersHorizontal className="w-12 h-12 text-muted-foreground/40 mx-auto" />
         <p className="text-muted-foreground">
-          No videos found for "{query}"
+          No videos match your current filters
         </p>
         <p className="text-xs text-muted-foreground/60">
-          Try a different description or explore one of the suggested topics
+          Try adjusting your filters or broadening your search
         </p>
+        {onClearFilters && (
+          <Button variant="outline" size="sm" onClick={onClearFilters}>
+            Clear all filters
+          </Button>
+        )}
       </div>
     );
   }
@@ -80,15 +80,7 @@ export function VideoGrid({
 
   return (
     <div className="space-y-4">
-      {searchTime !== undefined && (
-        <p className="text-sm text-muted-foreground">
-          {results.length} video{results.length !== 1 ? "s" : ""} found
-          <span className="ml-1 text-muted-foreground/60">
-            ({searchTime}ms)
-          </span>
-        </p>
-      )}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4">
         {visibleResults.map((video) => (
           <VideoCard key={video.video_id} video={video} onPlay={onPlay} onFindSimilar={onFindSimilar} />
         ))}

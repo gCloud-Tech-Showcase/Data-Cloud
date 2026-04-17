@@ -1,4 +1,4 @@
-import { Play, ExternalLink, Clock, Sparkles } from "lucide-react";
+import { Play, ExternalLink, Sparkles } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -15,10 +15,11 @@ export function VideoCard({ video, onPlay, onFindSimilar }: VideoCardProps) {
   const bestSegment = video.top_segments[0] || { segment_index: 0, start_seconds: 0, end_seconds: 120, distance: 0 };
 
   return (
-    <Card className="overflow-hidden hover:shadow-md transition-shadow duration-200 group">
+    <Card className="overflow-hidden group hover:shadow-md transition-shadow duration-200">
+      {/* Thumbnail — 16:9 aspect ratio */}
       <div
         className="relative aspect-video bg-muted cursor-pointer"
-        onClick={() => bestSegment && onPlay(video.video_id, bestSegment.segment_index)}
+        onClick={() => onPlay(video.video_id, bestSegment.segment_index)}
       >
         <img
           src={video.thumbnail_url}
@@ -28,9 +29,13 @@ export function VideoCard({ video, onPlay, onFindSimilar }: VideoCardProps) {
             (e.target as HTMLImageElement).style.display = "none";
           }}
         />
-        <div className="absolute inset-0 bg-black/0 group-hover:bg-black/30 transition-colors duration-200 flex items-center justify-center">
+
+        {/* Hover overlay with play button */}
+        <div className="absolute inset-0 bg-black/0 group-hover:bg-black/40 transition-colors duration-200 flex items-center justify-center">
           <Play className="w-12 h-12 text-white opacity-0 group-hover:opacity-100 transition-opacity duration-200 drop-shadow-lg" />
         </div>
+
+        {/* Match badge — only when searching */}
         {video.relevance_pct > 0 && (
           <Badge
             variant="secondary"
@@ -39,70 +44,78 @@ export function VideoCard({ video, onPlay, onFindSimilar }: VideoCardProps) {
             {video.relevance_pct}% match
           </Badge>
         )}
+
+        {/* Duration badge — bottom right of thumbnail */}
+        {video.duration_total_seconds && (
+          <span className="absolute bottom-2 right-2 bg-black/70 text-white text-xs px-1.5 py-0.5 rounded">
+            {formatDuration(video.duration_total_seconds)}
+          </span>
+        )}
       </div>
 
-      <CardContent className="p-4 space-y-2">
-        <div className="flex items-start justify-between gap-2">
-          <div className="min-w-0">
-            <h3 className="text-lg font-medium text-foreground truncate">
-              {video.title}
-            </h3>
-            <p className="text-sm text-muted-foreground">
-              {video.year && <span>{video.year}</span>}
-              {video.duration_total_seconds && (
-                <span className="ml-2">
-                  <Clock className="w-3 h-3 inline -mt-0.5 mr-0.5" />
-                  {formatDuration(video.duration_total_seconds)}
-                </span>
-              )}
-            </p>
-          </div>
-        </div>
+      <CardContent className="p-3 space-y-1">
+        {/* Title + year — always visible */}
+        <h3 className="text-sm font-medium text-foreground line-clamp-1">
+          {video.title}
+        </h3>
+        <p className="text-xs text-muted-foreground">
+          {video.year && <span>{video.year}</span>}
+          {video.category && (
+            <span className="ml-2 capitalize">{video.category}</span>
+          )}
+        </p>
 
+        {/* Description — visible on hover */}
         {video.ai_description && (
-          <p className="text-xs text-muted-foreground line-clamp-2">
+          <p className="text-xs text-muted-foreground line-clamp-2 opacity-0 group-hover:opacity-100 transition-opacity duration-200">
             {video.ai_description}
           </p>
         )}
 
-        {bestSegment && video.matching_intervals > 0 && (
-          <p className="text-xs text-muted-foreground">
-            Best match at {formatDuration(bestSegment.start_seconds)}–
-            {formatDuration(bestSegment.end_seconds)}
-            <span className="ml-1 text-muted-foreground/60">
-              ({video.matching_intervals} matching intervals)
-            </span>
+        {/* Match info — only when searching */}
+        {video.matching_intervals > 0 && (
+          <p className="text-[11px] text-muted-foreground/70">
+            Best match at {formatDuration(bestSegment.start_seconds)}–{formatDuration(bestSegment.end_seconds)}
           </p>
         )}
 
-        <div className="flex gap-2 pt-1">
-          {bestSegment && (
-            <Button
-              size="sm"
-              variant="default"
-              className="gap-1.5"
-              onClick={() => onPlay(video.video_id, bestSegment.segment_index)}
-            >
-              <Play className="w-3.5 h-3.5" />
-              Play segment
-            </Button>
-          )}
+        {/* Actions — visible on hover */}
+        <div className="flex gap-1.5 pt-1 opacity-0 group-hover:opacity-100 transition-opacity duration-200">
+          <Button
+            size="sm"
+            variant="default"
+            className="h-7 text-xs gap-1"
+            onClick={(e) => {
+              e.stopPropagation();
+              onPlay(video.video_id, bestSegment.segment_index);
+            }}
+          >
+            <Play className="w-3 h-3" />
+            Play
+          </Button>
           {onFindSimilar && (
             <Button
               size="sm"
               variant="secondary"
-              className="gap-1.5"
-              onClick={() => onFindSimilar(video.video_id)}
+              className="h-7 text-xs gap-1"
+              onClick={(e) => {
+                e.stopPropagation();
+                onFindSimilar(video.video_id);
+              }}
             >
-              <Sparkles className="w-3.5 h-3.5" />
+              <Sparkles className="w-3 h-3" />
               Similar
             </Button>
           )}
           {video.source_url && (
-            <a href={video.source_url} target="_blank" rel="noopener noreferrer">
-              <Button size="sm" variant="ghost" className="gap-1.5">
-                <ExternalLink className="w-3.5 h-3.5" />
-                Source
+            <a
+              href={video.source_url}
+              target="_blank"
+              rel="noopener noreferrer"
+              onClick={(e) => e.stopPropagation()}
+            >
+              <Button size="sm" variant="ghost" className="h-7 text-xs gap-1">
+                <ExternalLink className="w-3 h-3" />
               </Button>
             </a>
           )}
