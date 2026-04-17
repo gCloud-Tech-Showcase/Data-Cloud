@@ -22,7 +22,7 @@ export function ResultsBar({
   onSortChange,
 }: ResultsBarProps) {
   return (
-    <div className="flex items-center justify-between py-2 border-b border-border">
+    <div className="flex items-center justify-between py-2">
       <p className="text-sm text-muted-foreground">
         <span className="font-medium text-foreground">{totalResults}</span>
         {" "}video{totalResults !== 1 ? "s" : ""}

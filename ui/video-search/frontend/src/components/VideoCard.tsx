@@ -15,7 +15,7 @@ export function VideoCard({ video, onPlay, onFindSimilar }: VideoCardProps) {
   const bestSegment = video.top_segments[0] || { segment_index: 0, start_seconds: 0, end_seconds: 120, distance: 0 };
 
   return (
-    <Card className="overflow-hidden group hover:shadow-md transition-shadow duration-200">
+    <Card className="overflow-hidden group shadow-sm hover:shadow-lg transition-all duration-200 bg-background">
       {/* Thumbnail — 16:9 aspect ratio */}
       <div
         className="relative aspect-video bg-muted cursor-pointer"
@@ -45,6 +45,13 @@ export function VideoCard({ video, onPlay, onFindSimilar }: VideoCardProps) {
           </Badge>
         )}
 
+        {/* Category badge — top left of thumbnail */}
+        {video.category && (
+          <span className="absolute top-2 left-2 bg-black/60 text-white text-[10px] px-1.5 py-0.5 rounded capitalize backdrop-blur-sm">
+            {video.category}
+          </span>
+        )}
+
         {/* Duration badge — bottom right of thumbnail */}
         {video.duration_total_seconds && (
           <span className="absolute bottom-2 right-2 bg-black/70 text-white text-xs px-1.5 py-0.5 rounded">
@@ -58,12 +65,9 @@ export function VideoCard({ video, onPlay, onFindSimilar }: VideoCardProps) {
         <h3 className="text-sm font-medium text-foreground line-clamp-1">
           {video.title}
         </h3>
-        <p className="text-xs text-muted-foreground">
-          {video.year && <span>{video.year}</span>}
-          {video.category && (
-            <span className="ml-2 capitalize">{video.category}</span>
-          )}
-        </p>
+        {video.year && (
+          <p className="text-xs text-muted-foreground">{video.year}</p>
+        )}
 
         {/* Description — visible on hover */}
         {video.ai_description && (

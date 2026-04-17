@@ -1,5 +1,4 @@
 import { Film, Layers, Calendar } from "lucide-react";
-import { Card, CardContent } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import type { LibraryStats as Stats } from "@/types";
 
@@ -13,57 +12,39 @@ export function LibraryStats({ stats, isLoading = false }: LibraryStatsProps) {
 
   if (!stats) {
     return (
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
         {Array.from({ length: 3 }).map((_, i) => (
-          <Card key={i}>
-            <CardContent className="p-4 flex items-center gap-3">
-              <Skeleton className="w-5 h-5 rounded" />
-              <div className="space-y-1.5">
-                <Skeleton className="h-7 w-16" />
-                <Skeleton className="h-3 w-12" />
-              </div>
-            </CardContent>
-          </Card>
+          <div key={i} className="bg-primary/5 rounded-lg p-4 flex items-center gap-3">
+            <Skeleton className="w-5 h-5 rounded" />
+            <div className="space-y-1.5">
+              <Skeleton className="h-7 w-16" />
+              <Skeleton className="h-3 w-12" />
+            </div>
+          </div>
         ))}
       </div>
     );
   }
 
+  const items = [
+    { icon: Film, value: stats.total_videos, label: "Videos" },
+    { icon: Layers, value: stats.total_embeddings.toLocaleString(), label: "Embeddings" },
+    { icon: Calendar, value: `${stats.earliest_year}\u2013${stats.latest_year}`, label: "Year range" },
+  ];
+
   return (
-    <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-      <Card>
-        <CardContent className="p-4 flex items-center gap-3">
-          <Film className="w-5 h-5 text-primary" />
+    <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+      {items.map(({ icon: Icon, value, label }) => (
+        <div key={label} className="bg-primary/5 border border-primary/10 rounded-lg p-4 flex items-center gap-3">
+          <Icon className="w-5 h-5 text-primary" />
           <div>
-            <p className="font-mono text-2xl font-semibold tracking-tight">
-              {stats.total_videos}
+            <p className="font-mono text-xl font-semibold tracking-tight text-foreground">
+              {value}
             </p>
-            <p className="text-xs text-muted-foreground">Videos</p>
+            <p className="text-xs text-muted-foreground">{label}</p>
           </div>
-        </CardContent>
-      </Card>
-      <Card>
-        <CardContent className="p-4 flex items-center gap-3">
-          <Layers className="w-5 h-5 text-primary" />
-          <div>
-            <p className="font-mono text-2xl font-semibold tracking-tight">
-              {stats.total_embeddings.toLocaleString()}
-            </p>
-            <p className="text-xs text-muted-foreground">Embeddings</p>
-          </div>
-        </CardContent>
-      </Card>
-      <Card>
-        <CardContent className="p-4 flex items-center gap-3">
-          <Calendar className="w-5 h-5 text-primary" />
-          <div>
-            <p className="font-mono text-2xl font-semibold tracking-tight">
-              {stats.earliest_year}&ndash;{stats.latest_year}
-            </p>
-            <p className="text-xs text-muted-foreground">Year range</p>
-          </div>
-        </CardContent>
-      </Card>
+        </div>
+      ))}
     </div>
   );
 }

@@ -205,7 +205,7 @@ export default function App() {
   const hasActiveFilters = Object.values(activeFilters).some((s) => s.size > 0);
 
   return (
-    <div className="min-h-screen bg-background text-foreground flex flex-col">
+    <div className="min-h-screen bg-muted/40 text-foreground flex flex-col">
       <Header />
 
       <main className="flex-1 w-full max-w-7xl mx-auto p-4 md:p-6 lg:p-8 space-y-6">
@@ -234,12 +234,14 @@ export default function App() {
 
         {view === "library" && (
           <div className="space-y-4">
-            <SearchBar
-              onSearch={handleSearch}
-              onClear={handleClearSearch}
-              isLoading={isLoading}
-              externalQuery={externalQuery}
-            />
+            <div className="bg-background rounded-xl border border-border p-6 shadow-sm">
+              <SearchBar
+                onSearch={handleSearch}
+                onClear={handleClearSearch}
+                isLoading={isLoading}
+                externalQuery={externalQuery}
+              />
+            </div>
 
             {searchLabel && !isLoading && (
               <p className="text-sm font-medium text-foreground">

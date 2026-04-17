@@ -54,7 +54,7 @@ export function FilterSidebar({
   }
 
   return (
-    <aside className="w-56 flex-shrink-0 space-y-1">
+    <aside className="w-56 flex-shrink-0 space-y-1 bg-background rounded-xl border border-border p-4 shadow-sm h-fit sticky top-4">
       <div className="flex items-center justify-between mb-3">
         <h3 className="text-sm font-medium text-foreground">Filters</h3>
         {hasActiveFilters && (
