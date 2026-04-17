@@ -193,6 +193,9 @@ def generate_embeddings(video_id: str) -> None:
       e.video_start_sec,
       e.video_end_sec,
       vm.category,
+      vm.mood,
+      vm.color_mode,
+      vm.style,
       vm.description AS ai_description,
       e.embedding
     FROM `{DATASET}.silver_segment_embeddings` e

@@ -13,6 +13,9 @@ export interface VideoResult {
   duration_total_seconds: number | null;
   thumbnail_url: string;
   category: string | null;
+  mood: string | null;
+  color_mode: string | null;
+  style: string | null;
   ai_description: string | null;
   best_distance: number;
   relevance_pct: number;
@@ -34,6 +37,9 @@ export interface VideoListItem {
   source_url: string;
   duration_total_seconds: number | null;
   category: string | null;
+  mood: string | null;
+  color_mode: string | null;
+  style: string | null;
   ai_description: string | null;
   thumbnail_url: string;
 }

@@ -58,6 +58,9 @@ def search_videos(query: str, limit: int = 20) -> dict[str, Any]:
       ANY_VALUE(source_url) AS source_url,
       ANY_VALUE(duration_total_seconds) AS duration_total_seconds,
       ANY_VALUE(category) AS category,
+      ANY_VALUE(mood) AS mood,
+      ANY_VALUE(color_mode) AS color_mode,
+      ANY_VALUE(style) AS style,
       ANY_VALUE(ai_description) AS ai_description,
       ROUND(MIN(distance), 4) AS best_distance,
       COUNT(*) AS matching_intervals,
@@ -111,6 +114,9 @@ def search_videos(query: str, limit: int = 20) -> dict[str, Any]:
             "source_url": row.source_url,
             "duration_total_seconds": row.duration_total_seconds,
             "category": row.category,
+            "mood": row.mood,
+            "color_mode": row.color_mode,
+            "style": row.style,
             "ai_description": row.ai_description,
             "thumbnail_url": f"/api/videos/{row.video_id}/thumbnail",
             "best_distance": best_dist,
@@ -167,6 +173,9 @@ def find_similar(video_id: str, limit: int = 10) -> dict[str, Any]:
       ANY_VALUE(source_url) AS source_url,
       ANY_VALUE(duration_total_seconds) AS duration_total_seconds,
       ANY_VALUE(category) AS category,
+      ANY_VALUE(mood) AS mood,
+      ANY_VALUE(color_mode) AS color_mode,
+      ANY_VALUE(style) AS style,
       ANY_VALUE(ai_description) AS ai_description,
       ROUND(MIN(distance), 4) AS best_distance,
       COUNT(*) AS matching_intervals,
@@ -213,6 +222,9 @@ def find_similar(video_id: str, limit: int = 10) -> dict[str, Any]:
             "source_url": row.source_url,
             "duration_total_seconds": row.duration_total_seconds,
             "category": row.category,
+            "mood": row.mood,
+            "color_mode": row.color_mode,
+            "style": row.style,
             "ai_description": row.ai_description,
             "thumbnail_url": f"/api/videos/{row.video_id}/thumbnail",
             "best_distance": best_dist,
@@ -245,13 +257,14 @@ def get_library_stats() -> dict[str, Any]:
     row = next(client.query(sql).result())
 
     # Get filter dimensions from AI-generated metadata
+    METADATA_TABLE = f"{PROJECT_ID}.{DATASET}.silver_video_metadata"
     filters: dict[str, list] = {}
     filter_fields = ["category", "mood", "color_mode", "style"]
     for field in filter_fields:
         try:
             sql = f"""
             SELECT {field} AS value, COUNT(DISTINCT video_id) AS count
-            FROM `{GOLD_TABLE}`
+            FROM `{METADATA_TABLE}`
             WHERE {field} IS NOT NULL
             GROUP BY {field}
             ORDER BY count DESC
@@ -285,6 +298,9 @@ def list_videos() -> list[dict[str, Any]]:
       ANY_VALUE(source_url) AS source_url,
       ANY_VALUE(duration_total_seconds) AS duration_total_seconds,
       ANY_VALUE(category) AS category,
+      ANY_VALUE(mood) AS mood,
+      ANY_VALUE(color_mode) AS color_mode,
+      ANY_VALUE(style) AS style,
       ANY_VALUE(ai_description) AS ai_description
     FROM `{GOLD_TABLE}`
     GROUP BY video_id
@@ -301,6 +317,9 @@ def list_videos() -> list[dict[str, Any]]:
             "source_url": row.source_url,
             "duration_total_seconds": row.duration_total_seconds,
             "category": row.category,
+            "mood": row.mood,
+            "color_mode": row.color_mode,
+            "style": row.style,
             "ai_description": row.ai_description,
             "thumbnail_url": f"/api/videos/{row.video_id}/thumbnail",
         }

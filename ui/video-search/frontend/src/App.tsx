@@ -54,6 +54,9 @@ export default function App() {
         videos.map((v) => ({
           ...v,
           category: v.category ?? null,
+          mood: v.mood ?? null,
+          color_mode: v.color_mode ?? null,
+          style: v.style ?? null,
           ai_description: v.ai_description ?? null,
           best_distance: 0,
           relevance_pct: 0,
