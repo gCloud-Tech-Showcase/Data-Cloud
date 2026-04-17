@@ -55,9 +55,11 @@ export interface FilterOption {
 
 export interface LibraryStats {
   total_videos: number;
-  total_embeddings: number;
+  total_duration_minutes: number;
+  total_duration_hours: number;
   earliest_year: number | null;
   latest_year: number | null;
+  total_categories: number;
   categories: FilterOption[];
   filters: Record<string, FilterOption[]>;
 }

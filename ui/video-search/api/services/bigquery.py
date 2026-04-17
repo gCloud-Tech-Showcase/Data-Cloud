@@ -246,13 +246,22 @@ def get_library_stats() -> dict[str, Any]:
     client = _get_client()
 
     sql = f"""
+    WITH video_stats AS (
+      SELECT
+        video_id,
+        ANY_VALUE(duration_total_seconds) AS duration,
+        ANY_VALUE(year) AS year,
+        ANY_VALUE(category) AS category
+      FROM `{GOLD_TABLE}`
+      GROUP BY video_id
+    )
     SELECT
-      COUNT(DISTINCT video_id) AS total_videos,
-      COUNT(*) AS total_embeddings,
-      COUNT(DISTINCT segment_index) AS avg_segments_approx,
+      COUNT(*) AS total_videos,
+      COALESCE(SUM(duration), 0) AS total_duration_seconds,
       MIN(year) AS earliest_year,
-      MAX(year) AS latest_year
-    FROM `{GOLD_TABLE}`
+      MAX(year) AS latest_year,
+      COUNT(DISTINCT category) AS total_categories
+    FROM video_stats
     """
     row = next(client.query(sql).result())
 
@@ -275,11 +284,16 @@ def get_library_stats() -> dict[str, Any]:
         except Exception:
             filters[field] = []
 
+    total_minutes = int(row.total_duration_seconds / 60) if row.total_duration_seconds else 0
+    total_hours = round(total_minutes / 60, 1)
+
     return {
         "total_videos": row.total_videos,
-        "total_embeddings": row.total_embeddings,
+        "total_duration_minutes": total_minutes,
+        "total_duration_hours": total_hours,
         "earliest_year": row.earliest_year,
         "latest_year": row.latest_year,
+        "total_categories": row.total_categories,
         "categories": filters.get("category", []),
         "filters": filters,
     }
