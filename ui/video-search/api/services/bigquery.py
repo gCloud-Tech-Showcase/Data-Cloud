@@ -263,10 +263,10 @@ def get_library_stats() -> dict[str, Any]:
     for field in filter_fields:
         try:
             sql = f"""
-            SELECT {field} AS value, COUNT(DISTINCT video_id) AS count
+            SELECT LOWER(TRIM({field})) AS value, COUNT(DISTINCT video_id) AS count
             FROM `{METADATA_TABLE}`
             WHERE {field} IS NOT NULL
-            GROUP BY {field}
+            GROUP BY value
             ORDER BY count DESC
             """
             filters[field] = [
