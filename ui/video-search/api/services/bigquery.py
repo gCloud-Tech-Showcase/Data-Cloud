@@ -40,6 +40,7 @@ def search_videos(query: str, limit: int = 20) -> dict[str, Any]:
         base.color_mode,
         base.style,
         base.ai_description,
+        base.content_warnings,
         distance
       FROM VECTOR_SEARCH(
         TABLE `{gold_table}`, 'embedding',
@@ -165,6 +166,7 @@ def find_similar(video_id: str, limit: int = 10) -> dict[str, Any]:
         base.color_mode,
         base.style,
         base.ai_description,
+        base.content_warnings,
         distance
       FROM VECTOR_SEARCH(
         (SELECT * FROM `{gold_table}` WHERE video_id != @video_id),
