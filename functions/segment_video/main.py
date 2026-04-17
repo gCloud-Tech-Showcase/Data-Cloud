@@ -125,52 +125,39 @@ def generate_embeddings(video_id: str) -> None:
     client.query(embed_sql).result()
     log(f"Embeddings generated for {video_id}")
 
-    # Extract metadata using Gemini via AI.GENERATE_TABLE (two-pass for accuracy)
-    log(f"Extracting visual metadata for {video_id} (pass 1)...")
-    visuals_sql = f"""
-    MERGE INTO `{DATASET}.silver_video_visuals` T
+    # Extract metadata using Gemini 2.5 Flash via AI.GENERATE + OBJ.GET_ACCESS_URL
+    log(f"Extracting metadata for {video_id}...")
+    meta_sql = f"""
+    MERGE INTO `{DATASET}.silver_video_metadata` T
     USING (
-      SELECT video_id, category, color_mode, style
-      FROM AI.GENERATE_TABLE(
-        MODEL `{DATASET}.gemini_video_model`,
-        (SELECT *, REGEXP_EXTRACT(uri, r'/segments/([^/]+)/') AS video_id,
-          'Look at this video. What type of content is it (cartoon, educational, documentary, newsreel, other)? Is it in color or black_and_white? What style is it (hand-drawn animation, stop motion, live action, mixed)?' AS prompt
-         FROM `{DATASET}.bronze_video_segments`
-         WHERE uri LIKE '%/segments/{video_id}/seg_000.mp4'),
-        STRUCT('category STRING, color_mode STRING, style STRING' AS output_schema, 0.3 AS temperature, 512 AS max_output_tokens)
-      )
-    ) S ON T.video_id = S.video_id
-    WHEN MATCHED THEN UPDATE SET category = S.category, color_mode = S.color_mode, style = S.style
-    WHEN NOT MATCHED THEN INSERT (video_id, category, color_mode, style) VALUES (S.video_id, S.category, S.color_mode, S.style)
+      SELECT
+        REGEXP_EXTRACT(uri, r'/segments/([^/]+)/') AS video_id,
+        r.category, r.mood, r.color_mode, r.style, r.description, r.themes, r.characters
+      FROM `{DATASET}.bronze_video_segments`,
+      UNNEST([
+        AI.GENERATE(
+          (OBJ.GET_ACCESS_URL(ref, 'r'),
+           'Classify this video. category: cartoon, educational, documentary, newsreel, or other. mood: humorous, dramatic, educational, suspenseful, lighthearted, or serious. color_mode: color or black_and_white. style: hand-drawn animation, stop motion, live action, or mixed. description: one sentence about the main action. themes: 2-4 themes. characters: character names if identifiable.'),
+          connection_id => 'us.vertex-ai-connection',
+          endpoint => 'gemini-2.5-flash',
+          output_schema => 'category STRING, mood STRING, color_mode STRING, style STRING, description STRING, themes ARRAY<STRING>, characters ARRAY<STRING>'
+        )
+      ]) AS r
+      WHERE uri LIKE '%/segments/{video_id}/seg_000.mp4'
+    ) S
+    ON T.video_id = S.video_id
+    WHEN MATCHED THEN UPDATE SET
+      category = S.category, mood = S.mood, color_mode = S.color_mode,
+      style = S.style, description = S.description, themes = S.themes, characters = S.characters
+    WHEN NOT MATCHED THEN INSERT
+      (video_id, category, mood, color_mode, style, description, themes, characters)
+      VALUES (S.video_id, S.category, S.mood, S.color_mode, S.style, S.description, S.themes, S.characters)
     """
     try:
-        client.query(visuals_sql).result()
-        log(f"Visual metadata extracted for {video_id}")
+        client.query(meta_sql).result()
+        log(f"Metadata extracted for {video_id}")
     except Exception as e:
-        log(f"Visual metadata extraction failed (non-fatal): {e}")
-
-    log(f"Extracting content metadata for {video_id} (pass 2)...")
-    content_sql = f"""
-    MERGE INTO `{DATASET}.silver_video_content` T
-    USING (
-      SELECT video_id, mood, description, themes, characters
-      FROM AI.GENERATE_TABLE(
-        MODEL `{DATASET}.gemini_video_model`,
-        (SELECT *, REGEXP_EXTRACT(uri, r'/segments/([^/]+)/') AS video_id,
-          'Describe this video clip. What is the mood (humorous, dramatic, educational, suspenseful, lighthearted, serious)? Write one sentence describing the main action. List 2-4 themes. List character names only if you can identify them, otherwise leave empty.' AS prompt
-         FROM `{DATASET}.bronze_video_segments`
-         WHERE uri LIKE '%/segments/{video_id}/seg_000.mp4'),
-        STRUCT('mood STRING, description STRING, themes ARRAY<STRING>, characters ARRAY<STRING>' AS output_schema, 0.3 AS temperature, 1024 AS max_output_tokens)
-      )
-    ) S ON T.video_id = S.video_id
-    WHEN MATCHED THEN UPDATE SET mood = S.mood, description = S.description, themes = S.themes, characters = S.characters
-    WHEN NOT MATCHED THEN INSERT (video_id, mood, description, themes, characters) VALUES (S.video_id, S.mood, S.description, S.themes, S.characters)
-    """
-    try:
-        client.query(content_sql).result()
-        log(f"Content metadata extracted for {video_id}")
-    except Exception as e:
-        log(f"Content metadata extraction failed (non-fatal): {e}")
+        log(f"Metadata extraction failed (non-fatal): {e}")
 
     # Rebuild gold table using object metadata + AI metadata
     log("Rebuilding gold table...")
