@@ -7,8 +7,7 @@ import { LibraryStats } from "@/components/LibraryStats";
 import { AddVideos } from "@/components/AddVideos";
 import { FilterSidebar } from "@/components/FilterSidebar";
 import { ResultsBar } from "@/components/ResultsBar";
-import { Button } from "@/components/ui/button";
-import { Search, Plus } from "lucide-react";
+import { ArrowLeft } from "lucide-react";
 import {
   searchVideos,
   getSegmentPlayUrl,
@@ -206,33 +205,16 @@ export default function App() {
 
   return (
     <div className="min-h-screen bg-muted/40 text-foreground flex flex-col">
-      <Header />
+      <Header
+        onAddVideos={() => setView("add")}
+        isAddView={view === "add"}
+        onBackToLibrary={() => setView("library")}
+      />
 
       <main className="flex-1 w-full max-w-7xl mx-auto p-4 md:p-6 lg:p-8 space-y-6">
-        <LibraryStats stats={stats} isLoading={statsLoading} />
-
-        <div className="flex items-center gap-2 border-b border-border pb-2">
-          <Button
-            variant={view === "library" ? "default" : "ghost"}
-            size="sm"
-            className="gap-1.5"
-            onClick={() => setView("library")}
-          >
-            <Search className="w-4 h-4" />
-            Library
-          </Button>
-          <Button
-            variant={view === "add" ? "default" : "ghost"}
-            size="sm"
-            className="gap-1.5"
-            onClick={() => setView("add")}
-          >
-            <Plus className="w-4 h-4" />
-            Add videos
-          </Button>
-        </div>
-
         {view === "library" && (
+          <>
+          <LibraryStats stats={stats} isLoading={statsLoading} />
           <div className="space-y-4">
             <div className="bg-background rounded-xl border border-border p-6 shadow-sm">
               <SearchBar
@@ -286,9 +268,22 @@ export default function App() {
               </div>
             </div>
           </div>
+          </>
         )}
 
-        {view === "add" && <AddVideos />}
+        {view === "add" && (
+          <div className="space-y-4">
+            <button
+              type="button"
+              className="flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground transition-colors"
+              onClick={() => setView("library")}
+            >
+              <ArrowLeft className="w-4 h-4" />
+              Back to library
+            </button>
+            <AddVideos />
+          </div>
+        )}
       </main>
 
       {playerVideo && playerUrl && (
