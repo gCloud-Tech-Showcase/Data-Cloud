@@ -7,6 +7,7 @@ import { LibraryStats } from "@/components/LibraryStats";
 import { AddVideos } from "@/components/AddVideos";
 import { FilterSidebar } from "@/components/FilterSidebar";
 import { ResultsBar } from "@/components/ResultsBar";
+import { SelectionBar } from "@/components/SelectionBar";
 import { Footer } from "@/components/Footer";
 import { ArrowLeft } from "lucide-react";
 import {
@@ -36,6 +37,9 @@ export default function App() {
   const [externalQuery, setExternalQuery] = useState<string | undefined>();
   const [activeFilters, setActiveFilters] = useState<Record<string, Set<string>>>({});
   const [sortBy, setSortBy] = useState("title");
+
+  // Selection state
+  const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
 
   // Player state
   const [playerVideo, setPlayerVideo] = useState<VideoResult | null>(null);
@@ -143,6 +147,19 @@ export default function App() {
 
   const handleClearAllFilters = useCallback(() => {
     setActiveFilters({});
+  }, []);
+
+  const handleToggleSelect = useCallback((videoId: string) => {
+    setSelectedIds((prev) => {
+      const next = new Set(prev);
+      if (next.has(videoId)) next.delete(videoId);
+      else next.add(videoId);
+      return next;
+    });
+  }, []);
+
+  const handleClearSelection = useCallback(() => {
+    setSelectedIds(new Set());
   }, []);
 
   // Unfiltered results
@@ -253,6 +270,8 @@ export default function App() {
                   onPlay={handlePlay}
                   onFindSimilar={handleFindSimilar}
                   onClearFilters={hasActiveFilters ? handleClearAllFilters : undefined}
+                  selectedIds={selectedIds}
+                  onToggleSelect={handleToggleSelect}
                 />
               </div>
             </div>
@@ -274,6 +293,15 @@ export default function App() {
           </div>
         )}
       </main>
+
+      <SelectionBar
+        selectedVideos={
+          [...selectedIds]
+            .map((id) => (displayedVideos ?? allVideos).find((v) => v.video_id === id))
+            .filter(Boolean) as VideoResult[]
+        }
+        onClearSelection={handleClearSelection}
+      />
 
       <Footer />
 

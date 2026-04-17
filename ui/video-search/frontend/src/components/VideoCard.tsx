@@ -9,13 +9,15 @@ interface VideoCardProps {
   video: VideoResult;
   onPlay: (videoId: string, segmentIndex: number) => void;
   onFindSimilar?: (videoId: string) => void;
+  isSelected?: boolean;
+  onToggleSelect?: (videoId: string) => void;
 }
 
-export function VideoCard({ video, onPlay, onFindSimilar }: VideoCardProps) {
+export function VideoCard({ video, onPlay, onFindSimilar, isSelected, onToggleSelect }: VideoCardProps) {
   const bestSegment = video.top_segments[0] || { segment_index: 0, start_seconds: 0, end_seconds: 120, distance: 0 };
 
   return (
-    <Card className="overflow-hidden group shadow-sm hover:shadow-lg transition-all duration-200 bg-background flex flex-col">
+    <Card className={`overflow-hidden group shadow-sm hover:shadow-lg transition-all duration-200 bg-background flex flex-col ${isSelected ? "ring-2 ring-primary" : ""}`}>
       {/* Thumbnail — 16:9 aspect ratio */}
       <div
         className="relative aspect-video bg-muted cursor-pointer flex-shrink-0"
@@ -35,9 +37,31 @@ export function VideoCard({ video, onPlay, onFindSimilar }: VideoCardProps) {
           <Play className="w-12 h-12 text-white opacity-0 group-hover:opacity-100 transition-opacity duration-200 drop-shadow-lg" />
         </div>
 
-        {/* Category badge — top left */}
+        {/* Selection checkbox — top left */}
+        {onToggleSelect && (
+          <button
+            type="button"
+            className={`absolute top-2 left-2 z-10 w-5 h-5 rounded border-2 flex items-center justify-center transition-all ${
+              isSelected
+                ? "bg-primary border-primary text-primary-foreground"
+                : "border-white/70 bg-black/30 opacity-0 group-hover:opacity-100"
+            }`}
+            onClick={(e) => {
+              e.stopPropagation();
+              onToggleSelect(video.video_id);
+            }}
+          >
+            {isSelected && (
+              <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+              </svg>
+            )}
+          </button>
+        )}
+
+        {/* Category badge */}
         {video.category && (
-          <span className="absolute top-2 left-2 bg-black/60 text-white text-[10px] px-1.5 py-0.5 rounded capitalize backdrop-blur-sm">
+          <span className={`absolute ${onToggleSelect ? "top-2 left-9" : "top-2 left-2"} bg-black/60 text-white text-[10px] px-1.5 py-0.5 rounded capitalize backdrop-blur-sm`}>
             {video.category}
           </span>
         )}

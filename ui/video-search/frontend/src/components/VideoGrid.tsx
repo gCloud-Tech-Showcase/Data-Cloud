@@ -13,6 +13,8 @@ interface VideoGridProps {
   onPlay: (videoId: string, segmentIndex: number) => void;
   onFindSimilar?: (videoId: string) => void;
   onClearFilters?: () => void;
+  selectedIds?: Set<string>;
+  onToggleSelect?: (videoId: string) => void;
 }
 
 export function VideoGrid({
@@ -21,6 +23,8 @@ export function VideoGrid({
   onPlay,
   onFindSimilar,
   onClearFilters,
+  selectedIds,
+  onToggleSelect,
 }: VideoGridProps) {
   const [visibleCount, setVisibleCount] = useState(PAGE_SIZE);
 
@@ -82,7 +86,14 @@ export function VideoGrid({
     <div className="space-y-4">
       <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4">
         {visibleResults.map((video) => (
-          <VideoCard key={video.video_id} video={video} onPlay={onPlay} onFindSimilar={onFindSimilar} />
+          <VideoCard
+            key={video.video_id}
+            video={video}
+            onPlay={onPlay}
+            onFindSimilar={onFindSimilar}
+            isSelected={selectedIds?.has(video.video_id)}
+            onToggleSelect={onToggleSelect}
+          />
         ))}
       </div>
       {hasMore && (
