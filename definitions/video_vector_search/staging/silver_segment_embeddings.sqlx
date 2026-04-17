@@ -1,7 +1,8 @@
 config {
-  type: "table",
+  type: "incremental",
   schema: "video_vector_search",
-  description: "SILVER: Multimodal embeddings for video segments. Each segment is sampled at 16-second intervals by multimodalembedding@001, producing multiple 1408-dimensional embeddings per segment for fine-grained semantic matching.",
+  uniqueKey: ["segment_uri", "video_start_sec"],
+  description: "SILVER: Multimodal embeddings for video segments. Incremental — only processes new segments not already embedded. Each segment is sampled at 16-second intervals by multimodalembedding@001, producing multiple 1408-dimensional embeddings per segment.",
   columns: {
     segment_uri: "GCS URI of the video segment",
     video_id: "Parent video identifier extracted from the GCS path",
@@ -25,5 +26,8 @@ SELECT
 FROM
   AI.GENERATE_EMBEDDING(
     MODEL ${ref("multimodal_embedding_model")},
-    TABLE ${ref("bronze_video_segments")}
+    (
+      SELECT * FROM ${ref("bronze_video_segments")}
+      ${when(incremental(), `WHERE uri NOT IN (SELECT DISTINCT segment_uri FROM ${self()})`)}
+    )
   )

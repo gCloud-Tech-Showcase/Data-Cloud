@@ -1,7 +1,8 @@
 config {
-  type: "table",
+  type: "incremental",
   schema: "video_vector_search",
-  description: "SILVER: Comprehensive AI-extracted video metadata using Gemini 2.5 Flash via AI.GENERATE. Single-pass extraction of visual, content, and contextual metadata from each video's first segment.",
+  uniqueKey: ["video_id"],
+  description: "SILVER: Comprehensive AI-extracted video metadata using Gemini 2.5 Flash via AI.GENERATE. Incremental — only analyzes new videos not already in the table. Single-pass extraction of visual, content, and contextual metadata from each video's first segment.",
   columns: {
     video_id: "Parent video identifier",
     category: "AI-detected content type",
@@ -53,3 +54,4 @@ UNNEST([
   )
 ]) AS r
 WHERE uri LIKE '%/seg_000.mp4'
+${when(incremental(), `AND REGEXP_EXTRACT(uri, r'/segments/([^/]+)/') NOT IN (SELECT video_id FROM ${self()})`)}
