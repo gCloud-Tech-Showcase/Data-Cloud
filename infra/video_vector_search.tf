@@ -274,7 +274,7 @@ resource "google_cloudfunctions2_function" "segment_video" {
   }
 
   service_config {
-    max_instance_count    = 50
+    max_instance_count    = var.video_search_max_instances
     available_memory      = "1Gi"
     timeout_seconds       = 540
     service_account_email = google_service_account.video_segmenter.email

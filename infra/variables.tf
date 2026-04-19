@@ -171,3 +171,18 @@ variable "enable_spanner_graph_demo" {
   default     = false
 }
 
+# =============================================================================
+# Video Vector Search
+# =============================================================================
+
+variable "video_search_max_instances" {
+  description = <<-EOT
+    Maximum concurrent Cloud Function instances for video segmentation.
+
+    Default of 10 is sufficient for the quick-start (10 videos).
+    Increase to 50 for processing the full curated list (106 videos).
+  EOT
+  type        = number
+  default     = 10
+}
+

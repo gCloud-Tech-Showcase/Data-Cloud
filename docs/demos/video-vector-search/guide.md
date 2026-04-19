@@ -42,14 +42,19 @@ cd scripts
 source .venv/bin/activate
 pip install -r requirements.txt
 
-# Preview what will be downloaded (dry run)
-python source_archive_videos.py --dry-run --limit 10
+# Quick start: download 10 diverse videos (~3 minutes)
+python source_archive_videos.py --limit 10
 
-# Download all 106 curated videos
-python source_archive_videos.py
+# Or download the full curated list (106 videos, ~30 minutes)
+# python source_archive_videos.py
 ```
 
+The first 10 videos in the curated list are pre-selected for diversity: Popeye, Superman, Betty Boop, Bugs Bunny, Casper, plus educational and documentary films.
+
 This uploads videos to `gs://{project}-video-search/raw/` with custom metadata (title, year, source URL, etc.) attached to each GCS object.
+
+> **Tip:** For the full list, increase Cloud Function instances:
+> `terraform apply -var="video_search_max_instances=50"`
 
 The Cloud Function automatically triggers on each upload:
 - Splits the video into 2-minute segments

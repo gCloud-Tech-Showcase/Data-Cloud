@@ -247,14 +247,14 @@ Downloads public domain videos from Archive.org and uploads them to GCS for the 
 **Usage:**
 
 ```bash
-# Download from curated list (default, deterministic)
+# Quick start: download 10 diverse videos (~3 minutes)
+python source_archive_videos.py --limit 10
+
+# Or download the full curated list (106 videos, ~30 minutes)
 python source_archive_videos.py
 
 # Preview what would be downloaded
 python source_archive_videos.py --dry-run
-
-# Download specific number of videos
-python source_archive_videos.py --limit 10
 
 # Discover videos via Archive.org search
 python source_archive_videos.py --source search --limit 20
@@ -262,6 +262,8 @@ python source_archive_videos.py --source search --limit 20
 # Check progress
 python source_archive_videos.py --status
 ```
+
+The first 10 videos in the curated list are pre-selected for diversity: Popeye, Superman, Betty Boop, Bugs Bunny, Casper, plus educational and documentary films.
 
 **Output:**
 - GCS bucket: `gs://{PROJECT_ID}-video-search/raw/`
