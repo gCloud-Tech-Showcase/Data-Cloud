@@ -1,0 +1,45 @@
+# Video Vector Search
+
+Semantic video search using Gemini multimodal embeddings and BigQuery Vector Search, with a React-based UI.
+
+## What You'll Build
+
+1. **Video Ingestion** — Upload videos to GCS, automatically segment into 2-minute chunks via Cloud Function, and attach metadata
+2. **Multimodal Embeddings** — Generate 1408-dimensional vector embeddings from video content using `multimodalembedding@001`
+3. **AI Metadata Extraction** — Gemini 2.5 Flash analyzes each video to extract category, mood, characters, themes, content warnings, and more (14 fields total via `AI.GENERATE`)
+4. **Semantic Search** — Find videos by natural language query ("friendship", "chase scene") using BigQuery `VECTOR_SEARCH`
+5. **Web UI** — React application with search, filters, video playback, collections, highlight reels, and a detail panel
+
+## Technologies
+
+| Service | Purpose |
+|---------|---------|
+| BigQuery | Vector storage, search, and analytics |
+| `multimodalembedding@001` | Generate cross-modal embeddings (text + video in same space) |
+| Gemini 2.5 Flash | AI metadata extraction via `AI.GENERATE` |
+| BigLake Object Tables | Query video segments in GCS via SQL |
+| Cloud Functions (2nd gen) | Event-driven video segmentation on upload |
+| Eventarc | GCS upload event triggers |
+| GCS | Video storage (raw, segments, thumbnails, metadata) |
+| Dataform | Incremental data pipeline (bronze/silver/gold) |
+| Terraform | Infrastructure as code (all resources) |
+| React + Vite + Tailwind + shadcn/ui | Frontend UI |
+| Python FastAPI | Backend API |
+
+## Results
+
+- **100+ videos** from Archive.org indexed and searchable
+- **Sub-second** semantic search across all video content
+- **14 AI-extracted metadata fields** per video (zero manual tagging)
+- **Event-driven pipeline** — upload a video, it's automatically segmented
+- **Full web UI** — search, filter, play, create collections, highlight reels
+
+## Guides
+
+- [Quick Reference](quick.md) — SQL queries with expected outputs
+- [Architecture](architecture.md) — Pipeline diagram, data flow, components
+- [Step-by-Step Guide](guide.md) — Deploy infrastructure, source videos, run pipeline, use UI
+
+## Standalone
+
+This demo is independent from other demos. It creates its own BQ dataset, GCS bucket, and Cloud Function.

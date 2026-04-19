@@ -173,6 +173,7 @@ Each demo has its own architecture diagram:
 - [Vertica Ingestion](demos/vertica-ingestion/architecture.md)
 - [Spanner Graph](demos/spanner-graph/architecture.md)
 - [BQ Graph](demos/bq-graph/architecture.md)
+- [Video Vector Search](demos/video-vector-search/architecture.md)
 
 ---
 

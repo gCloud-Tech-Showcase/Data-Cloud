@@ -2,7 +2,7 @@
 
 ## Project Identity
 
-Google Cloud Data Showcase - 4 demos using BigQuery, Gemini AI, and Vertex AI.
+Google Cloud Data Showcase - 8 demos using BigQuery, Gemini AI, and Vertex AI.
 
 ## Demos
 
@@ -12,6 +12,10 @@ Google Cloud Data Showcase - 4 demos using BigQuery, Gemini AI, and Vertex AI.
 | `sentiment-analysis` | Gemini review analysis |
 | `campaign-intelligence` | Census geospatial targeting |
 | `security-logs` | AI threat detection |
+| `vertica-ingestion` | Migrate from Vertica to BigQuery |
+| `spanner-graph` | Property graph on Cloud Spanner |
+| `bq-graph` | BigQuery property graph (GQL) |
+| `video-vector-search` | Semantic video search with Gemini multimodal embeddings + React UI |
 
 ## Architecture
 
@@ -23,7 +27,10 @@ Google Cloud Data Showcase - 4 demos using BigQuery, Gemini AI, and Vertex AI.
 
 - **Infrastructure:** Terraform
 - **Data:** BigQuery, BigLake, Dataform
-- **AI:** Gemini 2.0 Flash, BQML, Vertex AI
+- **AI:** Gemini 2.5 Flash, BQML, Vertex AI, multimodalembedding@001
+- **Functions:** Cloud Functions (2nd gen), Eventarc
+- **Frontend:** React, Vite, Tailwind CSS, shadcn/ui (video-vector-search demo)
+- **Backend:** Python FastAPI (video-vector-search demo)
 
 ## Conventions
 

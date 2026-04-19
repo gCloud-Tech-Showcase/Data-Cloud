@@ -15,6 +15,7 @@ Explore GCP Data Cloud capabilities through these use cases:
 - [Vertica Ingestion](demos/vertica-ingestion/) — Migrate data from Vertica to BigQuery with Dataproc
 - [Spanner Graph](demos/spanner-graph/) — Property graph queries for data center topology analysis
 - [BQ Graph](demos/bq-graph/) — BigQuery property graph for data center topology GQL analytics
+- [Video Vector Search](demos/video-vector-search/) — Semantic video search with Gemini multimodal embeddings and a React UI
 
 ## Reference
 
