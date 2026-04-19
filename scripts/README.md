@@ -280,9 +280,8 @@ Splits videos into 2-minute segments for embedding generation. Alternative to th
 
 **Features:**
 - Downloads from GCS, splits with ffmpeg, uploads segments
-- Attaches full metadata (title, year, timing) to each segment
+- Attaches full metadata (title, year, timing) to each segment as GCS custom metadata
 - Extracts thumbnail frame per video
-- Writes per-video metadata CSV to GCS
 - Checkpoint-based resumability
 
 **Usage:**
@@ -304,7 +303,6 @@ python segment_videos.py --dry-run
 **Output:**
 - Segments: `gs://{PROJECT_ID}-video-search/segments/{video_id}/seg_000.mp4`
 - Thumbnails: `gs://{PROJECT_ID}-video-search/thumbnails/{video_id}.jpg`
-- Metadata: `gs://{PROJECT_ID}-video-search/manifests/metadata/{video_id}.csv`
 
 **Note:** The Cloud Function handles segmentation automatically on upload. This script is for manual/batch processing.
 

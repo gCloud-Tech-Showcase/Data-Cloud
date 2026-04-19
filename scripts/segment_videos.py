@@ -12,9 +12,6 @@ Supports two input modes:
 - Local: Reads videos from a local directory (--local-dir), useful for
   testing without the GCS round-trip.
 
-Also writes per-video CSV metadata files to GCS for Dataform to read
-via an external table, joining segments back to parent videos at query time.
-
 Usage:
     # Process all videos from GCS (reads manifest for video list)
     python segment_videos.py --project PROJECT_ID
@@ -33,8 +30,6 @@ Usage:
 """
 
 import argparse
-import csv
-import io
 import json
 import logging
 import os
@@ -57,11 +52,6 @@ SEGMENT_CHECKPOINT_FILE = SCRIPT_DIR / "segment_checkpoint.json"
 LOG_FILE = SCRIPT_DIR / "segment_videos.log"
 SEGMENT_DURATION = 120  # seconds
 BUCKET_SUFFIX = "-video-search"
-METADATA_CSV_COLUMNS = [
-    "video_id", "identifier", "title", "year", "source_url",
-    "license", "segment_index", "start_seconds", "end_seconds",
-    "duration_total_seconds",
-]
 
 # Setup logging
 logging.basicConfig(
@@ -224,38 +214,6 @@ def upload_to_gcs(
 
 
 # ---------------------------------------------------------------------------
-# Metadata CSV
-# ---------------------------------------------------------------------------
-
-def upload_metadata_csv(
-    bucket_name: str,
-    video_id: str,
-    rows: list[dict[str, Any]],
-) -> bool:
-    """Write a per-video metadata CSV to GCS.
-
-    One file per video at manifests/metadata/{video_id}.csv.
-    Overwrites on re-processing (idempotent).
-    """
-    buf = io.StringIO()
-    writer = csv.DictWriter(buf, fieldnames=METADATA_CSV_COLUMNS)
-    writer.writeheader()
-    writer.writerows(rows)
-
-    gcs_path = f"manifests/metadata/{video_id}.csv"
-    try:
-        client = storage.Client()
-        bucket = client.bucket(bucket_name)
-        blob = bucket.blob(gcs_path)
-        blob.upload_from_string(buf.getvalue(), content_type="text/csv")
-        logger.info(f"  Metadata CSV: gs://{bucket_name}/{gcs_path}")
-        return True
-    except Exception as e:
-        logger.error(f"CSV upload failed for {gcs_path}: {e}")
-        return False
-
-
-# ---------------------------------------------------------------------------
 # Core processing
 # ---------------------------------------------------------------------------
 
@@ -266,7 +224,7 @@ def process_video(
     local_dir: Optional[Path],
     dry_run: bool,
 ) -> int:
-    """Process a single video: download, split, upload segments + metadata CSV.
+    """Process a single video: download, split, upload segments.
 
     Returns the number of segments created.
     """
@@ -312,7 +270,7 @@ def process_video(
         # Upload segments with full metadata attached per segment
         source_url = manifest_entry.get("source_url", "")
         license_str = manifest_entry.get("license", "Public Domain")
-        metadata_rows = []
+        uploaded_count = 0
         for i, seg_path in enumerate(segments):
             start_seconds = i * SEGMENT_DURATION
             end_seconds = min((i + 1) * SEGMENT_DURATION, int(duration))
@@ -332,21 +290,8 @@ def process_video(
 
             gcs_path = f"segments/{video_id}/seg_{i:03d}.mp4"
             logger.info(f"  Uploading segment {i}: {gcs_path}")
-            if not upload_to_gcs(bucket_name, seg_path, gcs_path, custom_metadata=segment_metadata):
-                continue
-
-            metadata_rows.append({
-                "video_id": video_id,
-                "identifier": identifier,
-                "title": title,
-                "year": year or "",
-                "source_url": source_url,
-                "license": license_str,
-                "segment_index": i,
-                "start_seconds": start_seconds,
-                "end_seconds": end_seconds,
-                "duration_total_seconds": int(duration),
-            })
+            if upload_to_gcs(bucket_name, seg_path, gcs_path, custom_metadata=segment_metadata):
+                uploaded_count += 1
 
         # Extract thumbnail from first segment
         thumbnail_path = tmpdir_path / f"{video_id}.jpg"
@@ -366,11 +311,7 @@ def process_video(
             if upload_to_gcs(bucket_name, thumbnail_path, thumb_gcs):
                 logger.info(f"  Thumbnail: gs://{bucket_name}/{thumb_gcs}")
 
-        # Write per-video metadata CSV to GCS
-        if metadata_rows:
-            upload_metadata_csv(bucket_name, video_id, metadata_rows)
-
-        return len(metadata_rows)
+        return uploaded_count
 
 
 # ---------------------------------------------------------------------------
@@ -528,7 +469,6 @@ def main():
     print(f"Segments created:  {total_segments}")
     if not args.dry_run:
         print(f"Segments in GCS:   gs://{bucket_name}/segments/")
-        print(f"Metadata in GCS:   gs://{bucket_name}/manifests/metadata/")
 
 
 if __name__ == "__main__":

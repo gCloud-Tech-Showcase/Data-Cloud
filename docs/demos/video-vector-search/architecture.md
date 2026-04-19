@@ -13,7 +13,6 @@ graph TB
         B -->|Cloud Function trigger| C[ffmpeg segmentation]
         C --> D[GCS segments/]
         C --> E[GCS thumbnails/]
-        C --> F[GCS metadata CSVs]
     end
 
     subgraph "Bronze Layer"
@@ -54,7 +53,7 @@ sequenceDiagram
     User->>GCS: Upload video to raw/
     GCS->>CF: Object finalization event
     CF->>CF: ffmpeg split (2-min segments)
-    CF->>GCS: Upload segments + thumbnail + CSV
+    CF->>GCS: Upload segments + thumbnail
 
     Note over DF: Scheduled (hourly)
     DF->>BQ: Refresh object table cache
@@ -77,7 +76,6 @@ sequenceDiagram
 | Layer | Table/Resource | Type | Purpose |
 |-------|---------------|------|---------|
 | Bronze | `bronze_video_segments` | Object Table (SIMPLE) | GCS video segments queryable via SQL |
-| Bronze | `bronze_segment_mapping` | External Table (CSV) | Per-video metadata CSVs |
 | Model | `multimodal_embedding_model` | Remote Model | `multimodalembedding@001` for video/text embeddings |
 | Model | `gemini_video_model` | Remote Model | Gemini 2.5 Flash for AI metadata extraction |
 | Silver | `silver_segment_embeddings` | Incremental Table | 1408-dim embeddings per segment interval |

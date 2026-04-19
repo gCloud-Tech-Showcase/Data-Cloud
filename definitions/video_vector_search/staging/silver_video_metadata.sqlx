@@ -24,12 +24,19 @@ config {
   dependencies: ["silver_segment_embeddings"]
 }
 
+WITH new_videos AS (
+  SELECT *
+  FROM ${ref("bronze_video_segments")}
+  WHERE uri LIKE '%/seg_000.mp4'
+  ${when(incremental(), `AND REGEXP_EXTRACT(uri, r'/segments/([^/]+)/') NOT IN (SELECT video_id FROM ${self()})`)}
+)
+
 SELECT
   REGEXP_EXTRACT(uri, r'/segments/([^/]+)/') AS video_id,
   r.category, r.mood, r.color_mode, r.style, r.description,
   r.themes, r.characters, r.language, r.has_dialogue, r.has_music,
   r.target_audience, r.setting, r.pacing, r.content_warnings
-FROM ${ref("bronze_video_segments")},
+FROM new_videos,
 UNNEST([
   AI.GENERATE(
     (OBJ.GET_ACCESS_URL(ref, 'r'),
@@ -53,5 +60,3 @@ UNNEST([
     output_schema => 'category STRING, mood STRING, color_mode STRING, style STRING, description STRING, themes ARRAY<STRING>, characters ARRAY<STRING>, language STRING, has_dialogue BOOL, has_music BOOL, target_audience STRING, setting STRING, pacing STRING, content_warnings ARRAY<STRING>'
   )
 ]) AS r
-WHERE uri LIKE '%/seg_000.mp4'
-${when(incremental(), `AND REGEXP_EXTRACT(uri, r'/segments/([^/]+)/') NOT IN (SELECT video_id FROM ${self()})`)}

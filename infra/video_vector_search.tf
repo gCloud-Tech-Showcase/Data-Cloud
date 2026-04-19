@@ -31,7 +31,7 @@ resource "google_bigquery_dataset" "video_vector_search" {
 # Structure:
 #   gs://{project}-video-search/raw/          — Original full videos
 #   gs://{project}-video-search/segments/     — 2-min segments per video
-#   gs://{project}-video-search/manifests/    — Provenance and mapping metadata
+#   gs://{project}-video-search/thumbnails/   — Thumbnail per video
 # -----------------------------------------------------------------------------
 
 resource "google_storage_bucket" "video_search" {
@@ -221,14 +221,20 @@ resource "google_project_iam_member" "segmenter_bq_data_editor" {
 
 resource "google_project_iam_member" "segmenter_bq_connection_user" {
   project = var.project_id
-  role    = "roles/bigquery.connectionUser"
+  role    = "roles/bigquery.connectionAdmin"
   member  = "serviceAccount:${google_service_account.video_segmenter.email}"
 }
 
-# Dataform service agent needs Token Creator to impersonate the SA
+# Dataform service agent needs Token Creator + SA User to impersonate the SA
 resource "google_service_account_iam_member" "dataform_token_creator" {
   service_account_id = google_service_account.video_segmenter.name
   role               = "roles/iam.serviceAccountTokenCreator"
+  member             = "serviceAccount:${google_project_service_identity.dataform.email}"
+}
+
+resource "google_service_account_iam_member" "dataform_sa_user" {
+  service_account_id = google_service_account.video_segmenter.name
+  role               = "roles/iam.serviceAccountUser"
   member             = "serviceAccount:${google_project_service_identity.dataform.email}"
 }
 

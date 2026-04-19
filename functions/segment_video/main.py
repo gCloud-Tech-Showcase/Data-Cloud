@@ -7,7 +7,6 @@ When a video is uploaded to raw/*.mp4, this function:
 2. Splits it into 2-minute segments using ffmpeg
 3. Uploads segments with full metadata (title, year, timing, etc.)
 4. Extracts a thumbnail frame
-5. Writes a per-video metadata CSV
 
 Embedding generation and AI metadata extraction are handled by the
 scheduled Dataform pipeline — not by this function. This keeps the
@@ -17,8 +16,6 @@ Only processes files matching raw/*.mp4 — ignores everything else
 to prevent infinite trigger loops from segment uploads.
 """
 
-import csv
-import io
 import json
 import os
 import subprocess
@@ -30,12 +27,6 @@ from cloudevents.http import CloudEvent
 from google.cloud import storage
 
 SEGMENT_DURATION = 120  # seconds
-
-METADATA_CSV_COLUMNS = [
-    "video_id", "identifier", "title", "year", "source_url",
-    "license", "segment_index", "start_seconds", "end_seconds",
-    "duration_total_seconds",
-]
 
 
 def log(message: str) -> None:
@@ -149,7 +140,6 @@ def segment_video(cloud_event: CloudEvent) -> None:
         log(f"Produced {len(segments)} segments")
 
         # Upload segments with full metadata per segment
-        metadata_rows = []
         for i, seg_path in enumerate(segments):
             start_seconds = i * SEGMENT_DURATION
             end_seconds = min((i + 1) * SEGMENT_DURATION, int(duration))
@@ -173,19 +163,6 @@ def segment_video(cloud_event: CloudEvent) -> None:
             seg_blob.upload_from_filename(str(seg_path))
             log(f"  Uploaded segment {i}: {gcs_path}")
 
-            metadata_rows.append({
-                "video_id": video_id,
-                "identifier": identifier,
-                "title": title,
-                "year": year,
-                "source_url": source_url,
-                "license": license_str,
-                "segment_index": i,
-                "start_seconds": start_seconds,
-                "end_seconds": end_seconds,
-                "duration_total_seconds": int(duration),
-            })
-
         # Extract thumbnail from first segment
         thumbnail_path = tmpdir_path / f"{video_id}.jpg"
         subprocess.run(
@@ -203,17 +180,6 @@ def segment_video(cloud_event: CloudEvent) -> None:
             thumb_blob = bucket.blob(f"thumbnails/{video_id}.jpg")
             thumb_blob.upload_from_filename(str(thumbnail_path))
             log(f"  Thumbnail: gs://{bucket_name}/thumbnails/{video_id}.jpg")
-
-        # Write metadata CSV
-        buf = io.StringIO()
-        writer = csv.DictWriter(buf, fieldnames=METADATA_CSV_COLUMNS)
-        writer.writeheader()
-        writer.writerows(metadata_rows)
-
-        csv_path = f"manifests/metadata/{video_id}.csv"
-        csv_blob = bucket.blob(csv_path)
-        csv_blob.upload_from_string(buf.getvalue(), content_type="text/csv")
-        log(f"  Metadata CSV: gs://{bucket_name}/{csv_path}")
 
     log(
         f"Done: {video_id} — {len(segments)} segments, "
