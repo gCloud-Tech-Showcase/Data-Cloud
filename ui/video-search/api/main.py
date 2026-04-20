@@ -4,6 +4,10 @@ Serves the search API and media endpoints for the Video Vector Search demo.
 In production (Cloud Run), also serves the built React frontend as static files.
 """
 
+from dotenv import load_dotenv
+
+load_dotenv()
+
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles

@@ -1,6 +1,7 @@
 """Archive.org service — search, download, and embed public domain videos."""
 
 import logging
+import os
 import re
 import tempfile
 from pathlib import Path
@@ -12,7 +13,7 @@ from google.cloud import storage
 ARCHIVE_SEARCH_URL = "https://archive.org/advancedsearch.php"
 ARCHIVE_METADATA_URL = "https://archive.org/metadata"
 ARCHIVE_DOWNLOAD_URL = "https://archive.org/download"
-BUCKET_NAME = "gcloud-tech-showcase-video-search"
+BUCKET_NAME = os.environ["GCS_BUCKET"]
 
 logger = logging.getLogger(__name__)
 

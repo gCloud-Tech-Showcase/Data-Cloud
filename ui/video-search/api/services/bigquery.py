@@ -1,11 +1,12 @@
 """BigQuery service for vector search queries."""
 
+import os
 import time
 from typing import Any
 
 from google.cloud import bigquery
 
-PROJECT_ID = "gcloud-tech-showcase"
+PROJECT_ID = os.environ["GCP_PROJECT_ID"]
 DATASET = "video_vector_search"
 EMBEDDING_MODEL = f"{PROJECT_ID}.{DATASET}.multimodal_embedding_model"
 GOLD_TABLE = f"{PROJECT_ID}.{DATASET}.gold_searchable_videos"

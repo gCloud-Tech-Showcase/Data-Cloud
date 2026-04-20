@@ -313,3 +313,188 @@ resource "google_cloudfunctions2_function" "segment_video" {
     google_project_iam_member.gcs_pubsub_publisher,
   ]
 }
+
+# -----------------------------------------------------------------------------
+# Artifact Registry: Pre-Built Container Images
+# Always on — the image must exist before Cloud Run can reference it.
+# Public read access so any project can pull the pre-built images.
+# -----------------------------------------------------------------------------
+
+resource "google_artifact_registry_repository" "public" {
+  repository_id = "public"
+  location      = var.region
+  format        = "DOCKER"
+  description   = "Pre-built container images for demo UIs"
+
+  labels = {
+    project = "data-cloud"
+    purpose = "container-images"
+  }
+
+  depends_on = [google_project_service.cloudbuild]
+}
+
+resource "google_artifact_registry_repository_iam_member" "public_reader" {
+  repository = google_artifact_registry_repository.public.name
+  location   = var.region
+  role       = "roles/artifactregistry.reader"
+  member     = "allUsers"
+}
+
+# Cloud Build trigger: auto-build UI image on push to main
+resource "google_cloudbuild_trigger" "video_search_ui" {
+  name     = "video-search-ui"
+  location = var.region
+
+  github {
+    owner = "gCloud-Tech-Showcase"
+    name  = "Data-Cloud"
+    push {
+      branch = "^main$"
+    }
+  }
+
+  included_files = ["ui/video-search/**"]
+
+  build {
+    step {
+      name = "gcr.io/cloud-builders/docker"
+      args = [
+        "build",
+        "-t", "${var.region}-docker.pkg.dev/${var.project_id}/public/video-search-ui:$COMMIT_SHA",
+        "-t", "${var.region}-docker.pkg.dev/${var.project_id}/public/video-search-ui:latest",
+        "ui/video-search",
+      ]
+    }
+    step {
+      name = "gcr.io/cloud-builders/docker"
+      args = [
+        "push", "--all-tags",
+        "${var.region}-docker.pkg.dev/${var.project_id}/public/video-search-ui",
+      ]
+    }
+    images = ["${var.region}-docker.pkg.dev/${var.project_id}/public/video-search-ui:latest"]
+  }
+
+  depends_on = [google_artifact_registry_repository.public]
+}
+
+# -----------------------------------------------------------------------------
+# Generated .env for local API development
+# Terraform is the single source of truth for project config.
+# -----------------------------------------------------------------------------
+
+resource "local_file" "video_search_api_env" {
+  filename        = "${path.module}/../ui/video-search/api/.env"
+  file_permission = "0600"
+  content         = "GCP_PROJECT_ID=${var.project_id}\nGCS_BUCKET=${google_storage_bucket.video_search.name}\n"
+}
+
+# -----------------------------------------------------------------------------
+# Cloud Run: Video Search UI (Optional)
+# Deploy the React + FastAPI UI to a public Cloud Run endpoint.
+# Uses pre-built container image — no build step required.
+#
+# Enable with: enable_video_search_ui = true in terraform.tfvars
+# -----------------------------------------------------------------------------
+
+resource "google_service_account" "video_search_ui" {
+  count        = var.enable_video_search_ui ? 1 : 0
+  account_id   = "video-search-ui"
+  display_name = "Video Search UI (Cloud Run)"
+
+  depends_on = [google_project_service.run]
+}
+
+# Cloud Run SA: read BQ data
+resource "google_project_iam_member" "ui_bq_data_viewer" {
+  count   = var.enable_video_search_ui ? 1 : 0
+  project = var.project_id
+  role    = "roles/bigquery.dataViewer"
+  member  = "serviceAccount:${google_service_account.video_search_ui[0].email}"
+}
+
+# Cloud Run SA: run BQ queries
+resource "google_project_iam_member" "ui_bq_job_user" {
+  count   = var.enable_video_search_ui ? 1 : 0
+  project = var.project_id
+  role    = "roles/bigquery.jobUser"
+  member  = "serviceAccount:${google_service_account.video_search_ui[0].email}"
+}
+
+# Cloud Run SA: use BQ connection for AI.GENERATE_EMBEDDING in search
+resource "google_project_iam_member" "ui_bq_connection" {
+  count   = var.enable_video_search_ui ? 1 : 0
+  project = var.project_id
+  role    = "roles/bigquery.connectionUser"
+  member  = "serviceAccount:${google_service_account.video_search_ui[0].email}"
+}
+
+# Cloud Run SA: read videos and thumbnails from GCS
+resource "google_storage_bucket_iam_member" "ui_bucket_reader" {
+  count  = var.enable_video_search_ui ? 1 : 0
+  bucket = google_storage_bucket.video_search.name
+  role   = "roles/storage.objectViewer"
+  member = "serviceAccount:${google_service_account.video_search_ui[0].email}"
+}
+
+# Cloud Run SA: write to GCS for video ingestion (Add Videos feature)
+resource "google_storage_bucket_iam_member" "ui_bucket_writer" {
+  count  = var.enable_video_search_ui ? 1 : 0
+  bucket = google_storage_bucket.video_search.name
+  role   = "roles/storage.objectCreator"
+  member = "serviceAccount:${google_service_account.video_search_ui[0].email}"
+}
+
+resource "google_cloud_run_v2_service" "video_search_ui" {
+  count    = var.enable_video_search_ui ? 1 : 0
+  name     = "video-search-ui"
+  location = var.region
+
+  template {
+    service_account = google_service_account.video_search_ui[0].email
+
+    containers {
+      image = var.video_search_ui_image
+
+      env {
+        name  = "GCP_PROJECT_ID"
+        value = var.project_id
+      }
+      env {
+        name  = "GCS_BUCKET"
+        value = google_storage_bucket.video_search.name
+      }
+
+      resources {
+        limits = {
+          memory = "1Gi"
+          cpu    = "1"
+        }
+      }
+    }
+
+    scaling {
+      min_instance_count = 0
+      max_instance_count = 3
+    }
+  }
+
+  depends_on = [
+    google_project_service.run,
+    google_project_iam_member.ui_bq_data_viewer,
+    google_project_iam_member.ui_bq_job_user,
+    google_project_iam_member.ui_bq_connection,
+    google_storage_bucket_iam_member.ui_bucket_reader,
+    google_storage_bucket_iam_member.ui_bucket_writer,
+  ]
+}
+
+# Allow unauthenticated access (public demo)
+resource "google_cloud_run_v2_service_iam_member" "video_search_ui_public" {
+  count    = var.enable_video_search_ui ? 1 : 0
+  name     = google_cloud_run_v2_service.video_search_ui[0].name
+  location = var.region
+  role     = "roles/run.invoker"
+  member   = "allUsers"
+}

@@ -34,6 +34,7 @@ functions/*.zip
 ui/*/frontend/node_modules/
 ui/*/frontend/dist/
 ui/*/api/.venv/
+ui/*/api/.env
 __pycache__/
 *.pyc
 

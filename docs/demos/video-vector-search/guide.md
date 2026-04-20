@@ -128,6 +128,32 @@ Open **http://localhost:5173** in your browser.
 
 ---
 
+## Step 5b: Deploy UI to Cloud Run (Optional)
+
+Instead of running locally, deploy the UI to a public Cloud Run endpoint:
+
+```bash
+cd infra
+terraform apply -var="enable_video_search_ui=true"
+```
+
+Terraform outputs the URL. No Docker build needed — the image is pre-built and published automatically on each push to main via Cloud Build.
+
+To use a custom image:
+
+```bash
+terraform apply -var="enable_video_search_ui=true" \
+  -var="video_search_ui_image=us-central1-docker.pkg.dev/YOUR-PROJECT/YOUR-REPO/video-search-ui:latest"
+```
+
+To tear down:
+
+```bash
+terraform apply -var="enable_video_search_ui=false"
+```
+
+---
+
 ## Step 6: Explore the UI
 
 - **Search** — Type natural language queries ("friendship", "adventure", "educational health")

@@ -186,3 +186,29 @@ variable "video_search_max_instances" {
   default     = 10
 }
 
+variable "enable_video_search_ui" {
+  description = <<-EOT
+    Deploy the Video Library Intelligence UI to Cloud Run.
+
+    Creates a Cloud Run service using a pre-built container image.
+    No build step required — the image is published automatically on each
+    push to main via Cloud Build.
+
+    Set video_search_ui_image to use a custom image instead of the default.
+  EOT
+  type    = bool
+  default = false
+}
+
+variable "video_search_ui_image" {
+  description = <<-EOT
+    Container image for the Video Search UI Cloud Run service.
+    Only used when enable_video_search_ui = true.
+
+    Default points to the pre-built image in the gCloud-Tech-Showcase project.
+    Override to use a custom-built image from your own registry.
+  EOT
+  type    = string
+  default = "us-central1-docker.pkg.dev/gcloud-tech-showcase/public/video-search-ui:latest"
+}
+

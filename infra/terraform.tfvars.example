@@ -52,3 +52,8 @@ github_token = "your-github-personal-access-token"
 # Video Vector Search: max concurrent Cloud Function instances for segmentation
 # Default 10 is fine for quick-start (10 videos). Set to 50 for full curated list (106 videos).
 # video_search_max_instances = 10
+
+# Deploy Video Search UI to Cloud Run (uses pre-built container image)
+# No build step needed — image is published automatically on each push to main.
+# enable_video_search_ui = false
+# video_search_ui_image  = "us-central1-docker.pkg.dev/gcloud-tech-showcase/public/video-search-ui:latest"

@@ -1,8 +1,10 @@
 """GCS service for media streaming."""
 
+import os
+
 from google.cloud import storage
 
-BUCKET_NAME = "gcloud-tech-showcase-video-search"
+BUCKET_NAME = os.environ["GCS_BUCKET"]
 
 _client: storage.Client | None = None
 
