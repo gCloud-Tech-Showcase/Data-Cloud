@@ -32,6 +32,7 @@ Use it to learn, fork it to experiment, but please don't deploy it as-is to run 
 | [**Vertica Ingestion**](docs/demos/vertica-ingestion/)         | Migrate from Vertica to BQ  | Dataproc, Spark, JDBC   |
 | [**Spanner Graph**](docs/demos/spanner-graph/)                 | Property graph queries      | Cloud Spanner, GQL      |
 | [**BQ Graph**](docs/demos/bq-graph/)                           | Graph analytics at scale    | BigQuery, GQL           |
+| [**Video Vector Search**](docs/demos/video-vector-search/)     | Semantic video search + UI  | Vector Search, Gemini, React |
 
 Pick a demo based on your interest — each includes SQL queries, expected outputs, and step-by-step guides.
 

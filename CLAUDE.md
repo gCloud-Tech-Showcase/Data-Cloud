@@ -2,7 +2,7 @@
 
 ## WHAT: Project Overview
 
-Google Cloud Data Showcase with **7 demos** using BigQuery, Gemini AI, and Vertex AI:
+Google Cloud Data Showcase with **8 demos** using BigQuery, Gemini AI, and Vertex AI:
 
 1. **Churn Prediction** - BQML user retention model with rolling 7-day windows
 2. **Sentiment Analysis** - Gemini-powered review analysis via BigLake
@@ -11,6 +11,7 @@ Google Cloud Data Showcase with **7 demos** using BigQuery, Gemini AI, and Verte
 5. **Vertica Ingestion** - Migrate data from Vertica to BigQuery with Dataproc + Spark
 6. **Spanner Graph** - Property graph queries for data center topology analysis
 7. **BQ Graph** - BigQuery property graph for data center topology GQL analytics
+8. **Video Vector Search** - Semantic video search with Gemini multimodal embeddings, BQ Vector Search, and a React UI
 
 **Key Directories:** `definitions/{domain}/` for Dataform, `infra/` for Terraform, `docs/` for guides.
 
@@ -43,7 +44,7 @@ config {
 **Naming:** `bronze_*` → `silver_*` → `gold_*`
 
 **Tags:**
-- Domain: `sentiment_analysis`, `propensity_modeling`, `campaign_intelligence`, `security_logs`, `data_center_topology`
+- Domain: `sentiment_analysis`, `propensity_modeling`, `campaign_intelligence`, `security_logs`, `data_center_topology`, `video_vector_search`
 - Layer: `bronze`, `silver`, `gold`
 - Category: `sources`, `staging`, `marts`, `ml`, `models`, `examples`
 

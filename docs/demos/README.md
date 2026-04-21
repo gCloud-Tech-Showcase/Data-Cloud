@@ -11,6 +11,7 @@ Explore GCP Data Cloud capabilities through these use cases.
 | [**Vertica Ingestion**](vertica-ingestion/) | Migrate data from Vertica to BigQuery with Dataproc + Spark |
 | [**Spanner Graph**](spanner-graph/) | Property graph queries for data center topology analysis |
 | [**BQ Graph**](bq-graph/) | BigQuery property graph for data center topology GQL analytics |
+| [**Video Vector Search**](video-vector-search/) | Semantic video search with Gemini multimodal embeddings and a React UI |
 
 ---
 
@@ -25,6 +26,7 @@ Explore GCP Data Cloud capabilities through these use cases.
 | Data migration from Vertica | [Vertica Ingestion](vertica-ingestion/) |
 | Graph databases / GQL (Spanner) | [Spanner Graph](spanner-graph/) |
 | Graph databases / GQL (BigQuery) | [BQ Graph](bq-graph/) |
+| Video search / multimodal AI | [Video Vector Search](video-vector-search/) |
 
 ---
 
@@ -39,6 +41,7 @@ Explore GCP Data Cloud capabilities through these use cases.
 | **Vertica Ingestion** | Vertica CE VM | Terraform + data generator | Run `terraform apply -var="enable_vertica_demo=true"`, then load data |
 | **Spanner Graph** | Data center topology | Terraform + data generator | Run `terraform apply -var="enable_spanner_graph_demo=true"`, then load data |
 | **BQ Graph** | Data center topology | Terraform + data generator + Dataform | Run `terraform apply -var="enable_bq_graph_demo=true"`, load data, then execute Dataform (tag: graph) |
+| **Video Vector Search** | Archive.org public domain videos | Terraform + sourcing script + Dataform | Run `terraform apply`, then `scripts/source_archive_videos.py`, then execute Dataform (tag: video_vector_search) |
 
 ---
 
@@ -53,6 +56,7 @@ SQL queries with expected outputs — run these directly in BigQuery Console.
 - [Vertica Ingestion](vertica-ingestion/quick.md)
 - [Spanner Graph](spanner-graph/quick.md)
 - [BQ Graph](bq-graph/quick.md)
+- [Video Vector Search](video-vector-search/quick.md)
 
 ---
 
@@ -67,6 +71,7 @@ Step-by-step guides with explanations.
 - [Vertica Ingestion](vertica-ingestion/guide.md)
 - [Spanner Graph](spanner-graph/guide.md)
 - [BQ Graph](bq-graph/guide.md)
+- [Video Vector Search](video-vector-search/guide.md)
 
 ---
 

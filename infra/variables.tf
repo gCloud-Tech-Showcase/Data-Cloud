@@ -171,3 +171,59 @@ variable "enable_spanner_graph_demo" {
   default     = false
 }
 
+# =============================================================================
+# Video Vector Search
+# =============================================================================
+
+variable "video_search_max_instances" {
+  description = <<-EOT
+    Maximum concurrent Cloud Function instances for video segmentation.
+
+    Default of 10 is sufficient for the quick-start (10 videos).
+    Increase to 50 for processing the full curated list (106 videos).
+  EOT
+  type        = number
+  default     = 10
+}
+
+variable "enable_video_search_build" {
+  description = <<-EOT
+    Enable the build pipeline for the Video Search UI container image.
+
+    Creates an Artifact Registry repo and Cloud Build trigger that
+    auto-builds the image on push to main. Only needed by repo maintainers
+    who publish pre-built images.
+
+    Users deploying the demo do NOT need this — just enable_video_search_ui.
+  EOT
+  type    = bool
+  default = false
+}
+
+variable "enable_video_search_ui" {
+  description = <<-EOT
+    Deploy the Video Library Intelligence UI to Cloud Run.
+
+    Creates a Cloud Run service using a pre-built container image from
+    ghcr.io (gCloud-Tech-Showcase project). No build pipeline needed.
+
+    To use a custom image, override video_search_ui_image.
+    To build your own image with Cloud Build, also set enable_video_search_build = true.
+  EOT
+  type    = bool
+  default = false
+}
+
+variable "video_search_ui_image" {
+  description = <<-EOT
+    Container image for the Video Search UI Cloud Run service.
+    Only used when enable_video_search_ui = true and enable_video_search_build = false.
+
+    Default points to the pre-built image on GitHub Container Registry.
+    When enable_video_search_build = true, this is ignored — Cloud Run
+    uses the image from your project's Artifact Registry instead.
+  EOT
+  type    = string
+  default = "ghcr.io/gcloud-tech-showcase/video-search-ui:latest"
+}
+

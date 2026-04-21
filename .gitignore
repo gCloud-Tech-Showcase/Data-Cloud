@@ -25,6 +25,18 @@ Thumbs.db
 !*.json.example
 !package.json
 !package-lock.json
+!scripts/video_sources.json
+
+# Cloud Function build artifacts
+functions/*.zip
+
+# UI apps
+ui/*/frontend/node_modules/
+ui/*/frontend/dist/
+ui/*/api/.venv/
+ui/*/api/.env
+__pycache__/
+*.pyc
 
 # Node.js (Dataform)
 node_modules/
@@ -36,6 +48,9 @@ scripts/venv/
 scripts/__pycache__/
 scripts/*.pyc
 scripts/checkpoint.json
+scripts/video_checkpoint.json
+scripts/video_manifest.json
+scripts/video_staging/
 scripts/*.log
 scripts/.env
 scripts/service-account-key.json

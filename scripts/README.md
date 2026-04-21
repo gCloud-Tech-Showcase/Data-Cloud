@@ -232,6 +232,82 @@ gcloud dataproc workflow-templates instantiate vertica-to-bigquery --region=us-c
 
 ---
 
+---
+
+### `source_archive_videos.py`
+
+Downloads public domain videos from Archive.org and uploads them to GCS for the Video Vector Search demo.
+
+**Features:**
+- Dual-mode: curated list (deterministic) or Archive.org search (discovery)
+- Attaches custom GCS metadata (title, year, identifier, source URL) to each video
+- Checkpoint-based resumability
+- Provenance manifest tracking
+
+**Usage:**
+
+```bash
+# Quick start: download 10 diverse videos (~3 minutes)
+python source_archive_videos.py --limit 10
+
+# Or download the full curated list (106 videos, ~30 minutes)
+python source_archive_videos.py
+
+# Preview what would be downloaded
+python source_archive_videos.py --dry-run
+
+# Discover videos via Archive.org search
+python source_archive_videos.py --source search --limit 20
+
+# Check progress
+python source_archive_videos.py --status
+```
+
+The first 10 videos in the curated list are pre-selected for diversity: Popeye, Superman, Betty Boop, Bugs Bunny, Casper, plus educational and documentary films.
+
+**Output:**
+- GCS bucket: `gs://{PROJECT_ID}-video-search/raw/`
+- Local manifest: `video_manifest.json`
+- Local checkpoint: `video_checkpoint.json`
+
+**Curated List:** `video_sources.json` contains 106 public domain videos (66 cartoons + 40 educational films) with Archive.org identifiers.
+
+---
+
+### `segment_videos.py`
+
+Splits videos into 2-minute segments for embedding generation. Alternative to the Cloud Function for batch processing.
+
+**Features:**
+- Downloads from GCS, splits with ffmpeg, uploads segments
+- Attaches full metadata (title, year, timing) to each segment as GCS custom metadata
+- Extracts thumbnail frame per video
+- Checkpoint-based resumability
+
+**Usage:**
+
+```bash
+# Process all videos in the manifest
+python segment_videos.py
+
+# Process specific videos
+python segment_videos.py --video-id popeye-for-president spree-lunch
+
+# Process from local files (skip GCS download)
+python segment_videos.py --local-dir ./video_staging
+
+# Preview
+python segment_videos.py --dry-run
+```
+
+**Output:**
+- Segments: `gs://{PROJECT_ID}-video-search/segments/{video_id}/seg_000.mp4`
+- Thumbnails: `gs://{PROJECT_ID}-video-search/thumbnails/{video_id}.jpg`
+
+**Note:** The Cloud Function handles segmentation automatically on upload. This script is for manual/batch processing.
+
+---
+
 ## File Structure
 
 ```
@@ -239,13 +315,18 @@ scripts/
 ├── .gitignore
 ├── README.md
 ├── requirements.txt
+├── video_sources.json                 # Curated list of 106 PD videos
 ├── scrape_play_store_reviews.py       # Play Store review scraper
 ├── generate_security_logs.py          # Security log generator
 ├── generate_datacenter_topology.py    # Data center topology generator
+├── source_archive_videos.py           # Archive.org video sourcer
+├── segment_videos.py                  # Video segmentation (batch)
 ├── spark/
 │   └── vertica_to_bigquery.py         # PySpark job for Vertica ingestion
 ├── .venv/                             # Git-ignored
 ├── checkpoint.json                    # Git-ignored (scraper state)
+├── video_checkpoint.json              # Git-ignored (video sourcing state)
+├── video_manifest.json                # Git-ignored (video manifest)
 ├── scrape.log                         # Git-ignored (scraper logs)
 └── security_logs_generator.log        # Git-ignored (security gen logs)
 ```

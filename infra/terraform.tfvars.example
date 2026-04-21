@@ -25,6 +25,7 @@ github_token = "your-github-personal-access-token"
 #   - Sentiment Analysis (BQ dataset, GCS bucket)
 #   - Campaign Intelligence (BQ dataset)
 #   - Security Logs (BQ dataset, GCS bucket, log sink)
+#   - Video Vector Search (BQ dataset, GCS bucket, Cloud Function)
 # =============================================================================
 
 # Vertica-to-BigQuery ingestion demo
@@ -47,3 +48,17 @@ github_token = "your-github-personal-access-token"
 # WARNING: Creates an Enterprise reservation. See https://cloud.google.com/bigquery/pricing
 # enable_realtime_alerts    = false
 # realtime_alerts_max_slots = 50  # must be multiple of 50, min 50, max 500
+
+# Video Vector Search: max concurrent Cloud Function instances for segmentation
+# Default 10 is fine for quick-start (10 videos). Set to 50 for full curated list (106 videos).
+# video_search_max_instances = 10
+
+# Deploy Video Search UI to Cloud Run (uses pre-built image from ghcr.io)
+# No build pipeline or configuration needed — just set to true.
+# enable_video_search_ui = false
+
+# Build pipeline for Video Search UI (repo maintainers / forkers only)
+# Creates Artifact Registry repo + Cloud Build trigger for auto-building images.
+# Most users do NOT need this — the default ghcr.io image works out of the box.
+# enable_video_search_build = false
+# video_search_ui_image     = "ghcr.io/gcloud-tech-showcase/video-search-ui:latest"  # default, no change needed

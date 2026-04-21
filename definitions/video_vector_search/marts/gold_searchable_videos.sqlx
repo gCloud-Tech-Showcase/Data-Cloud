@@ -1,0 +1,70 @@
+config {
+  type: "table",
+  schema: "video_vector_search",
+  description: "GOLD: Search-ready video embeddings with metadata extracted directly from GCS object custom metadata on each segment. No external mapping table needed. Use with VECTOR_SEARCH to find videos by natural language query.",
+  columns: {
+    segment_uri: "GCS URI of the video segment",
+    video_id: "Parent video identifier",
+    segment_index: "Zero-based segment index within the parent video",
+    title: "Original video title (from GCS custom metadata)",
+    year: "Production year (from GCS custom metadata)",
+    source_url: "Archive.org source URL (from GCS custom metadata)",
+    license: "License type (from GCS custom metadata)",
+    duration_total_seconds: "Total duration of the parent video in seconds",
+    start_seconds: "Start offset of this segment in the parent video",
+    end_seconds: "End offset of this segment in the parent video",
+    video_start_sec: "Start second of the embedding interval within the segment",
+    video_end_sec: "End second of the embedding interval within the segment",
+    category: "AI-detected category (cartoon, educational, documentary, etc.)",
+    ai_description: "AI-generated one-sentence description of the video",
+    embedding: "1408-dimensional multimodal embedding vector"
+  },
+  tags: ["video_vector_search", "gold", "marts"]
+}
+
+WITH segment_metadata AS (
+  SELECT
+    uri,
+    (SELECT value FROM UNNEST(metadata) WHERE name = 'title') AS title,
+    SAFE_CAST((SELECT value FROM UNNEST(metadata) WHERE name = 'year') AS INT64) AS year,
+    (SELECT value FROM UNNEST(metadata) WHERE name = 'source_url') AS source_url,
+    (SELECT value FROM UNNEST(metadata) WHERE name = 'license') AS license,
+    SAFE_CAST((SELECT value FROM UNNEST(metadata) WHERE name = 'start_seconds') AS INT64) AS start_seconds,
+    SAFE_CAST((SELECT value FROM UNNEST(metadata) WHERE name = 'end_seconds') AS INT64) AS end_seconds,
+    SAFE_CAST((SELECT value FROM UNNEST(metadata) WHERE name = 'duration_total_seconds') AS INT64) AS duration_total_seconds
+  FROM ${ref("bronze_video_segments")}
+)
+
+SELECT
+  e.segment_uri,
+  e.video_id,
+  e.segment_index,
+  COALESCE(sm.title, e.video_id) AS title,
+  sm.year,
+  sm.source_url,
+  sm.license,
+  sm.duration_total_seconds,
+  sm.start_seconds,
+  sm.end_seconds,
+  e.video_start_sec,
+  e.video_end_sec,
+  REPLACE(LOWER(TRIM(vm.category)), '_', ' ') AS category,
+  REPLACE(LOWER(TRIM(vm.mood)), '_', ' ') AS mood,
+  REPLACE(LOWER(TRIM(vm.color_mode)), '_', ' ') AS color_mode,
+  REPLACE(LOWER(TRIM(vm.style)), '_', ' ') AS style,
+  vm.description AS ai_description,
+  vm.themes,
+  vm.characters,
+  REPLACE(LOWER(TRIM(vm.language)), '_', ' ') AS language,
+  vm.has_dialogue,
+  vm.has_music,
+  REPLACE(LOWER(TRIM(vm.target_audience)), '_', ' ') AS target_audience,
+  REPLACE(LOWER(TRIM(vm.setting)), '_', ' ') AS setting,
+  REPLACE(LOWER(TRIM(vm.pacing)), '_', ' ') AS pacing,
+  vm.content_warnings,
+  e.embedding
+FROM ${ref("silver_segment_embeddings")} e
+LEFT JOIN segment_metadata sm
+  ON e.segment_uri = sm.uri
+LEFT JOIN ${ref("silver_video_metadata")} vm
+  ON e.video_id = vm.video_id

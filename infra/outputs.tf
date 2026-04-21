@@ -93,6 +93,30 @@ output "multimodal_data_bucket" {
 }
 
 # -----------------------------------------------------------------------------
+# Video Vector Search
+# -----------------------------------------------------------------------------
+
+output "video_vector_search_dataset_id" {
+  description = "The video vector search BigQuery dataset ID"
+  value       = google_bigquery_dataset.video_vector_search.dataset_id
+}
+
+output "video_search_bucket" {
+  description = "GCS bucket for video data (raw + segments)"
+  value       = google_storage_bucket.video_search.name
+}
+
+output "video_search_ui_url" {
+  description = "Video Search UI Cloud Run URL (if enabled)"
+  value       = var.enable_video_search_ui ? google_cloud_run_v2_service.video_search_ui[0].uri : null
+}
+
+output "video_search_ui_enabled" {
+  description = "Whether the Video Search UI is deployed to Cloud Run"
+  value       = var.enable_video_search_ui
+}
+
+# -----------------------------------------------------------------------------
 # Campaign Intelligence
 # -----------------------------------------------------------------------------
 

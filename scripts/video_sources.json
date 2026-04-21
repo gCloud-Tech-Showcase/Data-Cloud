@@ -1,0 +1,744 @@
+[
+  {
+    "identifier": "Popeye_forPresident",
+    "title": "Popeye for President",
+    "year": 1956,
+    "category": "cartoon",
+    "collection": "animationandcartoons"
+  },
+  {
+    "identifier": "superman_1941",
+    "title": "Superman",
+    "year": 1941,
+    "category": "cartoon",
+    "collection": "animationandcartoons"
+  },
+  {
+    "identifier": "bb_snow_white",
+    "title": "Betty Boop: Snow White",
+    "year": 1933,
+    "category": "cartoon",
+    "collection": "animationandcartoons"
+  },
+  {
+    "identifier": "ACornyConcerto1943BugsBunny",
+    "title": "Merrie Melodies - A Corny Concerto",
+    "year": 1943,
+    "category": "cartoon",
+    "collection": "animationandcartoons"
+  },
+  {
+    "identifier": "TheFriendlyGhost",
+    "title": "The Friendly Ghost",
+    "year": 1945,
+    "category": "cartoon",
+    "collection": "animationandcartoons"
+  },
+  {
+    "identifier": "AboutBan1935",
+    "title": "About Bananas",
+    "year": 1935,
+    "category": "educational",
+    "collection": "prelinger"
+  },
+  {
+    "identifier": "DuckandC1951",
+    "title": "Duck and Cover",
+    "year": 1951,
+    "category": "educational",
+    "collection": "prelinger"
+  },
+  {
+    "identifier": "HealthYo1953",
+    "title": "Health: Your Posture",
+    "year": 1953,
+    "category": "educational",
+    "collection": "prelinger"
+  },
+  {
+    "identifier": "Experime1940",
+    "title": "Experiments in the Revival of Organisms",
+    "year": 1940,
+    "category": "educational",
+    "collection": "prelinger"
+  },
+  {
+    "identifier": "DontBeaS1947",
+    "title": "Don't Be a Sucker",
+    "year": 1947,
+    "category": "educational",
+    "collection": "prelinger"
+  },
+  {
+    "identifier": "spree_lunch",
+    "title": "Spree Lunch",
+    "year": 1957,
+    "category": "cartoon",
+    "collection": "animationandcartoons"
+  },
+  {
+    "identifier": "Popeye_Nearlyweds",
+    "title": "Popeye the Sailor: Nearlyweds",
+    "year": 1956,
+    "category": "cartoon",
+    "collection": "animationandcartoons"
+  },
+  {
+    "identifier": "Popeye_Cooking_With_Gags_1954",
+    "title": "Popeye: Cooking With Gags",
+    "year": 1954,
+    "category": "cartoon",
+    "collection": "animationandcartoons"
+  },
+  {
+    "identifier": "Popeye_Assault_and_Flattery_1956",
+    "title": "Popeye: Assault and Flattery",
+    "year": 1956,
+    "category": "cartoon",
+    "collection": "animationandcartoons"
+  },
+  {
+    "identifier": "Popeye_meetsSinbadtheSailor",
+    "title": "Popeye the Sailor meets Sinbad the Sailor",
+    "year": 1936,
+    "category": "cartoon",
+    "collection": "animationandcartoons"
+  },
+  {
+    "identifier": "bb_minnie_the_moocher",
+    "title": "Betty Boop: Minnie The Moocher",
+    "year": 1932,
+    "category": "cartoon",
+    "collection": "animationandcartoons"
+  },
+  {
+    "identifier": "haul_in_one",
+    "title": "Haul in One",
+    "year": 1956,
+    "category": "cartoon",
+    "collection": "animationandcartoons"
+  },
+  {
+    "identifier": "SOLDIER",
+    "title": "The Brave Tin Soldier",
+    "year": 1934,
+    "category": "cartoon",
+    "collection": "animationandcartoons"
+  },
+  {
+    "identifier": "little_sweepea",
+    "title": "Little Swee' Pea",
+    "year": 1936,
+    "category": "cartoon",
+    "collection": "animationandcartoons"
+  },
+  {
+    "identifier": "taxi-turvy",
+    "title": "Taxi-Turvy",
+    "year": 1954,
+    "category": "cartoon",
+    "collection": "animationandcartoons"
+  },
+  {
+    "identifier": "insect_to_injury",
+    "title": "Insect to Injury",
+    "year": 1956,
+    "category": "cartoon",
+    "collection": "animationandcartoons"
+  },
+  {
+    "identifier": "Popeye_Floor_Flusher_1954",
+    "title": "Popeye: Floor Flusher",
+    "year": 1953,
+    "category": "cartoon",
+    "collection": "animationandcartoons"
+  },
+  {
+    "identifier": "shuteye_popeye",
+    "title": "Shuteye Popeye",
+    "year": 1952,
+    "category": "cartoon",
+    "collection": "animationandcartoons"
+  },
+  {
+    "identifier": "BugsBunnyCaseOfTheMissingHare",
+    "title": "Merrie Melodies - Bugs Bunny - Case Of The Missing Hare",
+    "year": 1942,
+    "category": "cartoon",
+    "collection": "animationandcartoons"
+  },
+  {
+    "identifier": "im_in_the_army_now",
+    "title": "I'm in the Army Now",
+    "year": 1936,
+    "category": "cartoon",
+    "collection": "animationandcartoons"
+  },
+  {
+    "identifier": "Popeye_Gopher_Spinach_1954_871",
+    "title": "Popeye: Gopher Spinach",
+    "year": 1954,
+    "category": "cartoon",
+    "collection": "animationandcartoons"
+  },
+  {
+    "identifier": "bugs-bunny-all-this-and-rabbit-stew",
+    "title": "Bugs Bunny - All This and Rabbit Stew",
+    "year": 1941,
+    "category": "cartoon",
+    "collection": "animationandcartoons"
+  },
+  {
+    "identifier": "Popeye_Greek_Mirthology_1954",
+    "title": "Popeye: Greek Mirthology",
+    "year": 1954,
+    "category": "cartoon",
+    "collection": "animationandcartoons"
+  },
+  {
+    "identifier": "bb_and_grampy",
+    "title": "Betty Boop And Grampy",
+    "year": 1935,
+    "category": "cartoon",
+    "collection": "animationandcartoons"
+  },
+  {
+    "identifier": "RudolphTheRed-nosedReindeer1948",
+    "title": "Rudolph The Red-Nosed Reindeer",
+    "year": 1948,
+    "category": "cartoon",
+    "collection": "animationandcartoons"
+  },
+  {
+    "identifier": "Jolly_Fish_1932",
+    "title": "Tom and Jerry: Jolly Fish",
+    "year": 1932,
+    "category": "cartoon",
+    "collection": "animationandcartoons"
+  },
+  {
+    "identifier": "SantasSuprise",
+    "title": "Santa's Surprise",
+    "year": 1947,
+    "category": "cartoon",
+    "collection": "animationandcartoons"
+  },
+  {
+    "identifier": "HaveYouGotAnyCastles",
+    "title": "Have You Got Any Castles?",
+    "year": 1938,
+    "category": "cartoon",
+    "collection": "animationandcartoons"
+  },
+  {
+    "identifier": "The_Curious_Adventures_of_Mr._Wonderbird",
+    "title": "The Curious Adventures of Mr. Wonderbird",
+    "year": 1952,
+    "category": "cartoon",
+    "collection": "animationandcartoons"
+  },
+  {
+    "identifier": "TheSpiritOf43_56",
+    "title": "The Spirit of '43",
+    "year": 1943,
+    "category": "cartoon",
+    "collection": "animationandcartoons"
+  },
+  {
+    "identifier": "JackFrost_",
+    "title": "Jack Frost",
+    "year": 1934,
+    "category": "cartoon",
+    "collection": "animationandcartoons"
+  },
+  {
+    "identifier": "GoldRushDaze",
+    "title": "Gold Rush Daze",
+    "year": null,
+    "category": "cartoon",
+    "collection": "animationandcartoons"
+  },
+  {
+    "identifier": "Christmas_Comes_But_Once_A_Year_1936",
+    "title": "Christmas Comes But Once A Year",
+    "year": 1936,
+    "category": "cartoon",
+    "collection": "animationandcartoons"
+  },
+  {
+    "identifier": "MerrieMelodies-HittinTheTrailForHallelujahLand",
+    "title": "Merrie Melodies - Hittin The Trail For Hallelujah Land",
+    "year": null,
+    "category": "cartoon",
+    "collection": "animationandcartoons"
+  },
+  {
+    "identifier": "arctic_giant",
+    "title": "The Arctic Giant",
+    "year": 1942,
+    "category": "cartoon",
+    "collection": "animationandcartoons"
+  },
+  {
+    "identifier": "Popeye_ThePanelessWindowWasher",
+    "title": "Popeye: The Paneless Window Washer",
+    "year": 1937,
+    "category": "cartoon",
+    "collection": "animationandcartoons"
+  },
+  {
+    "identifier": "bb_bamboo_isle",
+    "title": "Betty Boop: Bamboo Isle",
+    "year": 1932,
+    "category": "cartoon",
+    "collection": "animationandcartoons"
+  },
+  {
+    "identifier": "bb_ill_be_glad_when_youre_dead",
+    "title": "Betty Boop: I'll Be Glad When You're Dead, You Rascal You",
+    "year": 1932,
+    "category": "cartoon",
+    "collection": "animationandcartoons"
+  },
+  {
+    "identifier": "Felix_BoldKingCole",
+    "title": "Felix the Cat in Bold King Cole",
+    "year": 1936,
+    "category": "cartoon",
+    "collection": "animationandcartoons"
+  },
+  {
+    "identifier": "bb_rise_to_fame",
+    "title": "Betty Boop's Rise To Fame",
+    "year": 1934,
+    "category": "cartoon",
+    "collection": "animationandcartoons"
+  },
+  {
+    "identifier": "bb_and_the_little_king",
+    "title": "Betty Boop And The Little King",
+    "year": 1936,
+    "category": "cartoon",
+    "collection": "animationandcartoons"
+  },
+  {
+    "identifier": "bb_be_human",
+    "title": "Betty Boop: Be Human",
+    "year": 1936,
+    "category": "cartoon",
+    "collection": "animationandcartoons"
+  },
+  {
+    "identifier": "NoahsArk_793",
+    "title": "Noah's Ark",
+    "year": null,
+    "category": "cartoon",
+    "collection": "animationandcartoons"
+  },
+  {
+    "identifier": "destruction_inc",
+    "title": "Destruction Inc.",
+    "year": 1942,
+    "category": "cartoon",
+    "collection": "animationandcartoons"
+  },
+  {
+    "identifier": "bb_big_boss",
+    "title": "Betty Boop's Big Boss",
+    "year": 1933,
+    "category": "cartoon",
+    "collection": "animationandcartoons"
+  },
+  {
+    "identifier": "Barnyard_Bunk_1932",
+    "title": "Tom and Jerry: Barnyard Bunk",
+    "year": 1932,
+    "category": "cartoon",
+    "collection": "animationandcartoons"
+  },
+  {
+    "identifier": "secret_agent",
+    "title": "Secret Agent",
+    "year": 1943,
+    "category": "cartoon",
+    "collection": "animationandcartoons"
+  },
+  {
+    "identifier": "bb_betty_in_blunderland",
+    "title": "Betty Boop: Betty in Blunderland",
+    "year": 1933,
+    "category": "cartoon",
+    "collection": "animationandcartoons"
+  },
+  {
+    "identifier": "bb_old_man_of_the_mountain",
+    "title": "Betty Boop: The Old Man Of The Mountain",
+    "year": 1933,
+    "category": "cartoon",
+    "collection": "animationandcartoons"
+  },
+  {
+    "identifier": "bb_chess_nuts",
+    "title": "Betty Boop: Chess Nuts",
+    "year": 1932,
+    "category": "cartoon",
+    "collection": "animationandcartoons"
+  },
+  {
+    "identifier": "Popeye_BrideandGloom",
+    "title": "Popeye: Bride and Gloom",
+    "year": 1954,
+    "category": "cartoon",
+    "collection": "animationandcartoons"
+  },
+  {
+    "identifier": "bb_happy_you",
+    "title": "Betty Boop: Happy You And Merry Me",
+    "year": 1936,
+    "category": "cartoon",
+    "collection": "animationandcartoons"
+  },
+  {
+    "identifier": "DavidAndGoliath",
+    "title": "David and Goliath",
+    "year": null,
+    "category": "cartoon",
+    "collection": "animationandcartoons"
+  },
+  {
+    "identifier": "CameToSupper",
+    "title": "The Wabbit Who Came to Supper",
+    "year": 1942,
+    "category": "cartoon",
+    "collection": "animationandcartoons"
+  },
+  {
+    "identifier": "Baby_Huey_Quack-A-Doodle-Doo_1950",
+    "title": "Baby Huey: Quack-A-Doodle-Doo",
+    "year": 1950,
+    "category": "cartoon",
+    "collection": "animationandcartoons"
+  },
+  {
+    "identifier": "showdown",
+    "title": "Showdown",
+    "year": 1942,
+    "category": "cartoon",
+    "collection": "animationandcartoons"
+  },
+  {
+    "identifier": "mummy_strikes",
+    "title": "The Mummy Strikes",
+    "year": 1943,
+    "category": "cartoon",
+    "collection": "animationandcartoons"
+  },
+  {
+    "identifier": "bb_stop_that_noise",
+    "title": "Betty Boop: Stop That Noise",
+    "year": 1935,
+    "category": "cartoon",
+    "collection": "animationandcartoons"
+  },
+  {
+    "identifier": "Herman_CheeseBurglar",
+    "title": "Cheese Burglar featuring Herman",
+    "year": 1946,
+    "category": "cartoon",
+    "collection": "animationandcartoons"
+  },
+  {
+    "identifier": "HepCatSymphony",
+    "title": "Hep Cat Symphony",
+    "year": 1949,
+    "category": "cartoon",
+    "collection": "animationandcartoons"
+  },
+  {
+    "identifier": "bb_musical_mountaineers",
+    "title": "Betty Boop: Musical Mountaineers",
+    "year": 1939,
+    "category": "cartoon",
+    "collection": "animationandcartoons"
+  },
+  {
+    "identifier": "FallenHeir",
+    "title": "Falling Hare",
+    "year": 1943,
+    "category": "cartoon",
+    "collection": "animationandcartoons"
+  },
+  {
+    "identifier": "bb_house_cleaning_blues",
+    "title": "Betty Boop: House Cleaning Blues",
+    "year": 1937,
+    "category": "cartoon",
+    "collection": "animationandcartoons"
+  },
+  {
+    "identifier": "customers_wanted",
+    "title": "Customers Wanted",
+    "year": 1939,
+    "category": "cartoon",
+    "collection": "animationandcartoons"
+  },
+  {
+    "identifier": "PaulBunyon",
+    "title": "Paul Bunyon",
+    "year": null,
+    "category": "cartoon",
+    "collection": "animationandcartoons"
+  },
+  {
+    "identifier": "bb_poor_cinderella",
+    "title": "Betty Boop: Poor Cinderella",
+    "year": null,
+    "category": "cartoon",
+    "collection": "animationandcartoons"
+  },
+  {
+    "identifier": "Doctorin1946",
+    "title": "Doctor in Industry (Part I)",
+    "year": 1946,
+    "category": "educational",
+    "collection": "prelinger"
+  },
+  {
+    "identifier": "FromtheG1954",
+    "title": "From the Ground Up",
+    "year": 1954,
+    "category": "educational",
+    "collection": "prelinger"
+  },
+  {
+    "identifier": "Sleepfor1950",
+    "title": "Sleep for Health",
+    "year": 1950,
+    "category": "educational",
+    "collection": "prelinger"
+  },
+  {
+    "identifier": "JoanAvoi1947",
+    "title": "Joan Avoids a Cold",
+    "year": 1947,
+    "category": "educational",
+    "collection": "prelinger"
+  },
+  {
+    "identifier": "EatforHe1954",
+    "title": "Eat for Health",
+    "year": 1954,
+    "category": "educational",
+    "collection": "prelinger"
+  },
+  {
+    "identifier": "babies_and_breadwinners_2",
+    "title": "Babies and Breadwinners (Part II)",
+    "year": null,
+    "category": "educational",
+    "collection": "prelinger"
+  },
+  {
+    "identifier": "right_to_health_1",
+    "title": "Right to Health (Part I)",
+    "year": null,
+    "category": "educational",
+    "collection": "prelinger"
+  },
+  {
+    "identifier": "Automoti1940",
+    "title": "Automotive Service",
+    "year": 1940,
+    "category": "educational",
+    "collection": "prelinger"
+  },
+  {
+    "identifier": "Careofth1949",
+    "title": "Care of the Skin",
+    "year": 1949,
+    "category": "educational",
+    "collection": "prelinger"
+  },
+  {
+    "identifier": "Sniffles1955",
+    "title": "Sniffles and Sneezes",
+    "year": 1955,
+    "category": "educational",
+    "collection": "prelinger"
+  },
+  {
+    "identifier": "ParkCons1938",
+    "title": "Park Conscious",
+    "year": 1938,
+    "category": "educational",
+    "collection": "prelinger"
+  },
+  {
+    "identifier": "Personal1950",
+    "title": "Personal Hygiene (Part I)",
+    "year": 1950,
+    "category": "educational",
+    "collection": "prelinger"
+  },
+  {
+    "identifier": "122Eyes1950",
+    "title": "122 Eyes",
+    "year": 1950,
+    "category": "educational",
+    "collection": "prelinger"
+  },
+  {
+    "identifier": "Usingthe1947",
+    "title": "Using the Bank",
+    "year": 1947,
+    "category": "educational",
+    "collection": "prelinger"
+  },
+  {
+    "identifier": "bacteria_friend_and_foe",
+    "title": "Bacteria: Friend and Foe",
+    "year": null,
+    "category": "educational",
+    "collection": "prelinger"
+  },
+  {
+    "identifier": "HaveITol1958",
+    "title": "Have I Told You Lately That I Love You?",
+    "year": 1958,
+    "category": "educational",
+    "collection": "prelinger"
+  },
+  {
+    "identifier": "CaseofSp1940",
+    "title": "A Case of Spring Fever",
+    "year": 1940,
+    "category": "educational",
+    "collection": "prelinger"
+  },
+  {
+    "identifier": "SpotNews1937",
+    "title": "Spot News",
+    "year": 1937,
+    "category": "educational",
+    "collection": "prelinger"
+  },
+  {
+    "identifier": "GoodEati1951",
+    "title": "Good Eating Habits",
+    "year": 1951,
+    "category": "educational",
+    "collection": "prelinger"
+  },
+  {
+    "identifier": "WartimeN1943",
+    "title": "Wartime Nutrition",
+    "year": 1943,
+    "category": "educational",
+    "collection": "prelinger"
+  },
+  {
+    "identifier": "Achievem1955",
+    "title": "Achievement USA",
+    "year": 1955,
+    "category": "educational",
+    "collection": "prelinger"
+  },
+  {
+    "identifier": "always_on_call",
+    "title": "Always On Call",
+    "year": null,
+    "category": "educational",
+    "collection": "prelinger"
+  },
+  {
+    "identifier": "HowtoGoP1954",
+    "title": "How to Go Places",
+    "year": 1954,
+    "category": "educational",
+    "collection": "prelinger"
+  },
+  {
+    "identifier": "GeneralH1928",
+    "title": "General Health Habits",
+    "year": 1928,
+    "category": "educational",
+    "collection": "prelinger"
+  },
+  {
+    "identifier": "Preventi1940",
+    "title": "Preventing the Spread of Disease",
+    "year": 1940,
+    "category": "educational",
+    "collection": "prelinger"
+  },
+  {
+    "identifier": "TimeSave1936",
+    "title": "Time Savers for House Makers",
+    "year": 1936,
+    "category": "educational",
+    "collection": "prelinger"
+  },
+  {
+    "identifier": "Exercise1949",
+    "title": "Exercise and Health",
+    "year": 1949,
+    "category": "educational",
+    "collection": "prelinger"
+  },
+  {
+    "identifier": "hindenberg_explodes",
+    "title": "Hindenburg Explodes",
+    "year": 1937,
+    "category": "educational",
+    "collection": "prelinger"
+  },
+  {
+    "identifier": "PrivateL1947",
+    "title": "Private Life of a Cat",
+    "year": 1947,
+    "category": "educational",
+    "collection": "prelinger"
+  },
+  {
+    "identifier": "Japanese1943",
+    "title": "Japanese Relocation",
+    "year": 1943,
+    "category": "educational",
+    "collection": "prelinger"
+  },
+  {
+    "identifier": "boys_beware",
+    "title": "Boys Beware",
+    "year": 1961,
+    "category": "educational",
+    "collection": "prelinger"
+  },
+  {
+    "identifier": "AsBoysGr1957",
+    "title": "As Boys Grow",
+    "year": 1957,
+    "category": "educational",
+    "collection": "prelinger"
+  },
+  {
+    "identifier": "GoldenYe1960",
+    "title": "The Golden Years",
+    "year": 1960,
+    "category": "educational",
+    "collection": "prelinger"
+  },
+  {
+    "identifier": "MyJapan1945",
+    "title": "My Japan",
+    "year": 1945,
+    "category": "educational",
+    "collection": "prelinger"
+  },
+  {
+    "identifier": "Designfo1956",
+    "title": "Design for Dreaming",
+    "year": 1956,
+    "category": "educational",
+    "collection": "prelinger"
+  }
+]

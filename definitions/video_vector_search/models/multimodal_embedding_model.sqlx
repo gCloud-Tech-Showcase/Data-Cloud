@@ -1,0 +1,13 @@
+config {
+  type: "operations",
+  schema: "video_vector_search",
+  hasOutput: true,
+  description: "Remote multimodal embedding model for generating vector representations of video content. Uses Vertex AI multimodalembedding@001 which encodes text, image, and video in the same 1408-dimensional vector space, enabling cross-modal search (text query finds video content).",
+  tags: ["video_vector_search", "models", "embeddings"]
+}
+
+CREATE OR REPLACE MODEL ${self()}
+REMOTE WITH CONNECTION `US.vertex-ai-connection`
+OPTIONS (
+  ENDPOINT = 'multimodalembedding@001'
+)
