@@ -315,12 +315,16 @@ resource "google_cloudfunctions2_function" "segment_video" {
 }
 
 # -----------------------------------------------------------------------------
-# Artifact Registry: Pre-Built Container Images
-# Always on — the image must exist before Cloud Run can reference it.
-# Public read access so any project can pull the pre-built images.
+# Build Pipeline: Artifact Registry + Cloud Build (Optional)
+# Creates an AR repo and Cloud Build trigger for auto-building the UI image.
+# Only needed by repo maintainers who publish pre-built images.
+#
+# Enable with: enable_video_search_build = true in terraform.tfvars
 # -----------------------------------------------------------------------------
 
 resource "google_artifact_registry_repository" "public" {
+  count = var.enable_video_search_build ? 1 : 0
+
   repository_id = "public"
   location      = var.region
   format        = "DOCKER"
@@ -334,17 +338,43 @@ resource "google_artifact_registry_repository" "public" {
   depends_on = [google_project_service.cloudbuild]
 }
 
-resource "google_artifact_registry_repository_iam_member" "public_reader" {
-  repository = google_artifact_registry_repository.public.name
-  location   = var.region
-  role       = "roles/artifactregistry.reader"
-  member     = "allUsers"
+# Service account for Cloud Build (org policy requires BYOSA)
+resource "google_service_account" "ui_builder" {
+  count        = var.enable_video_search_build ? 1 : 0
+  account_id   = "video-search-ui-builder"
+  display_name = "Video Search UI Builder (Cloud Build)"
+
+  depends_on = [google_project_service.cloudbuild]
+}
+
+resource "google_project_iam_member" "ui_builder_builds" {
+  count   = var.enable_video_search_build ? 1 : 0
+  project = var.project_id
+  role    = "roles/cloudbuild.builds.builder"
+  member  = "serviceAccount:${google_service_account.ui_builder[0].email}"
+}
+
+resource "google_project_iam_member" "ui_builder_ar_writer" {
+  count   = var.enable_video_search_build ? 1 : 0
+  project = var.project_id
+  role    = "roles/artifactregistry.writer"
+  member  = "serviceAccount:${google_service_account.ui_builder[0].email}"
+}
+
+resource "google_project_iam_member" "ui_builder_logs" {
+  count   = var.enable_video_search_build ? 1 : 0
+  project = var.project_id
+  role    = "roles/logging.logWriter"
+  member  = "serviceAccount:${google_service_account.ui_builder[0].email}"
 }
 
 # Cloud Build trigger: auto-build UI image on push to main
 resource "google_cloudbuild_trigger" "video_search_ui" {
+  count    = var.enable_video_search_build ? 1 : 0
   name     = "video-search-ui"
   location = var.region
+
+  service_account = google_service_account.ui_builder[0].id
 
   github {
     owner = "gCloud-Tech-Showcase"
@@ -376,7 +406,12 @@ resource "google_cloudbuild_trigger" "video_search_ui" {
     images = ["${var.region}-docker.pkg.dev/${var.project_id}/public/video-search-ui:latest"]
   }
 
-  depends_on = [google_artifact_registry_repository.public]
+  depends_on = [
+    google_artifact_registry_repository.public,
+    google_project_iam_member.ui_builder_builds,
+    google_project_iam_member.ui_builder_ar_writer,
+    google_project_iam_member.ui_builder_logs,
+  ]
 }
 
 # -----------------------------------------------------------------------------
@@ -455,7 +490,7 @@ resource "google_cloud_run_v2_service" "video_search_ui" {
     service_account = google_service_account.video_search_ui[0].email
 
     containers {
-      image = var.video_search_ui_image
+      image = var.enable_video_search_build ? "${var.region}-docker.pkg.dev/${var.project_id}/public/video-search-ui:latest" : var.video_search_ui_image
 
       env {
         name  = "GCP_PROJECT_ID"

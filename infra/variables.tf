@@ -186,6 +186,20 @@ variable "video_search_max_instances" {
   default     = 10
 }
 
+variable "enable_video_search_build" {
+  description = <<-EOT
+    Enable the build pipeline for the Video Search UI container image.
+
+    Creates an Artifact Registry repo and Cloud Build trigger that
+    auto-builds the image on push to main. Only needed by repo maintainers
+    who publish pre-built images.
+
+    Users deploying the demo do NOT need this — just enable_video_search_ui.
+  EOT
+  type    = bool
+  default = false
+}
+
 variable "enable_video_search_ui" {
   description = <<-EOT
     Deploy the Video Library Intelligence UI to Cloud Run.

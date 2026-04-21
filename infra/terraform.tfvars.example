@@ -53,6 +53,11 @@ github_token = "your-github-personal-access-token"
 # Default 10 is fine for quick-start (10 videos). Set to 50 for full curated list (106 videos).
 # video_search_max_instances = 10
 
+# Build pipeline for Video Search UI (repo maintainers only)
+# Creates Artifact Registry repo + Cloud Build trigger for auto-building images.
+# Users deploying the demo do NOT need this.
+# enable_video_search_build = false
+
 # Deploy Video Search UI to Cloud Run (uses pre-built container image)
 # No build step needed — image is published automatically on each push to main.
 # enable_video_search_ui = false
