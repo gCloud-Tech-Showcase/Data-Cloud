@@ -77,7 +77,7 @@ Or wait for the hourly scheduled execution.
 The pipeline:
 1. **bronze_video_segments** — Object table refreshes (sees new segments in GCS)
 2. **silver_segment_embeddings** — Generates multimodal embeddings (incremental — only new segments)
-3. **silver_video_metadata** — Gemini 2.5 Flash extracts 14 metadata fields per video (incremental)
+3. **silver_video_metadata** — Gemini 2.5 Flash extracts 15 metadata fields per video (incremental)
 4. **gold_searchable_videos** — Joins embeddings + GCS metadata + AI metadata
 
 ---
@@ -137,14 +137,17 @@ cd infra
 terraform apply -var="enable_video_search_ui=true"
 ```
 
-Terraform outputs the URL. No Docker build needed — the image is pre-built and published automatically on each push to main via Cloud Build.
+Terraform outputs the URL. No Docker build needed — the default image is pre-built and published to GitHub Container Registry (`ghcr.io`) on each push to main.
 
-To use a custom image:
+To build your own image instead (e.g., after forking the repo):
 
 ```bash
-terraform apply -var="enable_video_search_ui=true" \
-  -var="video_search_ui_image=us-central1-docker.pkg.dev/YOUR-PROJECT/public/video-search-ui:latest"
+terraform apply \
+  -var="enable_video_search_build=true" \
+  -var="enable_video_search_ui=true"
 ```
+
+This creates an Artifact Registry repo and Cloud Build trigger in your project. Cloud Run automatically uses your own image when the build flag is enabled.
 
 To tear down:
 
@@ -158,7 +161,7 @@ terraform apply -var="enable_video_search_ui=false"
 
 - **Search** — Type natural language queries ("friendship", "adventure", "educational health")
 - **Filter** — Use the AI-generated sidebar filters (category, mood, color, style, content warnings)
-- **Video Detail** — Click a video title to see the full Gemini analysis (14 metadata fields)
+- **Video Detail** — Click a video title to see the full Gemini analysis (15 metadata fields)
 - **Play** — Click play to watch the full video with segment navigation
 - **Find Similar** — Click "Similar" on any video to find visually related content
 - **Collections** — Select videos with checkboxes, export as JSON/CSV with all AI metadata

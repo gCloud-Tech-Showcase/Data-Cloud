@@ -6,7 +6,7 @@ Semantic video search using Gemini multimodal embeddings and BigQuery Vector Sea
 
 1. **Video Ingestion** — Upload videos to GCS, automatically segment into 2-minute chunks via Cloud Function, and attach metadata
 2. **Multimodal Embeddings** — Generate 1408-dimensional vector embeddings from video content using `multimodalembedding@001`
-3. **AI Metadata Extraction** — Gemini 2.5 Flash analyzes each video to extract category, mood, characters, themes, content warnings, and more (14 fields total via `AI.GENERATE`)
+3. **AI Metadata Extraction** — Gemini 2.5 Flash analyzes each video to extract category, mood, characters, themes, content warnings, and more (15 fields total via `AI.GENERATE`)
 4. **Semantic Search** — Find videos by natural language query ("friendship", "chase scene") using BigQuery `VECTOR_SEARCH`
 5. **Web UI** — React application with search, filters, video playback, collections, highlight reels, and a detail panel
 
@@ -30,7 +30,7 @@ Semantic video search using Gemini multimodal embeddings and BigQuery Vector Sea
 
 - **100+ videos** from Archive.org indexed and searchable
 - **Sub-second** semantic search across all video content
-- **14 AI-extracted metadata fields** per video (zero manual tagging)
+- **15 AI-extracted metadata fields** per video (zero manual tagging)
 - **Event-driven pipeline** — upload a video, it's automatically segmented
 - **Full web UI** — search, filter, play, create collections, highlight reels
 

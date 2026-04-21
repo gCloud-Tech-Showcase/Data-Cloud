@@ -498,6 +498,10 @@ resource "google_cloud_run_v2_service" "video_search_ui" {
   name     = "video-search-ui"
   location = var.region
 
+  # Disable IAM invoker check — makes the service publicly accessible
+  # without allUsers binding (compatible with Domain Restricted Sharing)
+  invoker_iam_disabled = true
+
   template {
     service_account = google_service_account.video_search_ui[0].email
 

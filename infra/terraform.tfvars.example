@@ -53,12 +53,12 @@ github_token = "your-github-personal-access-token"
 # Default 10 is fine for quick-start (10 videos). Set to 50 for full curated list (106 videos).
 # video_search_max_instances = 10
 
-# Build pipeline for Video Search UI (repo maintainers only)
-# Creates Artifact Registry repo + Cloud Build trigger for auto-building images.
-# Users deploying the demo do NOT need this.
-# enable_video_search_build = false
-
-# Deploy Video Search UI to Cloud Run (uses pre-built container image)
-# No build step needed — image is published automatically on each push to main.
+# Deploy Video Search UI to Cloud Run (uses pre-built image from ghcr.io)
+# No build pipeline or configuration needed — just set to true.
 # enable_video_search_ui = false
-# video_search_ui_image  = "ghcr.io/gcloud-tech-showcase/video-search-ui:latest"
+
+# Build pipeline for Video Search UI (repo maintainers / forkers only)
+# Creates Artifact Registry repo + Cloud Build trigger for auto-building images.
+# Most users do NOT need this — the default ghcr.io image works out of the box.
+# enable_video_search_build = false
+# video_search_ui_image     = "ghcr.io/gcloud-tech-showcase/video-search-ui:latest"  # default, no change needed

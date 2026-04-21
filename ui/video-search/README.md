@@ -81,6 +81,7 @@ ui/video-search/
 │   │   │   ├── ui/                    # shadcn/ui components
 │   │   │   ├── Header.tsx             # App header with branding
 │   │   │   ├── SearchBar.tsx          # Search input + explore chips
+│   │   │   ├── FilterBar.tsx           # Horizontal filter chips
 │   │   │   ├── FilterSidebar.tsx      # AI-generated filter panel
 │   │   │   ├── VideoGrid.tsx          # Results grid with pagination
 │   │   │   ├── VideoCard.tsx          # Video card with hover actions

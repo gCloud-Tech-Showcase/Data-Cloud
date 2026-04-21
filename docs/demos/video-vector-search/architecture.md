@@ -21,7 +21,7 @@ graph TB
 
     subgraph "Silver Layer"
         G -->|AI.GENERATE_EMBEDDING| H[silver_segment_embeddings<br/>1408-dim vectors]
-        G -->|AI.GENERATE + Gemini 2.5| I[silver_video_metadata<br/>14 AI-extracted fields]
+        G -->|AI.GENERATE + Gemini 2.5| I[silver_video_metadata<br/>15 AI-extracted fields]
     end
 
     subgraph "Gold Layer"
@@ -79,7 +79,7 @@ sequenceDiagram
 | Model | `multimodal_embedding_model` | Remote Model | `multimodalembedding@001` for video/text embeddings |
 | Model | `gemini_video_model` | Remote Model | Gemini 2.5 Flash for AI metadata extraction |
 | Silver | `silver_segment_embeddings` | Incremental Table | 1408-dim embeddings per segment interval |
-| Silver | `silver_video_metadata` | Incremental Table | 14 AI-extracted fields per video |
+| Silver | `silver_video_metadata` | Incremental Table | 15 AI-extracted fields per video |
 | Gold | `gold_searchable_videos` | Table | Embeddings + GCS metadata + AI metadata joined |
 
 ---
