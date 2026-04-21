@@ -67,37 +67,19 @@ resource "google_storage_bucket_iam_member" "bq_connection_video_reader" {
 }
 
 # -----------------------------------------------------------------------------
-# Dataform Release Config for feature branch
-# Compiles from video-vector-search branch during development.
-# TODO: Remove after merging to main.
+# Dataform Workflow: Video Vector Search Pipeline
+# Runs hourly — incremental, so near-zero cost when no new videos.
+# Uses the production release config (compiles from main branch).
+# Separate from the full-workflow to preserve incremental behavior
+# (the main workflow does full refresh, which would re-run Gemini API calls).
 # -----------------------------------------------------------------------------
 
-resource "google_dataform_repository_release_config" "video_search_dev" {
-  provider   = google-beta
-  project    = var.project_id
-  region     = var.region
-  repository = google_dataform_repository.main.name
-
-  name          = "video-search-dev"
-  git_commitish = "video-vector-search"
-
-  cron_schedule = "0 * * * *"
-  time_zone     = "America/Los_Angeles"
-
-  code_compilation_config {
-    default_database = var.project_id
-    default_location = var.dataset_location
-  }
-}
-
-# Scheduled workflow for video vector search pipeline
-# Runs hourly — incremental, so near-zero cost when no new videos
 resource "google_dataform_repository_workflow_config" "video_search" {
   provider       = google-beta
   project        = var.project_id
   region         = var.region
   repository     = google_dataform_repository.main.name
-  release_config = google_dataform_repository_release_config.video_search_dev.id
+  release_config = google_dataform_repository_release_config.main.id
 
   name = "video-search-pipeline"
 
