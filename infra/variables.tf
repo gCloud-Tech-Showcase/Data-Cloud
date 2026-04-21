@@ -223,6 +223,6 @@ variable "video_search_ui_image" {
     Override to use a custom-built image from your own registry.
   EOT
   type    = string
-  default = "us-central1-docker.pkg.dev/gcloud-tech-showcase/public/video-search-ui:latest"
+  default = "ghcr.io/gcloud-tech-showcase/video-search-ui:latest"
 }
 

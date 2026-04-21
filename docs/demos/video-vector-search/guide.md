@@ -143,7 +143,7 @@ To use a custom image:
 
 ```bash
 terraform apply -var="enable_video_search_ui=true" \
-  -var="video_search_ui_image=us-central1-docker.pkg.dev/YOUR-PROJECT/YOUR-REPO/video-search-ui:latest"
+  -var="video_search_ui_image=us-central1-docker.pkg.dev/YOUR-PROJECT/public/video-search-ui:latest"
 ```
 
 To tear down:

@@ -368,6 +368,14 @@ resource "google_project_iam_member" "ui_builder_logs" {
   member  = "serviceAccount:${google_service_account.ui_builder[0].email}"
 }
 
+# Builder SA: read/write Cloud Build source bucket
+resource "google_project_iam_member" "ui_builder_storage" {
+  count   = var.enable_video_search_build ? 1 : 0
+  project = var.project_id
+  role    = "roles/storage.admin"
+  member  = "serviceAccount:${google_service_account.ui_builder[0].email}"
+}
+
 # Cloud Build trigger: auto-build UI image on push to main
 resource "google_cloudbuild_trigger" "video_search_ui" {
   count    = var.enable_video_search_build ? 1 : 0
@@ -404,6 +412,10 @@ resource "google_cloudbuild_trigger" "video_search_ui" {
       ]
     }
     images = ["${var.region}-docker.pkg.dev/${var.project_id}/public/video-search-ui:latest"]
+
+    options {
+      logging = "CLOUD_LOGGING_ONLY"
+    }
   }
 
   depends_on = [
@@ -525,11 +537,3 @@ resource "google_cloud_run_v2_service" "video_search_ui" {
   ]
 }
 
-# Allow unauthenticated access (public demo)
-resource "google_cloud_run_v2_service_iam_member" "video_search_ui_public" {
-  count    = var.enable_video_search_ui ? 1 : 0
-  name     = google_cloud_run_v2_service.video_search_ui[0].name
-  location = var.region
-  role     = "roles/run.invoker"
-  member   = "allUsers"
-}
