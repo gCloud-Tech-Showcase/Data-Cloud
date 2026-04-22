@@ -26,6 +26,9 @@ Thumbs.db
 !package.json
 !package-lock.json
 !scripts/video_sources.json
+!tsconfig.json
+!tsconfig.*.json
+!components.json
 
 # Cloud Function build artifacts
 functions/*.zip
