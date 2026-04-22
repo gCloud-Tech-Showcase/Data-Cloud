@@ -126,9 +126,12 @@ sequenceDiagram
 | `google_bigquery_dataset.video_vector_search` | BQ dataset |
 | `google_storage_bucket.video_search` | GCS bucket for all video data |
 | `google_cloudfunctions2_function.segment_video` | Auto-segmentation on upload |
-| `google_service_account.video_segmenter` | SA for Cloud Function |
-| `google_dataform_repository_release_config.video_search_dev` | Dataform compilation from feature branch |
-| `google_dataform_repository_workflow_config.video_search` | Scheduled hourly Dataform execution |
+| `google_service_account.video_segmenter` | SA for Cloud Function + Dataform execution |
+| `google_bigquery_dataset_iam_member.segmenter_bq_data_editor` | Dataform write access (scoped to dataset) |
+| `google_dataform_repository_workflow_config.video_search` | Scheduled hourly Dataform execution (uses shared release config) |
+| `local_file.video_search_api_env` | Generated `.env` for local API development |
+| `google_cloud_run_v2_service.video_search_ui` | Cloud Run UI deployment (optional, `enable_video_search_ui`) |
+| `google_service_account.video_search_ui` | SA for Cloud Run with BQ, GCS, and Vertex AI access |
 | `google_project_iam_member.ui_vertex_ai_user` | Cloud Run SA access to Gemini via Vertex AI |
 
 ---

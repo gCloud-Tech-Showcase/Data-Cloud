@@ -86,8 +86,7 @@ ui/video-search/
 │   │   │   ├── ui/                    # shadcn/ui components
 │   │   │   ├── Header.tsx             # App header with branding
 │   │   │   ├── SearchBar.tsx          # Search input + explore chips
-│   │   │   ├── FilterBar.tsx           # Horizontal filter chips
-│   │   │   ├── FilterSidebar.tsx      # AI-generated filter panel
+│   │   │   ├── FilterSidebar.tsx      # AI-generated filter panel (drawer on mobile)
 │   │   │   ├── VideoGrid.tsx          # Results grid with pagination
 │   │   │   ├── VideoCard.tsx          # Video card with hover actions
 │   │   │   ├── VideoPlayer.tsx        # Full video + segment nav
@@ -96,6 +95,7 @@ ui/video-search/
 │   │   │   ├── SelectionBar.tsx       # Floating selection + export
 │   │   │   ├── ChatPanel.tsx          # AI agent chat panel
 │   │   │   ├── ChatMessage.tsx        # Chat message rendering
+│   │   │   ├── AgentAvatar.tsx        # Agent avatar icon
 │   │   │   ├── AddVideos.tsx          # Archive.org search + ingest
 │   │   │   ├── ResultsBar.tsx         # Count + sort + share
 │   │   │   ├── LibraryStats.tsx       # Stats cards
