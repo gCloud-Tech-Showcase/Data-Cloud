@@ -198,7 +198,10 @@ resource "google_bigquery_dataset_iam_member" "segmenter_bq_data_editor" {
 
 resource "google_project_iam_member" "segmenter_bq_connection_user" {
   project = var.project_id
-  role    = "roles/bigquery.connectionUser"
+  # connectionAdmin is required (not connectionUser) because Dataform's
+  # service-account execution model needs bigquery.connections.delegate,
+  # which only connectionAdmin provides among predefined roles.
+  role    = "roles/bigquery.connectionAdmin"
   member  = "serviceAccount:${google_service_account.video_segmenter.email}"
 }
 
