@@ -272,12 +272,9 @@ resource "google_cloudfunctions2_function" "segment_video" {
       value     = google_storage_bucket.video_search.name
     }
 
-    # Only trigger on raw video uploads, not on segments/thumbnails written by the function
-    event_filters {
-      attribute = "name"
-      value     = "raw/*.mp4"
-      operator  = "match-path-pattern"
-    }
+    # Note: Eventarc does not support name/prefix filtering for GCS finalized events.
+    # The function handles this by checking the object path and exiting early
+    # for non-raw/ files (segments, thumbnails, etc.).
 
     service_account_email = google_service_account.video_segmenter.email
   }
