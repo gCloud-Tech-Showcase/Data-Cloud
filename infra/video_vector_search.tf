@@ -349,6 +349,22 @@ resource "google_project_iam_member" "ui_builder_logs" {
   member  = "serviceAccount:${google_service_account.ui_builder[0].email}"
 }
 
+# Builder SA: deploy new revisions to Cloud Run after building
+resource "google_project_iam_member" "ui_builder_run_developer" {
+  count   = var.enable_video_search_build ? 1 : 0
+  project = var.project_id
+  role    = "roles/run.developer"
+  member  = "serviceAccount:${google_service_account.ui_builder[0].email}"
+}
+
+# Builder SA: act as Cloud Run SA when deploying new revisions
+resource "google_service_account_iam_member" "ui_builder_acts_as_run_sa" {
+  count              = var.enable_video_search_build && var.enable_video_search_ui ? 1 : 0
+  service_account_id = google_service_account.video_search_ui[0].name
+  role               = "roles/iam.serviceAccountUser"
+  member             = "serviceAccount:${google_service_account.ui_builder[0].email}"
+}
+
 # Builder SA: read/write Cloud Build source and staging buckets
 resource "google_project_iam_member" "ui_builder_storage" {
   count   = var.enable_video_search_build ? 1 : 0
@@ -392,6 +408,15 @@ resource "google_cloudbuild_trigger" "video_search_ui" {
         "${var.region}-docker.pkg.dev/${var.project_id}/public/video-search-ui",
       ]
     }
+    # Deploy to Cloud Run (if the service exists)
+    step {
+      name = "gcr.io/google.com/cloudsdktool/cloud-sdk"
+      args = [
+        "gcloud", "run", "services", "update", "video-search-ui",
+        "--region", var.region,
+        "--image", "${var.region}-docker.pkg.dev/${var.project_id}/public/video-search-ui:$COMMIT_SHA",
+      ]
+    }
     images = ["${var.region}-docker.pkg.dev/${var.project_id}/public/video-search-ui:latest"]
 
     options {
@@ -404,6 +429,7 @@ resource "google_cloudbuild_trigger" "video_search_ui" {
     google_project_iam_member.ui_builder_builds,
     google_project_iam_member.ui_builder_ar_writer,
     google_project_iam_member.ui_builder_logs,
+    google_project_iam_member.ui_builder_run_developer,
   ]
 }
 
