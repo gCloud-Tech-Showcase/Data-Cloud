@@ -33,6 +33,8 @@ graph TB
     subgraph "UI Layer"
         J -->|VECTOR_SEARCH| K[FastAPI Backend]
         K --> L[React Frontend]
+        K -->|ADK Agent| M[Gemini 2.5 Flash<br/>The Archivist]
+        M -->|Conversational Analytics| J
     end
 ```
 
@@ -48,6 +50,7 @@ sequenceDiagram
     participant DF as Dataform
     participant BQ as BigQuery
     participant Gemini
+    participant K as ADK Agent
     participant UI as React UI
 
     User->>GCS: Upload video to raw/
@@ -67,6 +70,15 @@ sequenceDiagram
     UI->>BQ: VECTOR_SEARCH on gold table
     BQ->>UI: Ranked results with metadata
     UI->>User: Video cards with AI descriptions
+
+    User->>UI: Chat "Find adventure cartoons"
+    UI->>K: POST /api/agent/chat
+    K->>Gemini: ADK Agent (tool selection)
+    Gemini->>K: Call search_videos("adventure cartoons")
+    K->>BQ: VECTOR_SEARCH
+    BQ->>K: Results
+    K->>UI: {text, actions: [{type: "search"}]}
+    UI->>User: Chat response + UI updates
 ```
 
 ---
@@ -81,6 +93,7 @@ sequenceDiagram
 | Silver | `silver_segment_embeddings` | Incremental Table | 1408-dim embeddings per segment interval |
 | Silver | `silver_video_metadata` | Incremental Table | 15 AI-extracted fields per video |
 | Gold | `gold_searchable_videos` | Table | Embeddings + GCS metadata + AI metadata joined |
+| Agent | The Archivist (ADK) | LlmAgent | Conversational assistant with 9 tools (Gemini 2.5 Flash) |
 
 ---
 
@@ -90,6 +103,8 @@ sequenceDiagram
 |-------|----------|---------|-------|
 | Multimodal Embedding | `multimodalembedding@001` | Cross-modal vector embeddings | Video segments (16s intervals) |
 | Gemini 2.5 Flash | `gemini-2.5-flash` | Structured metadata extraction | Video segment 0 via `AI.GENERATE` |
+| Gemini 2.5 Flash | `gemini-2.5-flash` | Agent reasoning + tool use | Natural language via ADK Agent (runtime) |
+| Conversational Analytics | `geminidataanalytics` | NL-to-SQL on video metadata | Agent `query_metadata` tool |
 
 ---
 
@@ -111,9 +126,13 @@ sequenceDiagram
 | `google_bigquery_dataset.video_vector_search` | BQ dataset |
 | `google_storage_bucket.video_search` | GCS bucket for all video data |
 | `google_cloudfunctions2_function.segment_video` | Auto-segmentation on upload |
-| `google_service_account.video_segmenter` | SA for Cloud Function |
-| `google_dataform_repository_release_config.video_search_dev` | Dataform compilation from feature branch |
-| `google_dataform_repository_workflow_config.video_search` | Scheduled hourly Dataform execution |
+| `google_service_account.video_segmenter` | SA for Cloud Function + Dataform execution |
+| `google_bigquery_dataset_iam_member.segmenter_bq_data_editor` | Dataform write access (scoped to dataset) |
+| `google_dataform_repository_workflow_config.video_search` | Scheduled hourly Dataform execution (uses shared release config) |
+| `local_file.video_search_api_env` | Generated `.env` for local API development |
+| `google_cloud_run_v2_service.video_search_ui` | Cloud Run UI deployment (optional, `enable_video_search_ui`) |
+| `google_service_account.video_search_ui` | SA for Cloud Run with BQ, GCS, and Vertex AI access |
+| `google_project_iam_member.ui_vertex_ai_user` | Cloud Run SA access to Gemini via Vertex AI |
 
 ---
 

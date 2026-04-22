@@ -22,9 +22,8 @@ if "GCP_PROJECT_ID" not in os.environ:
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
-import os
 
-from routers import search, videos, archive
+from routers import search, videos, archive, agent
 
 app = FastAPI(
     title="Video Library Intelligence",
@@ -43,6 +42,7 @@ app.add_middleware(
 app.include_router(search.router)
 app.include_router(videos.router)
 app.include_router(archive.router)
+app.include_router(agent.router)
 
 
 @app.get("/api/health")

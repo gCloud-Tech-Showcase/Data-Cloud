@@ -74,6 +74,7 @@ export function Header({ onAddVideos, isAddView, onBackToLibrary }: HeaderProps)
           <button
             type="button"
             className="relative p-1.5 rounded-md hover:bg-white/10 transition-colors"
+            aria-label="Notifications"
           >
             <Bell className="w-4 h-4" />
             <span className="absolute top-0.5 right-0.5 w-1.5 h-1.5 bg-amber-400 rounded-full" />

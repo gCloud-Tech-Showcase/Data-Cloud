@@ -1,6 +1,6 @@
 # Video Vector Search
 
-Semantic video search using Gemini multimodal embeddings and BigQuery Vector Search, with a React-based UI.
+Semantic video search using Gemini multimodal embeddings and BigQuery Vector Search, with a React UI and an ADK-powered conversational agent ("The Archivist").
 
 ## What You'll Build
 
@@ -9,6 +9,7 @@ Semantic video search using Gemini multimodal embeddings and BigQuery Vector Sea
 3. **AI Metadata Extraction** — Gemini 2.5 Flash analyzes each video to extract category, mood, characters, themes, content warnings, and more (15 fields total via `AI.GENERATE`)
 4. **Semantic Search** — Find videos by natural language query ("friendship", "chase scene") using BigQuery `VECTOR_SEARCH`
 5. **Web UI** — React application with search, filters, video playback, collections, highlight reels, and a detail panel
+6. **AI Agent ("The Archivist")** — Conversational assistant powered by Google ADK + Gemini 2.5 Flash that controls the UI through natural language, plus Conversational Analytics for ad-hoc data questions
 
 ## Technologies
 
@@ -23,6 +24,9 @@ Semantic video search using Gemini multimodal embeddings and BigQuery Vector Sea
 | GCS | Video storage (raw, segments, thumbnails, metadata) |
 | Dataform | Incremental data pipeline (bronze/silver/gold) |
 | Terraform | Infrastructure as code (all resources) |
+| Google ADK | Agent framework (The Archivist) |
+| Gemini 2.5 Flash (runtime) | Agent reasoning and tool use via Vertex AI |
+| Conversational Analytics API | Natural language queries on BQ data |
 | React + Vite + Tailwind + shadcn/ui | Frontend UI |
 | Python FastAPI | Backend API |
 
@@ -33,6 +37,7 @@ Semantic video search using Gemini multimodal embeddings and BigQuery Vector Sea
 - **15 AI-extracted metadata fields** per video (zero manual tagging)
 - **Event-driven pipeline** — upload a video, it's automatically segmented
 - **Full web UI** — search, filter, play, create collections, highlight reels
+- **Conversational AI agent** — natural language control of the UI + analytical queries
 
 ## Guides
 

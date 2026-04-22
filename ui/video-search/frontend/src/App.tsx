@@ -11,6 +11,7 @@ import { SelectionBar } from "@/components/SelectionBar";
 import { VideoDetailPanel } from "@/components/VideoDetailPanel";
 import { HighlightReel } from "@/components/HighlightReel";
 import { Footer } from "@/components/Footer";
+import { ChatPanel } from "@/components/ChatPanel";
 import { ArrowLeft } from "lucide-react";
 import {
   searchVideos,
@@ -22,6 +23,7 @@ import type {
   VideoResult,
   SearchResponse,
   LibraryStats as StatsType,
+  AgentAction,
 } from "@/types";
 
 type View = "library" | "add";
@@ -42,6 +44,7 @@ export default function App() {
 
   // Selection state
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
+  const [autoExportName, setAutoExportName] = useState<string | undefined>();
 
   // Detail panel state
   const [detailVideoId, setDetailVideoId] = useState<string | null>(null);
@@ -131,7 +134,7 @@ export default function App() {
           color_mode: v.color_mode ?? null,
           style: v.style ?? null,
           ai_description: v.ai_description ?? null,
-          content_warnings: (v as any).content_warnings ?? null,
+          content_warnings: v.content_warnings ?? null,
           best_distance: 0,
           relevance_pct: 0,
           matching_intervals: 0,
@@ -233,12 +236,43 @@ export default function App() {
     setSelectedIds(new Set());
   }, []);
 
-  // Unfiltered results
-  const unfilteredVideos = hasSearched
-    ? searchResult?.results ?? null
-    : allVideos.length > 0
-      ? allVideos
-      : null;
+  // Agent action dispatcher — discriminated union provides type narrowing
+  const handleAgentAction = useCallback(
+    (action: AgentAction) => {
+      switch (action.type) {
+        case "search":
+          setExternalQuery(action.query);
+          handleSearch(action.query);
+          break;
+        case "apply_filter":
+          handleFilterChange(action.field, action.value);
+          break;
+        case "clear_filters":
+          handleClearAllFilters();
+          break;
+        case "play":
+          handlePlay(action.video_id, 0);
+          break;
+        case "show_details":
+          setDetailVideoId(action.video_id);
+          break;
+        case "find_similar":
+          handleFindSimilar(action.video_id);
+          break;
+        case "create_collection":
+          setSelectedIds(new Set(action.video_ids));
+          setAutoExportName(action.name);
+          break;
+      }
+    },
+    [handleSearch, handleFilterChange, handleClearAllFilters, handlePlay, handleFindSimilar]
+  );
+
+  // Unfiltered results (memoized to provide stable reference for downstream useMemo)
+  const unfilteredVideos = useMemo(() => {
+    if (hasSearched) return searchResult?.results ?? null;
+    return allVideos.length > 0 ? allVideos : null;
+  }, [hasSearched, searchResult?.results, allVideos]);
 
   // Apply multi-select filters
   const filteredVideos = useMemo(() => {
@@ -277,8 +311,41 @@ export default function App() {
     return sorted;
   }, [filteredVideos, sortBy]);
 
-  const hasFilters = stats?.filters && Object.values(stats.filters).some((f) => f.length > 0);
+  // Contextual filter counts: computed from current results, not the full library
+  const contextualFilters = useMemo(() => {
+    if (!stats?.filters) return null;
+    if (!unfilteredVideos) return stats.filters;
+
+    const fields = ["category", "mood", "color_mode", "style", "content_warnings"] as const;
+    const result: Record<string, { name: string; count: number }[]> = {};
+
+    for (const field of fields) {
+      const counts = new Map<string, number>();
+      for (const video of unfilteredVideos) {
+        const value = (video as unknown as Record<string, unknown>)[field];
+        if (typeof value === "string" && value) {
+          counts.set(value, (counts.get(value) || 0) + 1);
+        }
+      }
+      result[field] = [...counts.entries()]
+        .map(([name, count]) => ({ name, count }))
+        .sort((a, b) => b.count - a.count);
+    }
+
+    return result;
+  }, [stats?.filters, unfilteredVideos]);
+
+  const hasFilters = contextualFilters && Object.values(contextualFilters).some((f) => f.length > 0);
   const hasActiveFilters = Object.values(activeFilters).some((s) => s.size > 0);
+
+  // Memoize selected videos for SelectionBar
+  const selectedVideos = useMemo(() => {
+    if (selectedIds.size === 0) return [];
+    const source = displayedVideos ?? allVideos;
+    return [...selectedIds]
+      .map((id) => source.find((v) => v.video_id === id))
+      .filter(Boolean) as VideoResult[];
+  }, [selectedIds, displayedVideos, allVideos]);
 
   return (
     <div className="min-h-screen bg-muted/40 text-foreground flex flex-col">
@@ -314,10 +381,10 @@ export default function App() {
               </div>
             )}
 
-            <div className="flex gap-6">
-              {hasFilters && stats?.filters && (
+            <div className="lg:flex lg:gap-6 space-y-4 lg:space-y-0">
+              {hasFilters && contextualFilters && (
                 <FilterSidebar
-                  filters={stats.filters}
+                  filters={contextualFilters}
                   activeFilters={activeFilters}
                   onFilterChange={handleFilterChange}
                   onClearAll={handleClearAllFilters}
@@ -369,12 +436,10 @@ export default function App() {
       </main>
 
       <SelectionBar
-        selectedVideos={
-          [...selectedIds]
-            .map((id) => (displayedVideos ?? allVideos).find((v) => v.video_id === id))
-            .filter(Boolean) as VideoResult[]
-        }
+        selectedVideos={selectedVideos}
         onClearSelection={handleClearSelection}
+        autoExportName={autoExportName}
+        onAutoExportHandled={() => setAutoExportName(undefined)}
       />
 
       <Footer />
@@ -416,6 +481,8 @@ export default function App() {
           onClose={() => setPlayerVideo(null)}
         />
       )}
+
+      <ChatPanel onAction={handleAgentAction} />
     </div>
   );
 }

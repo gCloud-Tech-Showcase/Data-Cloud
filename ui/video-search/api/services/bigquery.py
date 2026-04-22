@@ -21,6 +21,41 @@ def _get_client() -> bigquery.Client:
     return _client
 
 
+def _row_to_video_dict(row) -> dict[str, Any]:
+    """Convert a BigQuery result row (with segments) to a video dict."""
+    best_dist = float(row.best_distance)
+    relevance_pct = round((1 - best_dist / 2) * 100, 1)
+
+    segments = [
+        {
+            "segment_index": seg["segment_index"],
+            "start_seconds": seg["start_seconds"],
+            "end_seconds": seg["end_seconds"],
+            "distance": float(seg["distance"]),
+        }
+        for seg in row.top_segments
+    ]
+
+    return {
+        "video_id": row.video_id,
+        "title": row.title,
+        "year": row.year,
+        "source_url": row.source_url,
+        "duration_total_seconds": row.duration_total_seconds,
+        "category": row.category,
+        "mood": row.mood,
+        "color_mode": row.color_mode,
+        "style": row.style,
+        "ai_description": row.ai_description,
+        "content_warnings": row.content_warnings_status,
+        "thumbnail_url": f"/api/videos/{row.video_id}/thumbnail",
+        "best_distance": best_dist,
+        "relevance_pct": relevance_pct,
+        "matching_intervals": row.matching_intervals,
+        "top_segments": segments,
+    }
+
+
 def search_videos(query: str, limit: int = 20) -> dict[str, Any]:
     """Run vector search and return results grouped by parent video."""
     client = _get_client()
@@ -98,39 +133,7 @@ def search_videos(query: str, limit: int = 20) -> dict[str, Any]:
     results = client.query(sql, job_config=job_config).result()
     elapsed_ms = int((time.time() - start) * 1000)
 
-    videos = []
-    for row in results:
-        best_dist = float(row.best_distance)
-        # Cosine distance ranges 0-2; convert to 0-100% similarity
-        relevance_pct = round((1 - best_dist / 2) * 100, 1)
-
-        segments = []
-        for seg in row.top_segments:
-            segments.append({
-                "segment_index": seg["segment_index"],
-                "start_seconds": seg["start_seconds"],
-                "end_seconds": seg["end_seconds"],
-                "distance": float(seg["distance"]),
-            })
-
-        videos.append({
-            "video_id": row.video_id,
-            "title": row.title,
-            "year": row.year,
-            "source_url": row.source_url,
-            "duration_total_seconds": row.duration_total_seconds,
-            "category": row.category,
-            "mood": row.mood,
-            "color_mode": row.color_mode,
-            "style": row.style,
-            "ai_description": row.ai_description,
-            "content_warnings": row.content_warnings_status,
-            "thumbnail_url": f"/api/videos/{row.video_id}/thumbnail",
-            "best_distance": best_dist,
-            "relevance_pct": relevance_pct,
-            "matching_intervals": row.matching_intervals,
-            "top_segments": segments,
-        })
+    videos = [_row_to_video_dict(row) for row in results]
 
     return {
         "query": query,
@@ -213,38 +216,7 @@ def find_similar(video_id: str, limit: int = 10) -> dict[str, Any]:
     results = client.query(sql, job_config=job_config).result()
     elapsed_ms = int((time.time() - start) * 1000)
 
-    videos = []
-    for row in results:
-        best_dist = float(row.best_distance)
-        relevance_pct = round((1 - best_dist / 2) * 100, 1)
-
-        segments = []
-        for seg in row.top_segments:
-            segments.append({
-                "segment_index": seg["segment_index"],
-                "start_seconds": seg["start_seconds"],
-                "end_seconds": seg["end_seconds"],
-                "distance": float(seg["distance"]),
-            })
-
-        videos.append({
-            "video_id": row.video_id,
-            "title": row.title,
-            "year": row.year,
-            "source_url": row.source_url,
-            "duration_total_seconds": row.duration_total_seconds,
-            "category": row.category,
-            "mood": row.mood,
-            "color_mode": row.color_mode,
-            "style": row.style,
-            "ai_description": row.ai_description,
-            "content_warnings": row.content_warnings_status,
-            "thumbnail_url": f"/api/videos/{row.video_id}/thumbnail",
-            "best_distance": best_dist,
-            "relevance_pct": relevance_pct,
-            "matching_intervals": row.matching_intervals,
-            "top_segments": segments,
-        })
+    videos = [_row_to_video_dict(row) for row in results]
 
     return {
         "source_video_id": video_id,

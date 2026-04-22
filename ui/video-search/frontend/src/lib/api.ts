@@ -1,4 +1,4 @@
-import type { SearchResponse, VideosResponse, LibraryStats, SimilarResponse, ArchiveSearchResponse, IngestResponse, VideoDetails } from "@/types";
+import type { SearchResponse, VideosResponse, LibraryStats, SimilarResponse, ArchiveSearchResponse, IngestResponse, VideoDetails, AgentChatResponse } from "@/types";
 
 const BASE = "";
 
@@ -68,8 +68,18 @@ export async function getVideoDetails(videoId: string): Promise<VideoDetails> {
   return res.json();
 }
 
-export function formatDuration(seconds: number): string {
-  const m = Math.floor(seconds / 60);
-  const s = seconds % 60;
-  return `${m}:${String(s).padStart(2, "0")}`;
+export async function agentChat(
+  message: string,
+  sessionId: string
+): Promise<AgentChatResponse> {
+  const res = await fetch(`${BASE}/api/agent/chat`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ message, session_id: sessionId }),
+  });
+  if (!res.ok) throw new Error(`Agent chat failed: ${res.statusText}`);
+  return res.json();
 }
+
+// Re-exported from utils for backwards compatibility
+export { formatDuration } from "@/lib/utils";
