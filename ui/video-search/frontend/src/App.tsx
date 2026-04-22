@@ -353,7 +353,7 @@ export default function App() {
               </div>
             )}
 
-            <div className="flex gap-6">
+            <div className="lg:flex lg:gap-6 space-y-4 lg:space-y-0">
               {hasFilters && stats?.filters && (
                 <FilterSidebar
                   filters={stats.filters}

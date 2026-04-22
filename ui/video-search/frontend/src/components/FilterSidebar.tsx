@@ -1,7 +1,16 @@
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import {
+  Drawer,
+  DrawerClose,
+  DrawerContent,
+  DrawerFooter,
+  DrawerHeader,
+  DrawerTitle,
+  DrawerTrigger,
+} from "@/components/ui/drawer";
 import type { FilterOption } from "@/types";
-import { ChevronDown, ChevronRight, Sparkles, X } from "lucide-react";
+import { ChevronDown, ChevronRight, SlidersHorizontal, Sparkles, X } from "lucide-react";
 import { useState } from "react";
 
 const FILTER_LABELS: Record<string, string> = {
@@ -31,6 +40,7 @@ export function FilterSidebar({
   const [expanded, setExpanded] = useState<Set<string>>(DEFAULT_EXPANDED);
 
   const hasActiveFilters = Object.values(activeFilters).some((s) => s.size > 0);
+  const activeCount = Object.values(activeFilters).reduce((n, s) => n + s.size, 0);
   const filterEntries = Object.entries(filters).filter(
     ([, options]) => options.length > 0,
   );
@@ -54,21 +64,8 @@ export function FilterSidebar({
     }
   }
 
-  return (
-    <aside className="w-56 flex-shrink-0 space-y-1 bg-background rounded-xl border border-border p-4 shadow-sm h-fit sticky top-4">
-      <div className="flex items-center justify-between mb-1">
-        <h3 className="text-sm font-medium text-foreground">Filters</h3>
-        {hasActiveFilters && (
-          <Button
-            variant="ghost"
-            size="sm"
-            className="h-6 px-2 text-xs text-muted-foreground"
-            onClick={onClearAll}
-          >
-            Clear all
-          </Button>
-        )}
-      </div>
+  const filterContent = (
+    <>
       <p className="flex items-center gap-1 text-[10px] text-primary opacity-70 mb-3">
         <Sparkles className="w-3 h-3" />
         Gemini-extracted video attributes
@@ -142,6 +139,72 @@ export function FilterSidebar({
           </div>
         );
       })}
-    </aside>
+    </>
+  );
+
+  return (
+    <>
+      {/* Mobile: Drawer (bottom sheet) */}
+      <Drawer>
+        <DrawerTrigger asChild>
+          <Button
+            variant="outline"
+            size="sm"
+            className="gap-2 lg:hidden"
+          >
+            <SlidersHorizontal className="w-4 h-4" />
+            Filters
+            {activeCount > 0 && (
+              <Badge variant="default" className="text-[10px] px-1.5 py-0 min-w-0">
+                {activeCount}
+              </Badge>
+            )}
+          </Button>
+        </DrawerTrigger>
+        <DrawerContent>
+          <DrawerHeader className="flex flex-row items-center justify-between">
+            <DrawerTitle>Filters</DrawerTitle>
+            {hasActiveFilters && (
+              <Button
+                variant="ghost"
+                size="sm"
+                className="h-7 px-2 text-xs text-muted-foreground"
+                onClick={onClearAll}
+              >
+                Clear all
+              </Button>
+            )}
+          </DrawerHeader>
+          <div className="overflow-y-auto px-4 pb-2">
+            {filterContent}
+          </div>
+          <DrawerFooter>
+            <DrawerClose asChild>
+              <Button className="w-full">
+                Show {activeCount > 0 ? "filtered " : ""}results
+              </Button>
+            </DrawerClose>
+          </DrawerFooter>
+        </DrawerContent>
+      </Drawer>
+
+      {/* Desktop: sticky sidebar */}
+      <aside className="hidden lg:block w-56 flex-shrink-0 space-y-1 bg-background rounded-xl border border-border p-4 shadow-sm h-fit sticky top-4">
+        <div className="flex items-center justify-between mb-1">
+          <h3 className="text-sm font-medium text-foreground">Filters</h3>
+          {hasActiveFilters && (
+            <Button
+              variant="ghost"
+              size="sm"
+              className="h-6 px-2 text-xs text-muted-foreground"
+              onClick={onClearAll}
+            >
+              Clear all
+            </Button>
+          )}
+        </div>
+        {filterContent}
+      </aside>
+    </>
   );
 }

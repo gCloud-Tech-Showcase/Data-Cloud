@@ -83,7 +83,7 @@ export function ChatPanel({ onAction }: ChatPanelProps) {
   }
 
   return (
-    <div className="fixed bottom-6 right-6 z-50 w-[400px] h-[600px] max-h-[calc(100vh-3rem)] bg-background rounded-xl border border-border shadow-2xl flex flex-col animate-in slide-in-from-bottom-5 fade-in">
+    <div className="fixed bottom-0 right-0 sm:bottom-6 sm:right-6 z-50 w-full sm:w-[400px] h-[100dvh] sm:h-[600px] sm:max-h-[calc(100vh-3rem)] bg-background sm:rounded-xl border border-border shadow-2xl flex flex-col animate-in slide-in-from-bottom-5 fade-in">
       {/* Header */}
       <div className="rounded-t-xl bg-background/95 backdrop-blur border-b border-border px-5 py-3.5 flex items-center justify-between">
           <div className="flex items-center gap-2.5">
