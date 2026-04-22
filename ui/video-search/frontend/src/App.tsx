@@ -134,7 +134,7 @@ export default function App() {
           color_mode: v.color_mode ?? null,
           style: v.style ?? null,
           ai_description: v.ai_description ?? null,
-          content_warnings: (v as any).content_warnings ?? null,
+          content_warnings: v.content_warnings ?? null,
           best_distance: 0,
           relevance_pct: 0,
           matching_intervals: 0,
@@ -236,51 +236,43 @@ export default function App() {
     setSelectedIds(new Set());
   }, []);
 
-  // Agent action dispatcher
+  // Agent action dispatcher — discriminated union provides type narrowing
   const handleAgentAction = useCallback(
     (action: AgentAction) => {
       switch (action.type) {
         case "search":
-          if (typeof action.query === "string") {
-            setExternalQuery(action.query);
-            handleSearch(action.query);
-          }
+          setExternalQuery(action.query);
+          handleSearch(action.query);
           break;
         case "apply_filter":
-          if (typeof action.field === "string" && typeof action.value === "string")
-            handleFilterChange(action.field, action.value);
+          handleFilterChange(action.field, action.value);
           break;
         case "clear_filters":
           handleClearAllFilters();
           break;
         case "play":
-          if (typeof action.video_id === "string") handlePlay(action.video_id, 0);
+          handlePlay(action.video_id, 0);
           break;
         case "show_details":
-          if (typeof action.video_id === "string") setDetailVideoId(action.video_id);
+          setDetailVideoId(action.video_id);
           break;
         case "find_similar":
-          if (typeof action.video_id === "string") handleFindSimilar(action.video_id);
+          handleFindSimilar(action.video_id);
           break;
         case "create_collection":
-          if (Array.isArray(action.video_ids)) {
-            setSelectedIds(new Set(action.video_ids as string[]));
-            if (typeof action.name === "string") {
-              setAutoExportName(action.name);
-            }
-          }
+          setSelectedIds(new Set(action.video_ids));
+          setAutoExportName(action.name);
           break;
       }
     },
     [handleSearch, handleFilterChange, handleClearAllFilters, handlePlay, handleFindSimilar]
   );
 
-  // Unfiltered results
-  const unfilteredVideos = hasSearched
-    ? searchResult?.results ?? null
-    : allVideos.length > 0
-      ? allVideos
-      : null;
+  // Unfiltered results (memoized to provide stable reference for downstream useMemo)
+  const unfilteredVideos = useMemo(() => {
+    if (hasSearched) return searchResult?.results ?? null;
+    return allVideos.length > 0 ? allVideos : null;
+  }, [hasSearched, searchResult?.results, allVideos]);
 
   // Apply multi-select filters
   const filteredVideos = useMemo(() => {
@@ -319,8 +311,41 @@ export default function App() {
     return sorted;
   }, [filteredVideos, sortBy]);
 
-  const hasFilters = stats?.filters && Object.values(stats.filters).some((f) => f.length > 0);
+  // Contextual filter counts: computed from current results, not the full library
+  const contextualFilters = useMemo(() => {
+    if (!stats?.filters) return null;
+    if (!unfilteredVideos) return stats.filters;
+
+    const fields = ["category", "mood", "color_mode", "style", "content_warnings"] as const;
+    const result: Record<string, { name: string; count: number }[]> = {};
+
+    for (const field of fields) {
+      const counts = new Map<string, number>();
+      for (const video of unfilteredVideos) {
+        const value = (video as unknown as Record<string, unknown>)[field];
+        if (typeof value === "string" && value) {
+          counts.set(value, (counts.get(value) || 0) + 1);
+        }
+      }
+      result[field] = [...counts.entries()]
+        .map(([name, count]) => ({ name, count }))
+        .sort((a, b) => b.count - a.count);
+    }
+
+    return result;
+  }, [stats?.filters, unfilteredVideos]);
+
+  const hasFilters = contextualFilters && Object.values(contextualFilters).some((f) => f.length > 0);
   const hasActiveFilters = Object.values(activeFilters).some((s) => s.size > 0);
+
+  // Memoize selected videos for SelectionBar
+  const selectedVideos = useMemo(() => {
+    if (selectedIds.size === 0) return [];
+    const source = displayedVideos ?? allVideos;
+    return [...selectedIds]
+      .map((id) => source.find((v) => v.video_id === id))
+      .filter(Boolean) as VideoResult[];
+  }, [selectedIds, displayedVideos, allVideos]);
 
   return (
     <div className="min-h-screen bg-muted/40 text-foreground flex flex-col">
@@ -357,9 +382,9 @@ export default function App() {
             )}
 
             <div className="lg:flex lg:gap-6 space-y-4 lg:space-y-0">
-              {hasFilters && stats?.filters && (
+              {hasFilters && contextualFilters && (
                 <FilterSidebar
-                  filters={stats.filters}
+                  filters={contextualFilters}
                   activeFilters={activeFilters}
                   onFilterChange={handleFilterChange}
                   onClearAll={handleClearAllFilters}
@@ -411,11 +436,7 @@ export default function App() {
       </main>
 
       <SelectionBar
-        selectedVideos={
-          [...selectedIds]
-            .map((id) => (displayedVideos ?? allVideos).find((v) => v.video_id === id))
-            .filter(Boolean) as VideoResult[]
-        }
+        selectedVideos={selectedVideos}
         onClearSelection={handleClearSelection}
         autoExportName={autoExportName}
         onAutoExportHandled={() => setAutoExportName(undefined)}

@@ -11,9 +11,22 @@ interface SelectionBarProps {
   onAutoExportHandled?: () => void;
 }
 
+function downloadBlob(content: string, mimeType: string, name: string, extension: string) {
+  const blob = new Blob([content], { type: mimeType });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = name
+    ? `${name.toLowerCase().replace(/\s+/g, "-")}.${extension}`
+    : `video-collection.${extension}`;
+  a.click();
+  URL.revokeObjectURL(url);
+}
+
 export function SelectionBar({ selectedVideos, onClearSelection, autoExportName, onAutoExportHandled }: SelectionBarProps) {
   const [showExport, setShowExport] = useState(false);
   const [collectionName, setCollectionName] = useState("");
+  const [collectionDesc, setCollectionDesc] = useState("");
 
   // Auto-open export modal when agent creates a collection
   useEffect(() => {
@@ -23,7 +36,6 @@ export function SelectionBar({ selectedVideos, onClearSelection, autoExportName,
       onAutoExportHandled?.();
     }
   }, [autoExportName, selectedVideos.length, onAutoExportHandled]);
-  const [collectionDesc, setCollectionDesc] = useState("");
 
   if (selectedVideos.length === 0) return null;
 
@@ -42,8 +54,8 @@ export function SelectionBar({ selectedVideos, onClearSelection, autoExportName,
       v.color_mode ?? "",
       v.style ?? "",
       v.ai_description ?? "",
-      "", // themes not in VideoResult currently
-      "", // characters not in VideoResult currently
+      "",
+      "",
       v.source_url ?? "",
       v.duration_total_seconds ?? "",
       v.relevance_pct > 0 ? `${v.relevance_pct}%` : "",
@@ -53,15 +65,7 @@ export function SelectionBar({ selectedVideos, onClearSelection, autoExportName,
       r.map((cell) => `"${String(cell).replace(/"/g, '""')}"`).join(",")
     )].join("\n");
 
-    const blob = new Blob([csv], { type: "text/csv" });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement("a");
-    a.href = url;
-    a.download = collectionName
-      ? `${collectionName.toLowerCase().replace(/\s+/g, "-")}.csv`
-      : "video-collection.csv";
-    a.click();
-    URL.revokeObjectURL(url);
+    downloadBlob(csv, "text/csv", collectionName, "csv");
     setShowExport(false);
   }
 
@@ -86,15 +90,7 @@ export function SelectionBar({ selectedVideos, onClearSelection, autoExportName,
       })),
     };
 
-    const blob = new Blob([JSON.stringify(data, null, 2)], { type: "application/json" });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement("a");
-    a.href = url;
-    a.download = collectionName
-      ? `${collectionName.toLowerCase().replace(/\s+/g, "-")}.json`
-      : "video-collection.json";
-    a.click();
-    URL.revokeObjectURL(url);
+    downloadBlob(JSON.stringify(data, null, 2), "application/json", collectionName, "json");
     setShowExport(false);
   }
 
@@ -135,6 +131,7 @@ export function SelectionBar({ selectedVideos, onClearSelection, autoExportName,
           variant="ghost"
           className="text-background hover:bg-background/10"
           onClick={onClearSelection}
+          aria-label="Clear selection"
         >
           <X className="w-4 h-4" />
         </Button>
@@ -142,14 +139,14 @@ export function SelectionBar({ selectedVideos, onClearSelection, autoExportName,
 
       {/* Collection modal */}
       {showExport && (
-        <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4">
+        <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4" role="dialog" aria-label="Create collection">
           <div className="bg-card rounded-lg shadow-xl max-w-md w-full p-6 space-y-4">
             <div className="flex items-center justify-between">
               <h2 className="text-lg font-medium text-foreground flex items-center gap-2">
                 <FolderPlus className="w-5 h-5 text-primary" />
                 Create Collection
               </h2>
-              <Button variant="ghost" size="sm" onClick={() => setShowExport(false)}>
+              <Button variant="ghost" size="sm" onClick={() => setShowExport(false)} aria-label="Close dialog">
                 <X className="w-4 h-4" />
               </Button>
             </div>
@@ -161,8 +158,9 @@ export function SelectionBar({ selectedVideos, onClearSelection, autoExportName,
 
             <div className="space-y-3">
               <div>
-                <label className="text-xs text-muted-foreground">Collection name</label>
+                <label htmlFor="collection-name" className="text-xs text-muted-foreground">Collection name</label>
                 <Input
+                  id="collection-name"
                   value={collectionName}
                   onChange={(e) => setCollectionName(e.target.value)}
                   placeholder="e.g., Adventure Campaign Q3"
@@ -170,8 +168,9 @@ export function SelectionBar({ selectedVideos, onClearSelection, autoExportName,
                 />
               </div>
               <div>
-                <label className="text-xs text-muted-foreground">Description (optional)</label>
+                <label htmlFor="collection-desc" className="text-xs text-muted-foreground">Description (optional)</label>
                 <Input
+                  id="collection-desc"
                   value={collectionDesc}
                   onChange={(e) => setCollectionDesc(e.target.value)}
                   placeholder="e.g., Selected clips for the adventure marketing campaign"

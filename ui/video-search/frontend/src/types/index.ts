@@ -132,10 +132,14 @@ export interface SimilarResponse {
   search_time_ms: number;
 }
 
-export interface AgentAction {
-  type: string;
-  [key: string]: unknown;
-}
+export type AgentAction =
+  | { type: "search"; query: string }
+  | { type: "apply_filter"; field: string; value: string }
+  | { type: "clear_filters" }
+  | { type: "play"; video_id: string }
+  | { type: "show_details"; video_id: string }
+  | { type: "find_similar"; video_id: string }
+  | { type: "create_collection"; name: string; video_ids: string[] };
 
 export interface AgentChatResponse {
   text: string;
@@ -144,6 +148,7 @@ export interface AgentChatResponse {
 }
 
 export interface ChatMessage {
+  id: string;
   role: "user" | "agent";
   text: string;
   actions?: AgentAction[];

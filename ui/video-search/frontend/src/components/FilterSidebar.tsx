@@ -98,6 +98,8 @@ export function FilterSidebar({
               type="button"
               className="flex items-center justify-between w-full py-2 text-left"
               onClick={() => toggleExpanded(field)}
+              aria-expanded={isExpanded}
+              aria-label={`${isExpanded ? "Collapse" : "Expand"} ${FILTER_LABELS[field] || field} filters`}
             >
               <span className="flex items-center gap-1.5 text-xs text-muted-foreground uppercase tracking-wider">
                 {FILTER_LABELS[field] || field}
