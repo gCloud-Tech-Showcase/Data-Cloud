@@ -8,7 +8,7 @@ import logging
 import uuid
 
 from fastapi import APIRouter
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 
 from google.adk.runners import Runner
 from google.adk.sessions import InMemorySessionService
@@ -32,7 +32,7 @@ _runner = Runner(
 
 
 class ChatRequest(BaseModel):
-    message: str
+    message: str = Field(..., min_length=1, max_length=4000)
     session_id: str = ""
 
 
@@ -56,6 +56,7 @@ def _get_library_context() -> dict:
             "actions": [],
         }
     except Exception:
+        logger.warning("Failed to load library context for agent", exc_info=True)
         return {
             "total_videos": "unknown",
             "earliest_year": "unknown",

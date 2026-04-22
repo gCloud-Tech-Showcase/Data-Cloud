@@ -9,10 +9,13 @@ The router resets this list via state_delta before each invocation and reads
 it from the session after the agent finishes.
 """
 
+import logging
 import os
 from typing import Any
 
 from google.adk.tools import ToolContext
+
+logger = logging.getLogger(__name__)
 
 from services.bigquery import (
     search_videos as bq_search_videos,
@@ -37,8 +40,8 @@ def _format_video_summary(video: dict[str, Any], index: int) -> str:
     duration = video.get("duration_total_seconds")
     duration_str = f", {int(duration // 60)}m{int(duration % 60)}s" if duration else ""
     return (
-        f"{index}. \"{video['title']}\" ({year}) — {category}, "
-        f"{relevance}% match{duration_str} [ID: {video['video_id']}]"
+        f"{index}. \"{video.get('title', 'Untitled')}\" ({year}) — {category}, "
+        f"{relevance}% match{duration_str} [ID: {video.get('video_id', 'unknown')}]"
     )
 
 
@@ -84,7 +87,8 @@ def apply_filters(
     mood: str = "",
     color_mode: str = "",
     style: str = "",
-    tool_context: ToolContext = None,
+    *,
+    tool_context: ToolContext,
 ) -> dict:
     """Apply filters to narrow the video library display. Only provide the
     filters you want to change — omit or leave empty any you don't need.
@@ -350,8 +354,9 @@ def query_metadata(query: str, tool_context: ToolContext) -> dict:
                 "is not installed. Use get_library_stats for basic questions."
             ),
         }
-    except Exception as e:
+    except Exception:
+        logger.exception("Conversational Analytics query failed")
         return {
             "status": "error",
-            "message": f"Conversational Analytics query failed: {e}. Try get_library_stats instead.",
+            "message": "Conversational Analytics query failed. Try get_library_stats instead.",
         }

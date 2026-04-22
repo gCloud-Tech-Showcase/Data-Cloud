@@ -1,7 +1,5 @@
 """Archive.org API router — search and ingest public domain videos."""
 
-import re
-import threading
 from fastapi import APIRouter, Query, HTTPException, BackgroundTasks
 
 from services.archive import search_archive, get_item_details, ingest_video
@@ -10,7 +8,7 @@ router = APIRouter()
 
 
 @router.get("/api/archive/search")
-async def search(
+def search(
     q: str = Query(..., min_length=1, description="Search query"),
     limit: int = Query(20, ge=1, le=50),
 ):
@@ -19,7 +17,7 @@ async def search(
 
 
 @router.get("/api/archive/{identifier}")
-async def details(identifier: str):
+def details(identifier: str):
     """Get details for a specific Archive.org item."""
     item = get_item_details(identifier)
     if not item:
@@ -28,7 +26,7 @@ async def details(identifier: str):
 
 
 @router.post("/api/archive/{identifier}/ingest")
-async def ingest(identifier: str, background_tasks: BackgroundTasks):
+def ingest(identifier: str, background_tasks: BackgroundTasks):
     """Ingest a video from Archive.org into the library.
 
     Downloads the MP4 and uploads to GCS with metadata.
