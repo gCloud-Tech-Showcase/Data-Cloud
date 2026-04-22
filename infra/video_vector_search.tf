@@ -59,11 +59,6 @@ resource "google_storage_bucket_iam_member" "bq_connection_video_reader" {
   bucket = google_storage_bucket.video_search.name
   role   = "roles/storage.objectViewer"
   member = "serviceAccount:${google_bigquery_connection.vertex_ai.cloud_resource[0].service_account_id}"
-
-  depends_on = [
-    google_bigquery_connection.vertex_ai,
-    google_storage_bucket.video_search
-  ]
 }
 
 # -----------------------------------------------------------------------------
@@ -195,15 +190,15 @@ resource "google_project_iam_member" "segmenter_bq_job_user" {
   member  = "serviceAccount:${google_service_account.video_segmenter.email}"
 }
 
-resource "google_project_iam_member" "segmenter_bq_data_editor" {
-  project = var.project_id
-  role    = "roles/bigquery.dataEditor"
-  member  = "serviceAccount:${google_service_account.video_segmenter.email}"
+resource "google_bigquery_dataset_iam_member" "segmenter_bq_data_editor" {
+  dataset_id = google_bigquery_dataset.video_vector_search.dataset_id
+  role       = "roles/bigquery.dataEditor"
+  member     = "serviceAccount:${google_service_account.video_segmenter.email}"
 }
 
 resource "google_project_iam_member" "segmenter_bq_connection_user" {
   project = var.project_id
-  role    = "roles/bigquery.connectionAdmin"
+  role    = "roles/bigquery.connectionUser"
   member  = "serviceAccount:${google_service_account.video_segmenter.email}"
 }
 
@@ -275,6 +270,13 @@ resource "google_cloudfunctions2_function" "segment_video" {
     event_filters {
       attribute = "bucket"
       value     = google_storage_bucket.video_search.name
+    }
+
+    # Only trigger on raw video uploads, not on segments/thumbnails written by the function
+    event_filters {
+      attribute = "name"
+      value     = "raw/*.mp4"
+      operator  = "match-path-pattern"
     }
 
     service_account_email = google_service_account.video_segmenter.email
@@ -350,11 +352,11 @@ resource "google_project_iam_member" "ui_builder_logs" {
   member  = "serviceAccount:${google_service_account.ui_builder[0].email}"
 }
 
-# Builder SA: read/write Cloud Build source bucket
+# Builder SA: read/write Cloud Build source and staging buckets
 resource "google_project_iam_member" "ui_builder_storage" {
   count   = var.enable_video_search_build ? 1 : 0
   project = var.project_id
-  role    = "roles/storage.admin"
+  role    = "roles/storage.objectAdmin"
   member  = "serviceAccount:${google_service_account.ui_builder[0].email}"
 }
 

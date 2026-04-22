@@ -103,6 +103,11 @@ variable "realtime_alerts_max_slots" {
   EOT
   type        = number
   default     = 50
+
+  validation {
+    condition     = var.realtime_alerts_max_slots >= 50 && var.realtime_alerts_max_slots <= 500 && var.realtime_alerts_max_slots % 50 == 0
+    error_message = "Must be a multiple of 50 between 50 and 500."
+  }
 }
 
 # =============================================================================
@@ -154,6 +159,11 @@ variable "bq_graph_max_slots" {
   EOT
   type        = number
   default     = 50
+
+  validation {
+    condition     = var.bq_graph_max_slots >= 50 && var.bq_graph_max_slots <= 500 && var.bq_graph_max_slots % 50 == 0
+    error_message = "Must be a multiple of 50 between 50 and 500."
+  }
 }
 
 variable "enable_spanner_graph_demo" {
@@ -184,6 +194,11 @@ variable "video_search_max_instances" {
   EOT
   type        = number
   default     = 10
+
+  validation {
+    condition     = var.video_search_max_instances >= 1 && var.video_search_max_instances <= 100
+    error_message = "Must be between 1 and 100."
+  }
 }
 
 variable "enable_video_search_build" {

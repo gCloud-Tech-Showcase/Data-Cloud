@@ -54,13 +54,7 @@ resource "google_project_iam_member" "dataform_bq_job_user" {
   depends_on = [google_project_service_identity.dataform]
 }
 
-resource "google_project_iam_member" "dataform_bq_data_viewer" {
-  project = var.project_id
-  role    = "roles/bigquery.dataViewer"
-  member  = "serviceAccount:${google_project_service_identity.dataform.email}"
-
-  depends_on = [google_project_service_identity.dataform]
-}
+# Note: dataViewer is not needed — dataEditor (below) is a superset that includes read access.
 
 resource "google_project_iam_member" "dataform_bq_data_editor" {
   project = var.project_id
