@@ -241,7 +241,10 @@ export default function App() {
     (action: AgentAction) => {
       switch (action.type) {
         case "search":
-          if (typeof action.query === "string") handleSearch(action.query);
+          if (typeof action.query === "string") {
+            setExternalQuery(action.query);
+            handleSearch(action.query);
+          }
           break;
         case "apply_filter":
           if (typeof action.field === "string" && typeof action.value === "string")
