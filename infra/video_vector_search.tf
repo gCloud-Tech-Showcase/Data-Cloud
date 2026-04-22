@@ -416,7 +416,7 @@ resource "google_cloudbuild_trigger" "video_search_ui" {
 resource "local_file" "video_search_api_env" {
   filename        = "${path.module}/../ui/video-search/api/.env"
   file_permission = "0600"
-  content         = "GCP_PROJECT_ID=${var.project_id}\nGCS_BUCKET=${google_storage_bucket.video_search.name}\n"
+  content         = "GCP_PROJECT_ID=${var.project_id}\nGCS_BUCKET=${google_storage_bucket.video_search.name}\nGOOGLE_GENAI_USE_VERTEXAI=TRUE\nGOOGLE_CLOUD_LOCATION=${var.region}\n"
 }
 
 # -----------------------------------------------------------------------------
@@ -467,6 +467,14 @@ resource "google_storage_bucket_iam_member" "ui_bucket_reader" {
   member = "serviceAccount:${google_service_account.video_search_ui[0].email}"
 }
 
+# Cloud Run SA: call Gemini via Vertex AI (agent + Conversational Analytics)
+resource "google_project_iam_member" "ui_vertex_ai_user" {
+  count   = var.enable_video_search_ui ? 1 : 0
+  project = var.project_id
+  role    = "roles/aiplatform.user"
+  member  = "serviceAccount:${google_service_account.video_search_ui[0].email}"
+}
+
 # Cloud Run SA: write to GCS for video ingestion (Add Videos feature)
 resource "google_storage_bucket_iam_member" "ui_bucket_writer" {
   count  = var.enable_video_search_ui ? 1 : 0
@@ -498,6 +506,14 @@ resource "google_cloud_run_v2_service" "video_search_ui" {
         name  = "GCS_BUCKET"
         value = google_storage_bucket.video_search.name
       }
+      env {
+        name  = "GOOGLE_GENAI_USE_VERTEXAI"
+        value = "TRUE"
+      }
+      env {
+        name  = "GOOGLE_CLOUD_LOCATION"
+        value = var.region
+      }
 
       resources {
         limits = {
@@ -518,6 +534,7 @@ resource "google_cloud_run_v2_service" "video_search_ui" {
     google_project_iam_member.ui_bq_data_viewer,
     google_project_iam_member.ui_bq_job_user,
     google_project_iam_member.ui_bq_connection,
+    google_project_iam_member.ui_vertex_ai_user,
     google_storage_bucket_iam_member.ui_bucket_reader,
     google_storage_bucket_iam_member.ui_bucket_writer,
   ]

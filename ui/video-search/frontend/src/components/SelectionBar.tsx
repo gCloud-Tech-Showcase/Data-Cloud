@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Download, FolderPlus, X, Sparkles } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -7,11 +7,22 @@ import type { VideoResult } from "@/types";
 interface SelectionBarProps {
   selectedVideos: VideoResult[];
   onClearSelection: () => void;
+  autoExportName?: string;
+  onAutoExportHandled?: () => void;
 }
 
-export function SelectionBar({ selectedVideos, onClearSelection }: SelectionBarProps) {
+export function SelectionBar({ selectedVideos, onClearSelection, autoExportName, onAutoExportHandled }: SelectionBarProps) {
   const [showExport, setShowExport] = useState(false);
   const [collectionName, setCollectionName] = useState("");
+
+  // Auto-open export modal when agent creates a collection
+  useEffect(() => {
+    if (autoExportName && selectedVideos.length > 0) {
+      setCollectionName(autoExportName);
+      setShowExport(true);
+      onAutoExportHandled?.();
+    }
+  }, [autoExportName, selectedVideos.length, onAutoExportHandled]);
   const [collectionDesc, setCollectionDesc] = useState("");
 
   if (selectedVideos.length === 0) return null;

@@ -11,6 +11,7 @@ import { SelectionBar } from "@/components/SelectionBar";
 import { VideoDetailPanel } from "@/components/VideoDetailPanel";
 import { HighlightReel } from "@/components/HighlightReel";
 import { Footer } from "@/components/Footer";
+import { ChatPanel } from "@/components/ChatPanel";
 import { ArrowLeft } from "lucide-react";
 import {
   searchVideos,
@@ -22,6 +23,7 @@ import type {
   VideoResult,
   SearchResponse,
   LibraryStats as StatsType,
+  AgentAction,
 } from "@/types";
 
 type View = "library" | "add";
@@ -42,6 +44,7 @@ export default function App() {
 
   // Selection state
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
+  const [autoExportName, setAutoExportName] = useState<string | undefined>();
 
   // Detail panel state
   const [detailVideoId, setDetailVideoId] = useState<string | null>(null);
@@ -233,6 +236,42 @@ export default function App() {
     setSelectedIds(new Set());
   }, []);
 
+  // Agent action dispatcher
+  const handleAgentAction = useCallback(
+    (action: AgentAction) => {
+      switch (action.type) {
+        case "search":
+          if (typeof action.query === "string") handleSearch(action.query);
+          break;
+        case "apply_filter":
+          if (typeof action.field === "string" && typeof action.value === "string")
+            handleFilterChange(action.field, action.value);
+          break;
+        case "clear_filters":
+          handleClearAllFilters();
+          break;
+        case "play":
+          if (typeof action.video_id === "string") handlePlay(action.video_id, 0);
+          break;
+        case "show_details":
+          if (typeof action.video_id === "string") setDetailVideoId(action.video_id);
+          break;
+        case "find_similar":
+          if (typeof action.video_id === "string") handleFindSimilar(action.video_id);
+          break;
+        case "create_collection":
+          if (Array.isArray(action.video_ids)) {
+            setSelectedIds(new Set(action.video_ids as string[]));
+            if (typeof action.name === "string") {
+              setAutoExportName(action.name);
+            }
+          }
+          break;
+      }
+    },
+    [handleSearch, handleFilterChange, handleClearAllFilters, handlePlay, handleFindSimilar]
+  );
+
   // Unfiltered results
   const unfilteredVideos = hasSearched
     ? searchResult?.results ?? null
@@ -375,6 +414,8 @@ export default function App() {
             .filter(Boolean) as VideoResult[]
         }
         onClearSelection={handleClearSelection}
+        autoExportName={autoExportName}
+        onAutoExportHandled={() => setAutoExportName(undefined)}
       />
 
       <Footer />
@@ -416,6 +457,8 @@ export default function App() {
           onClose={() => setPlayerVideo(null)}
         />
       )}
+
+      <ChatPanel onAction={handleAgentAction} />
     </div>
   );
 }

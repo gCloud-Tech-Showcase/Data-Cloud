@@ -11,7 +11,7 @@ Google Cloud Data Showcase with **8 demos** using BigQuery, Gemini AI, and Verte
 5. **Vertica Ingestion** - Migrate data from Vertica to BigQuery with Dataproc + Spark
 6. **Spanner Graph** - Property graph queries for data center topology analysis
 7. **BQ Graph** - BigQuery property graph for data center topology GQL analytics
-8. **Video Vector Search** - Semantic video search with Gemini multimodal embeddings, BQ Vector Search, and a React UI
+8. **Video Vector Search** - Semantic video search with Gemini multimodal embeddings, BQ Vector Search, React UI, and ADK-powered conversational agent ("The Archivist")
 
 **Key Directories:** `definitions/{domain}/` for Dataform, `infra/` for Terraform, `docs/` for guides.
 

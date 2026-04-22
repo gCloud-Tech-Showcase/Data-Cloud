@@ -131,3 +131,20 @@ export interface SimilarResponse {
   total_results: number;
   search_time_ms: number;
 }
+
+export interface AgentAction {
+  type: string;
+  [key: string]: unknown;
+}
+
+export interface AgentChatResponse {
+  text: string;
+  actions: AgentAction[];
+  session_id: string;
+}
+
+export interface ChatMessage {
+  role: "user" | "agent";
+  text: string;
+  actions?: AgentAction[];
+}
