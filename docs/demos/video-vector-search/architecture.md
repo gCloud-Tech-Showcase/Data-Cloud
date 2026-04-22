@@ -100,6 +100,7 @@ sequenceDiagram
 - **Incremental processing**: Silver tables use `type: "incremental"` with `uniqueKey` — only new segments/videos are processed on each Dataform run.
 - **Object table cache**: `AUTOMATIC` mode with 30-minute staleness. New segments visible within 30 minutes.
 - **Cross-modal search**: Text queries search against video embeddings because `multimodalembedding@001` encodes both modalities in the same vector space.
+- **Vector indexing**: Not enabled — brute-force scan is fast enough at this scale (~4K rows). For larger libraries, create a [vector index](https://cloud.google.com/bigquery/docs/vector-index) on `gold_searchable_videos.embedding` to accelerate `VECTOR_SEARCH` queries.
 
 ---
 

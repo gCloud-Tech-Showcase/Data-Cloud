@@ -4,9 +4,20 @@ Serves the search API and media endpoints for the Video Vector Search demo.
 In production (Cloud Run), also serves the built React frontend as static files.
 """
 
+import os
+import sys
+
 from dotenv import load_dotenv
 
 load_dotenv()
+
+if "GCP_PROJECT_ID" not in os.environ:
+    print(
+        "Error: GCP_PROJECT_ID not set.\n"
+        "Run 'terraform apply' in infra/ first — it generates the .env file automatically.",
+        file=sys.stderr,
+    )
+    sys.exit(1)
 
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
