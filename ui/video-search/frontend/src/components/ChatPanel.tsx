@@ -145,9 +145,9 @@ export function ChatPanel({ onAction }: ChatPanelProps) {
             </div>
             <div className="flex flex-wrap gap-1.5 justify-center max-w-[300px]">
               {[
-                "Find adventure cartoons",
-                "How many videos do we have?",
-                "Show me educational films",
+                "Find cartoons about animals",
+                "What percentage of the library is cartoons?",
+                "Show me educational films in black and white",
                 "What categories exist?",
               ].map((suggestion) => (
                 <button
