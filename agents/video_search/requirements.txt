@@ -1,0 +1,4 @@
+google-adk
+google-cloud-bigquery
+google-cloud-aiplatform[agent_engines]
+google-cloud-geminidataanalytics

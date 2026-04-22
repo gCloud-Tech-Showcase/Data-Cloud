@@ -229,6 +229,21 @@ variable "enable_video_search_ui" {
   default = false
 }
 
+variable "enable_agent_engine" {
+  description = <<-EOT
+    Deploy The Archivist agent to Vertex AI Agent Engine (Reasoning Engine).
+
+    Creates a standalone deployment of the video search agent that can be
+    registered with Gemini Enterprise. The embedded UI agent continues to
+    work independently — this is an additional deployment surface.
+
+    The agent is packaged from agents/video_search/ and deployed via
+    the google_vertex_ai_reasoning_engine Terraform resource.
+  EOT
+  type    = bool
+  default = false
+}
+
 variable "video_search_ui_image" {
   description = <<-EOT
     Container image for the Video Search UI Cloud Run service.

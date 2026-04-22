@@ -166,6 +166,23 @@ terraform apply -var="enable_video_search_ui=false"
 
 ---
 
+## Step 5c: Deploy Agent to Agent Engine (Optional)
+
+Deploy The Archivist agent to Vertex AI Agent Engine (Reasoning Engine) for use with Gemini Enterprise and external systems:
+
+```bash
+cd infra
+terraform apply -var="enable_agent_engine=true"
+```
+
+This creates a standalone deployment of the agent that is independently addressable via the Vertex AI API. The embedded UI agent continues to work — this is an additional deployment surface.
+
+Terraform outputs the `agent_engine_resource_name` for API access.
+
+> **Note:** This deploys the agent from `agents/video_search/` — a self-contained copy with its own BQ client. Updates to the agent require `terraform apply` to redeploy.
+
+---
+
 ## Step 6: Explore the UI
 
 - **The Archivist (AI Agent)** — Click the sparkles button (bottom-right) to open the chat panel. Ask questions like "Find adventure cartoons", "Only show color ones", "How many educational films do we have?" The agent controls the UI directly — search results, filters, and video player all update automatically

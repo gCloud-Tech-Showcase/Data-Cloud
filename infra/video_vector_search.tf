@@ -568,3 +568,145 @@ resource "google_cloud_run_v2_service" "video_search_ui" {
   ]
 }
 
+# =============================================================================
+# AGENT ENGINE (Optional)
+# Deploy The Archivist to Vertex AI Agent Engine (Reasoning Engine)
+# for use with Gemini Enterprise and external systems.
+#
+# Enable with: enable_agent_engine = true in terraform.tfvars
+# =============================================================================
+
+# GCS bucket for Agent Engine staging artifacts
+resource "google_storage_bucket" "agent_staging" {
+  count         = var.enable_agent_engine ? 1 : 0
+  name          = "${var.project_id}-agent-staging"
+  location      = var.region
+  force_destroy = true
+
+  uniform_bucket_level_access = true
+
+  labels = {
+    project = "data-cloud"
+    purpose = "agent-staging"
+    demo    = "video-vector-search"
+  }
+
+  depends_on = [google_project_service.storage]
+}
+
+# Service account for the deployed agent
+resource "google_service_account" "agent_engine" {
+  count        = var.enable_agent_engine ? 1 : 0
+  account_id   = "video-search-agent"
+  display_name = "The Archivist (Agent Engine)"
+
+  depends_on = [google_project_service.vertex_ai]
+}
+
+# Agent SA: run BQ queries
+resource "google_project_iam_member" "agent_bq_job_user" {
+  count   = var.enable_agent_engine ? 1 : 0
+  project = var.project_id
+  role    = "roles/bigquery.jobUser"
+  member  = "serviceAccount:${google_service_account.agent_engine[0].email}"
+}
+
+# Agent SA: read BQ data
+resource "google_project_iam_member" "agent_bq_data_viewer" {
+  count   = var.enable_agent_engine ? 1 : 0
+  project = var.project_id
+  role    = "roles/bigquery.dataViewer"
+  member  = "serviceAccount:${google_service_account.agent_engine[0].email}"
+}
+
+# Agent SA: delegate to BQ connection for AI.GENERATE_EMBEDDING
+# connectionAdmin is required (not connectionUser) because the agent
+# needs bigquery.connections.delegate for embedding generation.
+resource "google_project_iam_member" "agent_bq_connection" {
+  count   = var.enable_agent_engine ? 1 : 0
+  project = var.project_id
+  role    = "roles/bigquery.connectionAdmin"
+  member  = "serviceAccount:${google_service_account.agent_engine[0].email}"
+}
+
+# Agent SA: call Gemini via Vertex AI
+resource "google_project_iam_member" "agent_vertex_ai_user" {
+  count   = var.enable_agent_engine ? 1 : 0
+  project = var.project_id
+  role    = "roles/aiplatform.user"
+  member  = "serviceAccount:${google_service_account.agent_engine[0].email}"
+}
+
+# Agent SA: read from staging bucket
+resource "google_storage_bucket_iam_member" "agent_staging_reader" {
+  count  = var.enable_agent_engine ? 1 : 0
+  bucket = google_storage_bucket.agent_staging[0].name
+  role   = "roles/storage.objectViewer"
+  member = "serviceAccount:${google_service_account.agent_engine[0].email}"
+}
+
+# Package agent source code for deployment
+data "archive_file" "agent_source" {
+  count       = var.enable_agent_engine ? 1 : 0
+  type        = "zip"
+  source_dir  = "${path.module}/../agents/video_search"
+  output_path = "${path.module}/../agents/video_search.zip"
+}
+
+# Deploy agent to Agent Engine (Reasoning Engine)
+resource "google_vertex_ai_reasoning_engine" "the_archivist" {
+  count        = var.enable_agent_engine ? 1 : 0
+  display_name = "The Archivist"
+  description  = "Video Content Analyst — searches, filters, plays, and analyzes a video library through natural language conversation."
+  region       = var.region
+  project      = var.project_id
+
+  spec {
+    agent_framework = "google-adk"
+
+    source_code_spec {
+      inline_source {
+        source_archive = data.archive_file.agent_source[0].output_path
+      }
+
+      python_spec {
+        entrypoint_module = "agent"
+        entrypoint_object = "app"
+        version           = "3.12"
+        requirements_file = "requirements.txt"
+      }
+    }
+
+    deployment_spec {
+      min_instances = 1
+      max_instances = 2
+
+      env {
+        name  = "GOOGLE_CLOUD_PROJECT"
+        value = var.project_id
+      }
+      env {
+        name  = "GOOGLE_CLOUD_LOCATION"
+        value = var.region
+      }
+    }
+
+    service_account = google_service_account.agent_engine[0].email
+  }
+
+  labels = {
+    project = "data-cloud"
+    demo    = "video-vector-search"
+    agent   = "the-archivist"
+  }
+
+  depends_on = [
+    google_project_service.vertex_ai,
+    google_project_iam_member.agent_bq_job_user,
+    google_project_iam_member.agent_bq_data_viewer,
+    google_project_iam_member.agent_bq_connection,
+    google_project_iam_member.agent_vertex_ai_user,
+    google_storage_bucket_iam_member.agent_staging_reader,
+  ]
+}
+

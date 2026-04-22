@@ -27,6 +27,7 @@ Semantic video search using Gemini multimodal embeddings and BigQuery Vector Sea
 | Google ADK | Agent framework (The Archivist) |
 | Gemini 2.5 Flash (runtime) | Agent reasoning and tool use via Vertex AI |
 | Conversational Analytics API | Natural language queries on BQ data |
+| Vertex AI Agent Engine | Optional standalone agent deployment for Gemini Enterprise |
 | React + Vite + Tailwind + shadcn/ui | Frontend UI |
 | Python FastAPI | Backend API |
 

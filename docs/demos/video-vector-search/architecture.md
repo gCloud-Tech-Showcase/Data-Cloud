@@ -133,6 +133,8 @@ sequenceDiagram
 | `google_cloud_run_v2_service.video_search_ui` | Cloud Run UI deployment (optional, `enable_video_search_ui`) |
 | `google_service_account.video_search_ui` | SA for Cloud Run with BQ, GCS, and Vertex AI access |
 | `google_project_iam_member.ui_vertex_ai_user` | Cloud Run SA access to Gemini via Vertex AI |
+| `google_vertex_ai_reasoning_engine.the_archivist` | Agent Engine deployment (optional, `enable_agent_engine`) |
+| `google_service_account.agent_engine` | SA for Agent Engine with BQ and Vertex AI access |
 
 ---
 
