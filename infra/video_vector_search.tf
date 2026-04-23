@@ -511,6 +511,14 @@ resource "google_storage_bucket_iam_member" "ui_bucket_writer" {
   member = "serviceAccount:${google_service_account.video_search_ui[0].email}"
 }
 
+# Cloud Run SA: sign GCS URLs for media playback (signBlob API)
+resource "google_service_account_iam_member" "ui_self_token_creator" {
+  count              = var.enable_video_search_ui ? 1 : 0
+  service_account_id = google_service_account.video_search_ui[0].name
+  role               = "roles/iam.serviceAccountTokenCreator"
+  member             = "serviceAccount:${google_service_account.video_search_ui[0].email}"
+}
+
 resource "google_cloud_run_v2_service" "video_search_ui" {
   count    = var.enable_video_search_ui ? 1 : 0
   name     = "video-search-ui"
@@ -565,6 +573,7 @@ resource "google_cloud_run_v2_service" "video_search_ui" {
     google_project_iam_member.ui_vertex_ai_user,
     google_storage_bucket_iam_member.ui_bucket_reader,
     google_storage_bucket_iam_member.ui_bucket_writer,
+    google_service_account_iam_member.ui_self_token_creator,
   ]
 }
 
@@ -663,6 +672,34 @@ resource "google_vertex_ai_reasoning_engine" "the_archivist" {
 
   spec {
     agent_framework = "google-adk"
+    class_methods = jsonencode([
+      {
+        name     = "query"
+        api_mode = "async"
+        parameters = {
+          type       = "object"
+          required   = ["message"]
+          properties = {
+            message    = { type = "string", description = "The user's message" }
+            user_id    = { type = "string", description = "User identifier" }
+            session_id = { type = "string", description = "Session identifier" }
+          }
+        }
+      },
+      {
+        name     = "stream_query"
+        api_mode = "async"
+        parameters = {
+          type       = "object"
+          required   = ["message"]
+          properties = {
+            message    = { type = "string", description = "The user's message" }
+            user_id    = { type = "string", description = "User identifier" }
+            session_id = { type = "string", description = "Session identifier" }
+          }
+        }
+      },
+    ])
 
     source_code_spec {
       inline_source {

@@ -1,10 +1,10 @@
 """Videos API router — library listing, thumbnails, and playback."""
 
 from fastapi import APIRouter, HTTPException, Query
-from fastapi.responses import Response
+from fastapi.responses import RedirectResponse
 
 from services.bigquery import list_videos, find_similar, get_library_stats, get_video_details
-from services.storage import get_thumbnail_bytes, get_segment_bytes, get_raw_video_bytes
+from services.storage import get_thumbnail_signed_url, get_segment_signed_url, get_video_signed_url
 
 router = APIRouter()
 
@@ -41,34 +41,26 @@ def video_details(video_id: str):
 
 @router.get("/api/videos/{video_id}/thumbnail")
 def thumbnail(video_id: str):
-    """Serve video thumbnail image."""
-    data = get_thumbnail_bytes(video_id)
-    if not data:
+    """Redirect to signed GCS URL for video thumbnail."""
+    url = get_thumbnail_signed_url(video_id)
+    if not url:
         raise HTTPException(status_code=404, detail="Thumbnail not found")
-    return Response(content=data, media_type="image/jpeg")
+    return RedirectResponse(url=url, status_code=307)
 
 
 @router.get("/api/videos/{video_id}/segments/{segment_index}/play")
 def play_segment(video_id: str, segment_index: int):
-    """Stream video segment for playback."""
-    data = get_segment_bytes(video_id, segment_index)
-    if not data:
+    """Redirect to signed GCS URL for video segment playback."""
+    url = get_segment_signed_url(video_id, segment_index)
+    if not url:
         raise HTTPException(status_code=404, detail="Segment not found")
-    return Response(
-        content=data,
-        media_type="video/mp4",
-        headers={"Accept-Ranges": "bytes"},
-    )
+    return RedirectResponse(url=url, status_code=307)
 
 
 @router.get("/api/videos/{video_id}/play")
 def play_full(video_id: str):
-    """Stream full raw video for playback."""
-    data = get_raw_video_bytes(video_id)
-    if not data:
+    """Redirect to signed GCS URL for full video playback."""
+    url = get_video_signed_url(video_id)
+    if not url:
         raise HTTPException(status_code=404, detail="Video not found")
-    return Response(
-        content=data,
-        media_type="video/mp4",
-        headers={"Accept-Ranges": "bytes"},
-    )
+    return RedirectResponse(url=url, status_code=307)
