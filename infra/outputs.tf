@@ -116,11 +116,6 @@ output "video_search_ui_enabled" {
   value       = var.enable_video_search_ui
 }
 
-output "agent_engine_resource_name" {
-  description = "The Archivist Agent Engine resource name (if enabled)"
-  value       = var.enable_agent_engine ? google_vertex_ai_reasoning_engine.the_archivist[0].name : null
-}
-
 output "agent_engine_enabled" {
   description = "Whether The Archivist is deployed to Agent Engine"
   value       = var.enable_agent_engine

@@ -648,9 +648,9 @@ resource "google_storage_bucket_iam_member" "agent_staging_reader" {
 # Package agent source code for deployment
 data "archive_file" "agent_source" {
   count       = var.enable_agent_engine ? 1 : 0
-  type        = "zip"
+  type        = "tar.gz"
   source_dir  = "${path.module}/../agents/video_search"
-  output_path = "${path.module}/../agents/video_search.zip"
+  output_path = "${path.module}/../agents/video_search.tar.gz"
 }
 
 # Deploy agent to Agent Engine (Reasoning Engine)
@@ -666,7 +666,7 @@ resource "google_vertex_ai_reasoning_engine" "the_archivist" {
 
     source_code_spec {
       inline_source {
-        source_archive = data.archive_file.agent_source[0].output_path
+        source_archive = filebase64(data.archive_file.agent_source[0].output_path)
       }
 
       python_spec {
@@ -681,10 +681,7 @@ resource "google_vertex_ai_reasoning_engine" "the_archivist" {
       min_instances = 1
       max_instances = 2
 
-      env {
-        name  = "GOOGLE_CLOUD_PROJECT"
-        value = var.project_id
-      }
+      # GOOGLE_CLOUD_PROJECT is automatically set by Agent Engine (reserved)
       env {
         name  = "GOOGLE_CLOUD_LOCATION"
         value = var.region
