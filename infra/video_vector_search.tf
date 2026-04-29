@@ -600,6 +600,13 @@ resource "google_project_service" "telemetry" {
   disable_on_destroy = false
 }
 
+# Discovery Engine API — required for Gemini Enterprise integration
+resource "google_project_service" "discoveryengine" {
+  count              = var.enable_agent_engine ? 1 : 0
+  service            = "discoveryengine.googleapis.com"
+  disable_on_destroy = false
+}
+
 # GCS bucket for Agent Engine staging artifacts
 resource "google_storage_bucket" "agent_staging" {
   count         = var.enable_agent_engine ? 1 : 0
