@@ -1,3 +1,4 @@
-google-adk
+google-adk>=1.18.0
 google-cloud-bigquery
+google-cloud-aiplatform>=1.126.1
 google-cloud-geminidataanalytics

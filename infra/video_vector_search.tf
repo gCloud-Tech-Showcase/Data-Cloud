@@ -269,6 +269,7 @@ resource "google_cloudfunctions2_function" "segment_video" {
   event_trigger {
     trigger_region = var.region
     event_type     = "google.cloud.storage.object.v1.finalized"
+    retry_policy   = "RETRY_POLICY_DO_NOT_RETRY"
 
     event_filters {
       attribute = "bucket"
@@ -585,6 +586,20 @@ resource "google_cloud_run_v2_service" "video_search_ui" {
 # Enable with: enable_agent_engine = true in terraform.tfvars
 # =============================================================================
 
+# App Hub API — required for the Agent Engine dashboard in Cloud Console
+resource "google_project_service" "apphub" {
+  count              = var.enable_agent_engine ? 1 : 0
+  service            = "apphub.googleapis.com"
+  disable_on_destroy = false
+}
+
+# Telemetry API — required for Agent Engine tracing and observability dashboard
+resource "google_project_service" "telemetry" {
+  count              = var.enable_agent_engine ? 1 : 0
+  service            = "telemetry.googleapis.com"
+  disable_on_destroy = false
+}
+
 # GCS bucket for Agent Engine staging artifacts
 resource "google_storage_bucket" "agent_staging" {
   count         = var.enable_agent_engine ? 1 : 0
@@ -722,6 +737,19 @@ resource "google_vertex_ai_reasoning_engine" "the_archivist" {
       env {
         name  = "GOOGLE_CLOUD_LOCATION"
         value = var.region
+      }
+      # Tracing and observability (required for the Agent Engine dashboard)
+      env {
+        name  = "GOOGLE_CLOUD_AGENT_ENGINE_ENABLE_TELEMETRY"
+        value = "true"
+      }
+      env {
+        name  = "OTEL_SEMCONV_STABILITY_OPT_IN"
+        value = "gen_ai_latest_experimental"
+      }
+      env {
+        name  = "OTEL_INSTRUMENTATION_GENAI_CAPTURE_MESSAGE_CONTENT"
+        value = "EVENT_ONLY"
       }
     }
 
