@@ -183,6 +183,52 @@ Terraform outputs the `agent_engine_resource_name` for API access.
 
 ---
 
+## Step 5d: Register Agent in Gemini Enterprise (Optional)
+
+Register The Archivist into a new Gemini Enterprise (formerly Agentspace) app so it's reachable from the GE surface.
+
+> **Licenses required:**
+> - A **Gemini Enterprise license** assigned to your Google Workspace user account (managed in the Workspace Admin Console; per-user, not per-project — there's no API to consume it). Without a license you won't be able to open the GE app or chat with the agent.
+> - The user running `terraform apply` needs `roles/discoveryengine.admin` on the project to create the GE app.
+
+> **One-time machine setup:** The Discovery Engine API requires a quota project on your Application Default Credentials. Run this once on the machine you `terraform apply` from: `gcloud auth application-default set-quota-project <project-id>`. The repo's `providers.tf` also sets `user_project_override = true` so the google provider sends the required `X-Goog-User-Project` header on every API call.
+
+Apply:
+
+```bash
+cd infra
+terraform apply \
+  -var="enable_agent_engine=true" \
+  -var="enable_gemini_enterprise=true"
+```
+
+This creates a Discovery Engine **search engine** with `app_type = APP_TYPE_INTRANET` (the field that distinguishes a Gemini Enterprise / Agentspace app from a Vertex AI Search app), then registers the deployed Reasoning Engine as an ADK agent on the engine's auto-created `default_assistant` via the Discovery Engine v1alpha REST API.
+
+### Accessing the agent
+
+GE access in this demo is **preview-only** by design — the app isn't published to your org's GE landing page (no public surface, and the demo project isn't broadly licensed). Open the Cloud Console preview tab:
+
+```bash
+terraform output gemini_enterprise_preview_url
+```
+
+This opens a private chat surface where you can interact with The Archivist exactly as a GE end-user would. To make the agent discoverable in your tenant's GE landing for other licensed users, you'd additionally configure `sharingConfig.scope = "ALL_USERS"` on the agent — out of scope for this demo.
+
+### Test prompts
+
+Two prompts that exercise different tool paths and return verifiable output:
+
+- `What's in this video library? Give me a summary of what's available.` — calls `get_library_stats`, proves BQ access works from inside GE
+- `Find me adventure cartoons from the 1940s` — calls `search_videos` (vector search) with metadata filters
+
+Avoid prompts that ask the agent to "play" a video or "filter the UI" — those tools emit UI actions for the React frontend and produce no visible result inside the GE preview.
+
+> **Validation in progress:** GE deployment is provisioned and verified working at preview level for the recommended prompts above. Full validation that every agent tool behaves correctly through the GE surface — particularly analytical/Conversational Analytics prompts — is still in progress. If you hit unexpected behavior on a prompt, fall back to the Cloud Run UI for now.
+
+> **Note:** Agent registration uses `null_resource` with `local-exec` because the Discovery Engine v1alpha agent registration API is not yet covered by the Terraform provider. The destroy provisioner deregisters the agent on `terraform destroy`.
+
+---
+
 ## Step 6: Explore the UI
 
 - **The Archivist (AI Agent)** — Click the sparkles button (bottom-right) to open the chat panel. Ask questions like "Find adventure cartoons", "Only show color ones", "How many educational films do we have?" The agent controls the UI directly — search results, filters, and video player all update automatically

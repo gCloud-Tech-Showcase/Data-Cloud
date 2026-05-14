@@ -36,6 +36,11 @@ graph TB
         K -->|ADK Agent| M[Gemini 2.5 Flash<br/>The Archivist]
         M -->|Conversational Analytics| J
     end
+
+    subgraph "Gemini Enterprise (Optional)"
+        N[Agentspace Search Engine<br/>APP_TYPE_INTRANET] -->|Registered ADK Agent| O[Reasoning Engine<br/>The Archivist]
+        O -->|Tool calls| J
+    end
 ```
 
 ---
@@ -135,6 +140,10 @@ sequenceDiagram
 | `google_project_iam_member.ui_vertex_ai_user` | Cloud Run SA access to Gemini via Vertex AI |
 | `google_vertex_ai_reasoning_engine.the_archivist` | Agent Engine deployment (optional, `enable_agent_engine`) |
 | `google_service_account.agent_engine` | SA for Agent Engine with BQ and Vertex AI access |
+| `google_discovery_engine_search_engine.video_search` | Gemini Enterprise / Agentspace app — `app_type = APP_TYPE_INTRANET` (optional, `enable_gemini_enterprise`) |
+| `google_discovery_engine_data_store.video_search_stub` | Stub data store (NO_CONTENT) — schema requirement for the search engine, indexes nothing |
+| `null_resource.register_archivist_agent` | Creates `default_assistant` (if missing) and registers Reasoning Engine as ADK agent via Discovery Engine v1alpha REST API |
+| `google_project_iam_member.discoveryengine_sa_aiplatform_user` | Grants `roles/aiplatform.user` to the Discovery Engine service agent so GE can invoke the Reasoning Engine |
 
 ---
 

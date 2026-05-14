@@ -668,6 +668,26 @@ resource "google_project_iam_member" "agent_vertex_ai_user" {
   member  = "serviceAccount:${google_service_account.agent_engine[0].email}"
 }
 
+# Agent SA: write to Cloud Logging. Without this, the OpenTelemetry log
+# exporter inside the deployed agent fails with PermissionDenied on
+# logging.logEntries.create, hiding the real exceptions from query_metadata
+# and other tools.
+resource "google_project_iam_member" "agent_log_writer" {
+  count   = var.enable_agent_engine ? 1 : 0
+  project = var.project_id
+  role    = "roles/logging.logWriter"
+  member  = "serviceAccount:${google_service_account.agent_engine[0].email}"
+}
+
+# Agent SA: write spans to Cloud Trace. Required by the Agent Engine
+# OpenTelemetry exporter when telemetry is enabled (see env vars below).
+resource "google_project_iam_member" "agent_trace_agent" {
+  count   = var.enable_agent_engine ? 1 : 0
+  project = var.project_id
+  role    = "roles/cloudtrace.agent"
+  member  = "serviceAccount:${google_service_account.agent_engine[0].email}"
+}
+
 # Agent SA: read from staging bucket
 resource "google_storage_bucket_iam_member" "agent_staging_reader" {
   count  = var.enable_agent_engine ? 1 : 0
@@ -775,7 +795,184 @@ resource "google_vertex_ai_reasoning_engine" "the_archivist" {
     google_project_iam_member.agent_bq_data_viewer,
     google_project_iam_member.agent_bq_connection,
     google_project_iam_member.agent_vertex_ai_user,
+    google_project_iam_member.agent_log_writer,
     google_storage_bucket_iam_member.agent_staging_reader,
+  ]
+}
+
+# =============================================================================
+# GEMINI ENTERPRISE (Optional)
+# Register The Archivist into a new Gemini Enterprise (formerly Agentspace)
+# app so it's reachable from the GE surface. Requires enable_agent_engine.
+#
+# Enable with: enable_gemini_enterprise = true (and enable_agent_engine = true)
+# =============================================================================
+
+# Force-create the Discovery Engine service agent so we can grant it IAM below.
+# Without this, the service-{project_number}@gcp-sa-discoveryengine SA may not
+# exist on a fresh project until the first Discovery Engine resource is created.
+resource "google_project_service_identity" "discoveryengine" {
+  count    = var.enable_agent_engine && var.enable_gemini_enterprise ? 1 : 0
+  provider = google-beta
+  project  = var.project_id
+  service  = "discoveryengine.googleapis.com"
+
+  depends_on = [google_project_service.discoveryengine]
+}
+
+# Wait briefly after API enablement before creating the search engine,
+# to avoid SERVICE_DISABLED on first-time apply.
+resource "time_sleep" "discoveryengine_propagation" {
+  count           = var.enable_agent_engine && var.enable_gemini_enterprise ? 1 : 0
+  create_duration = "30s"
+
+  depends_on = [google_project_service.discoveryengine]
+}
+
+# Allow the Discovery Engine service agent to invoke the Reasoning Engine.
+# This is what lets the GE app call into The Archivist at query time.
+resource "google_project_iam_member" "discoveryengine_sa_aiplatform_user" {
+  count   = var.enable_agent_engine && var.enable_gemini_enterprise ? 1 : 0
+  project = var.project_id
+  role    = "roles/aiplatform.user"
+  member  = "serviceAccount:service-${data.google_project.current.number}@gcp-sa-discoveryengine.iam.gserviceaccount.com"
+
+  depends_on = [google_project_service_identity.discoveryengine]
+}
+
+# Stub data store for the Agentspace app. A GE search engine schema requires
+# at least one data store association even when the user-facing experience is
+# driven entirely by a registered agent. NO_CONTENT means nothing is indexed.
+resource "google_discovery_engine_data_store" "video_search_stub" {
+  count                       = var.enable_agent_engine && var.enable_gemini_enterprise ? 1 : 0
+  data_store_id               = "video-search-stub-store-search"
+  location                    = "global"
+  display_name                = "Video Search (stub data store)"
+  industry_vertical           = "GENERIC"
+  content_config              = "NO_CONTENT"
+  solution_types              = ["SOLUTION_TYPE_SEARCH"]
+  create_advanced_site_search = false
+
+  depends_on = [
+    google_project_service.discoveryengine,
+    time_sleep.discoveryengine_propagation,
+  ]
+}
+
+# The Gemini Enterprise / Agentspace app.
+# app_type = APP_TYPE_INTRANET is what makes this surface as an Agentspace
+# app (with the agent gallery) rather than a generic Vertex AI Search app.
+resource "google_discovery_engine_search_engine" "video_search" {
+  count             = var.enable_agent_engine && var.enable_gemini_enterprise ? 1 : 0
+  engine_id         = "video-search-engine"
+  collection_id     = "default_collection"
+  location          = "global"
+  display_name      = "Video Library Intelligence (Archivist)"
+  industry_vertical = "GENERIC"
+  app_type          = "APP_TYPE_INTRANET"
+  data_store_ids    = [google_discovery_engine_data_store.video_search_stub[0].data_store_id]
+
+  common_config {
+    company_name = "Video Library Intelligence (Archivist)"
+  }
+
+  search_engine_config {
+    search_tier = "SEARCH_TIER_ENTERPRISE"
+  }
+
+  depends_on = [
+    google_project_service.discoveryengine,
+    time_sleep.discoveryengine_propagation,
+  ]
+}
+
+# Register the deployed Reasoning Engine as an agent inside the GE app.
+# Discovery Engine v1alpha agent registration is not yet covered by the
+# Terraform provider, so we call the REST API via local-exec.
+resource "null_resource" "register_archivist_agent" {
+  count = var.enable_agent_engine && var.enable_gemini_enterprise ? 1 : 0
+
+  triggers = {
+    chat_engine_name    = google_discovery_engine_search_engine.video_search[0].name
+    reasoning_engine    = "projects/${var.project_id}/locations/${var.region}/reasoningEngines/${google_vertex_ai_reasoning_engine.the_archivist[0].name}"
+    agent_resource_path = "${google_discovery_engine_search_engine.video_search[0].name}/assistants/default_assistant/agents/the-archivist"
+    project_id          = var.project_id
+  }
+
+  # Create / update: ensure the default_assistant exists, then register
+  # The Archivist as an ADK agent on it. Both calls tolerate 409 (already
+  # exists) for idempotency on re-apply.
+  provisioner "local-exec" {
+    command = <<-EOT
+      set -e
+      TOKEN=$(gcloud auth application-default print-access-token)
+
+      echo "Ensuring default_assistant exists..."
+      GET_CODE=$(curl -sS -o /tmp/ge_assistant.json -w "%%{http_code}" \
+        "https://discoveryengine.googleapis.com/v1alpha/${self.triggers.chat_engine_name}/assistants/default_assistant" \
+        -H "Authorization: Bearer $TOKEN" \
+        -H "X-Goog-User-Project: ${self.triggers.project_id}")
+      if [ "$GET_CODE" = "200" ]; then
+        echo "default_assistant already exists"
+      elif [ "$GET_CODE" = "404" ]; then
+        echo "Creating default_assistant..."
+        POST_CODE=$(curl -sS -o /tmp/ge_assistant.json -w "%%{http_code}" -X POST \
+          "https://discoveryengine.googleapis.com/v1alpha/${self.triggers.chat_engine_name}/assistants?assistantId=default_assistant" \
+          -H "Authorization: Bearer $TOKEN" \
+          -H "Content-Type: application/json" \
+          -H "X-Goog-User-Project: ${self.triggers.project_id}" \
+          -d '{"displayName": "Video Library Intelligence"}')
+        cat /tmp/ge_assistant.json
+        if [ "$POST_CODE" != "200" ]; then
+          echo "Assistant creation failed (HTTP $POST_CODE)"
+          exit 1
+        fi
+      else
+        cat /tmp/ge_assistant.json
+        echo "Unexpected status checking assistant (HTTP $GET_CODE)"
+        exit 1
+      fi
+
+      echo "Registering The Archivist agent..."
+      AGENT_CODE=$(curl -sS -o /tmp/ge_register.json -w "%%{http_code}" -X POST \
+        "https://discoveryengine.googleapis.com/v1alpha/${self.triggers.chat_engine_name}/assistants/default_assistant/agents?agentId=the-archivist" \
+        -H "Authorization: Bearer $TOKEN" \
+        -H "Content-Type: application/json" \
+        -H "X-Goog-User-Project: ${self.triggers.project_id}" \
+        -d '{
+          "displayName": "The Archivist",
+          "description": "Video Content Analyst — searches, filters, plays, and analyzes a video library through natural language conversation.",
+          "adkAgentDefinition": {
+            "provisionedReasoningEngine": {
+              "reasoningEngine": "${self.triggers.reasoning_engine}"
+            }
+          }
+        }')
+      cat /tmp/ge_register.json
+      if [ "$AGENT_CODE" = "200" ] || [ "$AGENT_CODE" = "409" ]; then
+        echo "Registration OK (HTTP $AGENT_CODE)"
+      else
+        echo "Registration failed (HTTP $AGENT_CODE)"
+        exit 1
+      fi
+    EOT
+  }
+
+  # Destroy: deregister the agent. Tolerates 404 in case it was deleted manually.
+  provisioner "local-exec" {
+    when    = destroy
+    command = <<-EOT
+      curl -sS -X DELETE \
+        "https://discoveryengine.googleapis.com/v1alpha/${self.triggers.agent_resource_path}" \
+        -H "Authorization: Bearer $(gcloud auth application-default print-access-token)" \
+        -H "X-Goog-User-Project: ${self.triggers.project_id}" || true
+    EOT
+  }
+
+  depends_on = [
+    google_discovery_engine_search_engine.video_search,
+    google_vertex_ai_reasoning_engine.the_archivist,
+    google_project_iam_member.discoveryengine_sa_aiplatform_user,
   ]
 }
 

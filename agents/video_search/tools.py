@@ -510,9 +510,14 @@ def query_metadata(query: str, tool_context: ToolContext) -> dict:
                 "is not installed. Use get_library_stats for basic questions."
             ),
         }
-    except Exception:
+    except Exception as exc:
         logger.exception("Conversational Analytics query failed")
+        details = getattr(exc, "details", None)
+        detail_str = details() if callable(details) else (details or "")
         return {
             "status": "error",
             "message": "Conversational Analytics query failed. Try get_library_stats instead.",
+            "exception_type": type(exc).__name__,
+            "exception_message": str(exc),
+            "exception_details": str(detail_str),
         }

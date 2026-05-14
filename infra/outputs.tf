@@ -121,6 +121,26 @@ output "agent_engine_enabled" {
   value       = var.enable_agent_engine
 }
 
+output "agent_engine_resource_name" {
+  description = "Full resource name of The Archivist Reasoning Engine (if deployed)"
+  value       = var.enable_agent_engine ? "projects/${var.project_id}/locations/${var.region}/reasoningEngines/${google_vertex_ai_reasoning_engine.the_archivist[0].name}" : null
+}
+
+output "gemini_enterprise_enabled" {
+  description = "Whether The Archivist is registered in a Gemini Enterprise app"
+  value       = var.enable_agent_engine && var.enable_gemini_enterprise
+}
+
+output "gemini_enterprise_console_url" {
+  description = "Cloud Console URL for the Gemini Enterprise app (admin/configuration surface)"
+  value       = var.enable_agent_engine && var.enable_gemini_enterprise ? "https://console.cloud.google.com/gen-app-builder/engines/${google_discovery_engine_search_engine.video_search[0].engine_id}/data?project=${var.project_id}" : null
+}
+
+output "gemini_enterprise_preview_url" {
+  description = "Cloud Console preview tab — chat with The Archivist via the GE surface (private, requires GE license)"
+  value       = var.enable_agent_engine && var.enable_gemini_enterprise ? "https://console.cloud.google.com/gen-app-builder/engines/${google_discovery_engine_search_engine.video_search[0].engine_id}/preview?project=${var.project_id}" : null
+}
+
 # -----------------------------------------------------------------------------
 # Campaign Intelligence
 # -----------------------------------------------------------------------------

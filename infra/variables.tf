@@ -244,6 +244,25 @@ variable "enable_agent_engine" {
   default = false
 }
 
+variable "enable_gemini_enterprise" {
+  description = <<-EOT
+    Register The Archivist into a new Gemini Enterprise (formerly Agentspace) app.
+
+    Requires enable_agent_engine = true. When both flags are on, Terraform
+    creates a Discovery Engine search engine with app_type = APP_TYPE_INTRANET
+    (the field that surfaces the engine as a Gemini Enterprise / Agentspace
+    app rather than a Vertex AI Search app) and registers the deployed
+    Reasoning Engine as an ADK agent on its default_assistant, making The
+    Archivist reachable from the Gemini Enterprise surface.
+
+    The terraform runner needs roles/discoveryengine.admin to create the app.
+    Leave disabled if you don't have a Gemini Enterprise license — the agent
+    remains usable via Agent Engine and the embedded UI regardless.
+  EOT
+  type    = bool
+  default = false
+}
+
 variable "video_search_ui_image" {
   description = <<-EOT
     Container image for the Video Search UI Cloud Run service.
