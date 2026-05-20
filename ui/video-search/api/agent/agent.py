@@ -5,6 +5,9 @@ One agent with two categories of tools:
 - Data tools: library stats, Conversational Analytics (work in portal + Gemini Enterprise)
 """
 
+import json
+import logging
+
 from google.adk.agents import Agent
 
 from agent.tools import (
@@ -18,6 +21,42 @@ from agent.tools import (
     get_library_stats,
     query_metadata,
 )
+
+# Tool-call observability: emits TOOL_CALL_BEGIN / TOOL_CALL_END /
+# TOOL_CALL_ERROR lines for every tool invocation. Useful for local
+# debugging and routes through the host's stderr capture in Cloud Run
+# and Reasoning Engine, where it lands in Cloud Logging.
+_log = logging.getLogger("the_archivist.tools")
+_log.setLevel(logging.INFO)
+
+
+def _truncate(obj, limit: int = 2000) -> str:
+    try:
+        s = json.dumps(obj, default=str)
+    except Exception:
+        s = str(obj)
+    return s if len(s) <= limit else s[:limit] + f"...<truncated {len(s) - limit} chars>"
+
+
+def _log_tool_begin(tool, args, tool_context):
+    _log.info("TOOL_CALL_BEGIN tool=%s args=%s", tool.name, _truncate(args))
+    return None
+
+
+def _log_tool_end(tool, args, tool_context, tool_response):
+    _log.info("TOOL_CALL_END tool=%s response=%s", tool.name, _truncate(tool_response))
+    return None
+
+
+def _log_tool_error(tool, args, tool_context, error):
+    _log.error(
+        "TOOL_CALL_ERROR tool=%s exc=%s msg=%s args=%s",
+        tool.name,
+        type(error).__name__,
+        str(error),
+        _truncate(args),
+    )
+    return None
 
 INSTRUCTION = """\
 You are The Archivist — an expert curator for a library of public domain videos.
@@ -94,4 +133,7 @@ root_agent = Agent(
         get_library_stats,
         query_metadata,
     ],
+    before_tool_callback=_log_tool_begin,
+    after_tool_callback=_log_tool_end,
+    on_tool_error_callback=_log_tool_error,
 )

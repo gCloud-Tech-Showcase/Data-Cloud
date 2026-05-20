@@ -216,14 +216,13 @@ This opens a private chat surface where you can interact with The Archivist exac
 
 ### Test prompts
 
-Two prompts that exercise different tool paths and return verifiable output:
+Three prompts that exercise different tool paths and return verifiable output:
 
 - `What's in this video library? Give me a summary of what's available.` — calls `get_library_stats`, proves BQ access works from inside GE
 - `Find me adventure cartoons from the 1940s` — calls `search_videos` (vector search) with metadata filters
+- `What percentage of cartoons are in color?` — calls `query_metadata`, which routes to the Conversational Analytics `chat()` API with the gold table as an inline data source; returns a natural-language answer plus the generated SQL
 
 Avoid prompts that ask the agent to "play" a video or "filter the UI" — those tools emit UI actions for the React frontend and produce no visible result inside the GE preview.
-
-> **Validation in progress:** GE deployment is provisioned and verified working at preview level for the recommended prompts above. Full validation that every agent tool behaves correctly through the GE surface — particularly analytical/Conversational Analytics prompts — is still in progress. If you hit unexpected behavior on a prompt, fall back to the Cloud Run UI for now.
 
 > **Note:** Agent registration uses `null_resource` with `local-exec` because the Discovery Engine v1alpha agent registration API is not yet covered by the Terraform provider. The destroy provisioner deregisters the agent on `terraform destroy`.
 

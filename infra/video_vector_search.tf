@@ -688,6 +688,18 @@ resource "google_project_iam_member" "agent_trace_agent" {
   member  = "serviceAccount:${google_service_account.agent_engine[0].email}"
 }
 
+# Agent SA: call Conversational Analytics chat() for the query_metadata tool.
+# This role grants geminidataanalytics.locations.chat which the stateless
+# chat() endpoint requires. Without it, query_metadata returns 403
+# "User does not have permission to chat" when invoked through Agent Engine.
+# Locally the developer has the same capability via owner role.
+resource "google_project_iam_member" "agent_geminidataanalytics_stateless_chat" {
+  count   = var.enable_agent_engine ? 1 : 0
+  project = var.project_id
+  role    = "roles/geminidataanalytics.dataAgentStatelessUser"
+  member  = "serviceAccount:${google_service_account.agent_engine[0].email}"
+}
+
 # Agent SA: read from staging bucket
 resource "google_storage_bucket_iam_member" "agent_staging_reader" {
   count  = var.enable_agent_engine ? 1 : 0

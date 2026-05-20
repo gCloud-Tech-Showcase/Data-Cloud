@@ -428,6 +428,21 @@ def get_library_stats(tool_context: ToolContext) -> dict:
         except Exception:
             pass
 
+    # Content warnings breakdown — content_warnings is an ARRAY, so it doesn't
+    # fit the simple field loop above. Mirrors ui/.../services/bigquery.py.
+    try:
+        warnings_sql = f"""
+        SELECT
+          CASE WHEN ARRAY_LENGTH(content_warnings) > 0 THEN 'has warnings' ELSE 'no warnings' END AS value,
+          COUNT(DISTINCT video_id) AS count
+        FROM `{gold_table}` GROUP BY value ORDER BY count DESC
+        """
+        items = [f"  {r.value}: {r.count} videos" for r in client.query(warnings_sql).result()]
+        if items:
+            breakdowns["Content Warnings"] = "\n".join(items)
+    except Exception:
+        pass
+
     total_hours = round(int(row.total_duration_seconds / 60) / 60, 1) if row.total_duration_seconds else 0
 
     return {
@@ -473,33 +488,55 @@ def query_metadata(query: str, tool_context: ToolContext) -> dict:
             table_id="gold_searchable_videos",
         )
 
-        request = ca.QueryDataRequest(
+        # Use chat() with inline_context (stateless) instead of query_data —
+        # query_data does not support BigQuery (only AlloyDB / Spanner / Cloud SQL).
+        # chat() supports BigQuery and runs stateless when inline_context is set.
+        request = ca.ChatRequest(
             parent=f"projects/{project_id}/locations/{location}",
-            prompt=query,
-            context=ca.QueryDataContext(
+            inline_context=ca.Context(
                 datasource_references=ca.DatasourceReferences(
                     bq=ca.BigQueryTableReferences(
                         table_references=[table_ref],
                     )
-                )
+                ),
             ),
-            generation_options=ca.GenerationOptions(
-                generate_query_result=True,
-                generate_natural_language_answer=True,
-            ),
+            messages=[
+                ca.Message(user_message=ca.UserMessage(text=query)),
+            ],
         )
 
-        response = client.query_data(request=request)
+        # chat() streams a sequence of system messages. Per the proto
+        # definition (geminidataanalytics_v1alpha types data_chat_service.py),
+        # only TextMessage with text_type == FINAL_RESPONSE is the user-facing
+        # answer; THOUGHT is the model's internal reasoning and PROGRESS is
+        # informational (e.g. tool-invocation notices). We collect only
+        # FINAL_RESPONSE text + the generated SQL.
+        FINAL = ca.TextMessage.TextType.FINAL_RESPONSE
+        answer_parts: list[str] = []
+        sql: str | None = None
+        error_text: str | None = None
+        for msg in client.chat(request=request):
+            sm = msg.system_message
+            if sm.text and sm.text.parts and sm.text.text_type == FINAL:
+                answer_parts.extend(sm.text.parts)
+            if sm.data and sm.data.generated_sql:
+                sql = sm.data.generated_sql
+            if sm.error and sm.error.text:
+                error_text = sm.error.text
 
-        if response.natural_language_answer:
-            result = {"status": "success", "answer": response.natural_language_answer}
-            if response.generated_query:
-                result["sql"] = response.generated_query
+        answer = "\n".join(p for p in answer_parts if p).strip()
+        if answer:
+            result = {"status": "success", "answer": answer}
+            if sql:
+                result["sql"] = sql
             return result
 
         return {
             "status": "error",
-            "message": "The Conversational Analytics API returned no answer. Try rephrasing.",
+            "message": (
+                error_text
+                or "Conversational Analytics returned no answer. Try rephrasing."
+            ),
         }
 
     except ImportError:

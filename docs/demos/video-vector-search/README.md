@@ -40,7 +40,7 @@ Semantic video search using Gemini multimodal embeddings and BigQuery Vector Sea
 - **Event-driven pipeline** — upload a video, it's automatically segmented
 - **Full web UI** — search, filter, play, create collections, highlight reels
 - **Conversational AI agent** — natural language control of the UI + analytical queries
-- **Three deployment surfaces for the agent** — embedded in the React UI, Vertex AI Agent Engine (standalone API), and Gemini Enterprise (Agentspace app, preview-only by default — full agent-feature validation through the GE surface is in progress)
+- **Three deployment surfaces for the agent** — embedded in the React UI, Vertex AI Agent Engine (standalone API), and Gemini Enterprise (Agentspace app, preview-only by default; all 9 agent tools verified working through GE)
 
 ## Guides
 
