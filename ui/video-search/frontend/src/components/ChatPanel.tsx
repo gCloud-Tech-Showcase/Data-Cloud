@@ -31,10 +31,12 @@ export function ChatPanel({ onAction }: ChatPanelProps) {
     setInput("");
   }, []);
 
-  // Focus input when panel opens
+  // Focus input when panel opens; also prefetch the chart bundle so the
+  // first chart doesn't wait on a code-split chunk download.
   useEffect(() => {
     if (isOpen) {
       requestAnimationFrame(() => inputRef.current?.focus());
+      void import("@/components/VegaChart");
     }
   }, [isOpen]);
 
@@ -60,6 +62,7 @@ export function ChatPanel({ onAction }: ChatPanelProps) {
             role: "agent",
             text: response.text,
             actions: response.actions,
+            chart: response.chart ?? undefined,
           },
         ]);
         for (const action of response.actions) {

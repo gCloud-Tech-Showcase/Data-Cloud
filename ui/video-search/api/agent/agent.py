@@ -7,6 +7,7 @@ One agent with two categories of tools:
 
 import json
 import logging
+import sys
 
 from google.adk.agents import Agent
 
@@ -23,11 +24,18 @@ from agent.tools import (
 )
 
 # Tool-call observability: emits TOOL_CALL_BEGIN / TOOL_CALL_END /
-# TOOL_CALL_ERROR lines for every tool invocation. Useful for local
-# debugging and routes through the host's stderr capture in Cloud Run
-# and Reasoning Engine, where it lands in Cloud Logging.
+# TOOL_CALL_ERROR lines for every tool invocation. Lands on stderr,
+# which Cloud Run and Reasoning Engine forward to Cloud Logging.
+# Uses a dedicated handler so we don't depend on whatever the host
+# happened to configure on the root logger.
 _log = logging.getLogger("the_archivist.tools")
 _log.setLevel(logging.INFO)
+if not _log.handlers:
+    _h = logging.StreamHandler(sys.stderr)
+    _h.setLevel(logging.INFO)
+    _h.setFormatter(logging.Formatter("%(levelname)s:%(name)s:%(message)s"))
+    _log.addHandler(_h)
+    _log.propagate = False  # avoid double-logging if root also has a handler
 
 
 def _truncate(obj, limit: int = 2000) -> str:

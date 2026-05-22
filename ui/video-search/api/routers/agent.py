@@ -39,6 +39,7 @@ class ChatRequest(BaseModel):
 class ChatResponse(BaseModel):
     text: str
     actions: list[dict]
+    chart: dict | None = None
     session_id: str
 
 
@@ -96,7 +97,7 @@ async def agent_chat(request: ChatRequest) -> ChatResponse:
             user_id=USER_ID,
             session_id=session_id,
             new_message=user_message,
-            state_delta={"actions": []},
+            state_delta={"actions": [], "chart": None},
         ):
             if event.is_final_response() and event.content and event.content.parts:
                 for part in event.content.parts:
@@ -110,16 +111,18 @@ async def agent_chat(request: ChatRequest) -> ChatResponse:
             session_id=session_id,
         )
 
-    # Read actions accumulated by tools during this invocation
+    # Read actions + chart accumulated by tools during this invocation
     updated_session = await _session_service.get_session(
         app_name=APP_NAME,
         user_id=USER_ID,
         session_id=session_id,
     )
     actions = list(updated_session.state.get("actions", []))
+    chart = updated_session.state.get("chart")
 
     return ChatResponse(
         text=final_text or "I wasn't able to generate a response. Please try again.",
         actions=actions,
+        chart=chart,
         session_id=session_id,
     )

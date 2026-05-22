@@ -144,6 +144,7 @@ export type AgentAction =
 export interface AgentChatResponse {
   text: string;
   actions: AgentAction[];
+  chart?: Record<string, unknown> | null;
   session_id: string;
 }
 
@@ -152,4 +153,5 @@ export interface ChatMessage {
   role: "user" | "agent";
   text: string;
   actions?: AgentAction[];
+  chart?: Record<string, unknown>;
 }

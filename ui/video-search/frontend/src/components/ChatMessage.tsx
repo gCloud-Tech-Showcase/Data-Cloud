@@ -1,6 +1,9 @@
+import { lazy, Suspense } from "react";
 import { type LucideIcon, Search, Filter, Play, Info, Layers, RotateCcw } from "lucide-react";
 import { AgentAvatar } from "@/components/AgentAvatar";
 import type { ChatMessage as ChatMessageType, AgentAction } from "@/types";
+
+const VegaChart = lazy(() => import("@/components/VegaChart"));
 
 interface ChatMessageProps {
   message: ChatMessageType;
@@ -55,12 +58,19 @@ export function ChatMessage({ message }: ChatMessageProps) {
   return (
     <div className="flex items-start gap-2.5">
       <AgentAvatar />
-      <div className="space-y-1.5 max-w-[85%]">
+      <div className="space-y-1.5 max-w-[85%] min-w-0 flex-1">
         <div className="bg-muted rounded-lg rounded-tl-sm px-3.5 py-2.5">
           <p className="text-sm text-foreground whitespace-pre-wrap">
             {message.text}
           </p>
         </div>
+        {message.chart && (
+          <Suspense
+            fallback={<div className="h-48 animate-pulse bg-muted rounded" />}
+          >
+            <VegaChart spec={message.chart} />
+          </Suspense>
+        )}
         {message.actions && message.actions.length > 0 && (
           <div className="flex flex-wrap gap-1">
             {message.actions.map((action, i) => (

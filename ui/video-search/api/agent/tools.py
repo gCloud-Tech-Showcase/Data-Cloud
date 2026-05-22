@@ -317,6 +317,17 @@ def query_metadata(query: str, tool_context: ToolContext) -> dict:
         # Use chat() with inline_context (stateless) instead of query_data —
         # query_data does not support BigQuery (only AlloyDB / Spanner / Cloud SQL).
         # chat() supports BigQuery and runs stateless when inline_context is set.
+        #
+        # Append a chart hint so CA considers emitting a visualization. The
+        # Archivist's outer LLM tends to strip presentation language ("as a
+        # pie chart") from the query before calling this tool, so adding it
+        # here guarantees CA sees an imperative chart cue. CA still has
+        # discretion to skip the chart when the result isn't chartable
+        # (e.g. a single number).
+        ca_query = (
+            f"{query}\n\n"
+            "If this question is suitable for visualization, also create a chart."
+        )
         request = ca.ChatRequest(
             parent=f"projects/{project_id}/locations/{location}",
             inline_context=ca.Context(
@@ -327,7 +338,7 @@ def query_metadata(query: str, tool_context: ToolContext) -> dict:
                 ),
             ),
             messages=[
-                ca.Message(user_message=ca.UserMessage(text=query)),
+                ca.Message(user_message=ca.UserMessage(text=ca_query)),
             ],
         )
 
@@ -336,25 +347,45 @@ def query_metadata(query: str, tool_context: ToolContext) -> dict:
         # only TextMessage with text_type == FINAL_RESPONSE is the user-facing
         # answer; THOUGHT is the model's internal reasoning and PROGRESS is
         # informational (e.g. tool-invocation notices). We collect only
-        # FINAL_RESPONSE text + the generated SQL.
+        # FINAL_RESPONSE text + the generated SQL + the optional chart spec.
+        # Keep this branch in sync with agents/video_search/tools.py.
         FINAL = ca.TextMessage.TextType.FINAL_RESPONSE
         answer_parts: list[str] = []
         sql: str | None = None
         error_text: str | None = None
+        chart_spec: dict | None = None
         for msg in client.chat(request=request):
             sm = msg.system_message
             if sm.text and sm.text.parts and sm.text.text_type == FINAL:
                 answer_parts.extend(sm.text.parts)
             if sm.data and sm.data.generated_sql:
                 sql = sm.data.generated_sql
+            # Chart: only ChartMessage.result.vega_config is renderable
+            # (ChartMessage.query is the planning intent, not a final spec).
+            chart_msg = getattr(sm, "chart", None)
+            if chart_msg and chart_msg.result and chart_msg.result.vega_config:
+                # vega_config is a google.protobuf.Struct wrapped as a
+                # proto-plus MapComposite (no .to_dict on the field itself).
+                # Converting the parent ChartResult recursively yields a plain
+                # dict where vega_config is already a JSON-serializable dict.
+                result_dict = type(chart_msg.result).to_dict(chart_msg.result)
+                chart_spec = result_dict.get("vega_config") or chart_spec
             if sm.error and sm.error.text:
                 error_text = sm.error.text
 
         answer = "\n".join(p for p in answer_parts if p).strip()
+        if chart_spec:
+            # Surface the chart through session state so the agent router
+            # can include it on ChatResponse for the frontend to render.
+            # Parallel pattern to tool_context.state["actions"].
+            tool_context.state["chart"] = chart_spec
+
         if answer:
             result = {"status": "success", "answer": answer}
             if sql:
                 result["sql"] = sql
+            if chart_spec:
+                result["chart_rendered"] = True
             return result
 
         return {
