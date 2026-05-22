@@ -504,6 +504,17 @@ resource "google_project_iam_member" "ui_vertex_ai_user" {
   member  = "serviceAccount:${google_service_account.video_search_ui[0].email}"
 }
 
+# Cloud Run SA: call Conversational Analytics chat() for the query_metadata
+# tool. Grants geminidataanalytics.locations.chat. Mirrors the same grant
+# made to the Reasoning Engine SA (agent_geminidataanalytics_stateless_chat)
+# — both surfaces run the same query_metadata code path.
+resource "google_project_iam_member" "ui_geminidataanalytics_stateless_chat" {
+  count   = var.enable_video_search_ui ? 1 : 0
+  project = var.project_id
+  role    = "roles/geminidataanalytics.dataAgentStatelessUser"
+  member  = "serviceAccount:${google_service_account.video_search_ui[0].email}"
+}
+
 # Cloud Run SA: write to GCS for video ingestion (Add Videos feature)
 resource "google_storage_bucket_iam_member" "ui_bucket_writer" {
   count  = var.enable_video_search_ui ? 1 : 0
