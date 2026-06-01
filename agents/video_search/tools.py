@@ -558,8 +558,11 @@ def query_metadata(query: str, tool_context: ToolContext) -> dict:
             result = {"status": "success", "answer": answer}
             if sql:
                 result["sql"] = sql
-            if chart_spec:
-                result["chart_rendered"] = True
+            # Chart spec deliberately not surfaced on the result dict — it
+            # flows separately via tool_context.state["chart"] for the React
+            # UI to render. Telling the LLM "a chart was rendered" causes it
+            # to hallucinate chart references in environments (like GE) where
+            # no chart actually appears.
             return result
 
         return {
