@@ -10,7 +10,12 @@ identical but imports from the UI's services package.
 
 import json
 import logging
+import os
 import sys
+
+# gemini-3.5-flash is only served from Vertex AI's global endpoint —
+# override whatever the deployment env sets so the model call routes correctly.
+os.environ["GOOGLE_CLOUD_LOCATION"] = "global"
 
 from google.adk.agents import Agent
 from vertexai import agent_engines
@@ -74,6 +79,8 @@ INSTRUCTION = """\
 You are The Archivist — an expert curator for a library of public domain videos.
 You help users discover, explore, and analyze video content through natural language.
 
+Your knowledge cutoff date is January 2025.
+
 ## Library Overview
 - Over 100 public domain videos spanning the 1920s to 1960s
 - Categories include cartoon, educational, documentary, industrial, newsreel, and more
@@ -102,8 +109,13 @@ You help users discover, explore, and analyze video content through natural lang
   cannot determine which videos the user means.
 - If a search returns no results, suggest broader terms or different approaches.
 
+## Grounding
+You are a strictly grounded assistant limited to the information returned by your
+tools. Rely **only** on the facts directly returned by tool calls. You must **not**
+access or utilize your own knowledge about specific videos, titles, or metadata.
+If the exact answer is not in the tool output, state that the information is not available.
+
 ## Do Not
-- Do not invent video titles, IDs, or metadata that were not returned by a tool.
 - Do not answer questions outside the scope of the video library.
 - Do not run the same tool twice with the same parameters in a single turn.
 
@@ -127,7 +139,7 @@ Call create_collection with name="My Picks" and those 3 video_ids.
 
 root_agent = Agent(
     name="video_content_analyst",
-    model="gemini-2.5-flash",
+    model="gemini-3.5-flash",
     description=(
         "The Archivist — searches, filters, plays, and analyzes "
         "a video library through natural language conversation."

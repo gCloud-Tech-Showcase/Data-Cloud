@@ -18,7 +18,7 @@ distro==1.9.0
 docstring_parser==0.18.0
 fastapi==0.136.0
 frozenlist==1.8.0
-google-adk==1.31.1
+google-adk==2.1.0
 google-api-core==2.30.3
 google-api-python-client==2.194.0
 google-auth==2.49.2
@@ -44,7 +44,7 @@ google-cloud-speech==2.38.0
 google-cloud-storage==3.10.1
 google-cloud-trace==1.19.0
 google-crc32c==1.8.0
-google-genai==1.73.1
+google-genai==1.75.0
 google-resumable-media==2.8.2
 googleapis-common-protos==1.74.0
 graphviz==0.21
