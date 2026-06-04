@@ -11,6 +11,7 @@ it from the session after the agent finishes.
 
 import logging
 import os
+import time
 from typing import Any
 
 from google.adk.tools import ToolContext
@@ -32,19 +33,6 @@ def _append_action(tool_context: ToolContext, action: dict[str, Any]) -> None:
     tool_context.state["actions"] = actions
 
 
-def _format_video_summary(video: dict[str, Any], index: int) -> str:
-    """Format a single video result as a text summary line for the agent."""
-    year = video.get("year") or "unknown year"
-    category = video.get("category") or "uncategorized"
-    relevance = video.get("relevance_pct", 0)
-    duration = video.get("duration_total_seconds")
-    duration_str = f", {int(duration // 60)}m{int(duration % 60)}s" if duration else ""
-    return (
-        f"{index}. \"{video.get('title', 'Untitled')}\" ({year}) — {category}, "
-        f"{relevance}% match{duration_str} [ID: {video.get('video_id', 'unknown')}]"
-    )
-
-
 # ---------------------------------------------------------------------------
 # UI Tools — trigger actions in the portal
 # ---------------------------------------------------------------------------
@@ -58,6 +46,16 @@ def search_videos(query: str, tool_context: ToolContext) -> dict:
         query: Natural language description of what to search for.
             Examples: "adventure cartoons", "educational films about science",
             "videos with animals in nature", "dramatic black and white footage".
+
+    Returns:
+        dict with keys:
+            status: "success" or "no_results"
+            total_results: int — total videos matched
+            search_time_ms: int — query latency
+            results: list of {video_id, title, year, category} for top 8 matches.
+                Use these IDs for follow-up tool calls and position references.
+            message: terse human-readable status. Confirm per the system instruction;
+                do not enumerate `results` back to the user.
     """
     result = bq_search_videos(query)
     _append_action(tool_context, {"type": "search", "query": query})
@@ -69,29 +67,36 @@ def search_videos(query: str, tool_context: ToolContext) -> dict:
             "message": f"No videos found for '{query}'.",
         }
 
-    summaries = [_format_video_summary(v, i + 1) for i, v in enumerate(videos[:8])]
     return {
         "status": "success",
         "total_results": result["total_results"],
         "search_time_ms": result["search_time_ms"],
-        "top_results": "\n".join(summaries),
+        "results": [
+            {
+                "video_id": v.get("video_id"),
+                "title": v.get("title"),
+                "year": v.get("year"),
+                "category": v.get("category"),
+            }
+            for v in videos[:8]
+        ],
         "message": (
-            f"Found {result['total_results']} videos matching '{query}' "
-            f"in {result['search_time_ms']}ms. The UI has been updated with results."
+            f"Found {result['total_results']} videos matching '{query}'. "
+            "The UI is showing them."
         ),
     }
 
 
 def apply_filters(
-    category: str = "",
-    mood: str = "",
-    color_mode: str = "",
-    style: str = "",
+    category: str | None = None,
+    mood: str | None = None,
+    color_mode: str | None = None,
+    style: str | None = None,
     *,
     tool_context: ToolContext,
 ) -> dict:
     """Apply filters to narrow the video library display. Only provide the
-    filters you want to change — omit or leave empty any you don't need.
+    filters you want to change — omit any you don't need.
 
     Args:
         category: Filter by category (e.g. "cartoon", "educational", "documentary",
@@ -101,6 +106,12 @@ def apply_filters(
         color_mode: Filter by color mode ("color" or "black and white").
         style: Filter by visual style (e.g. "animation", "live action",
             "mixed media", "stop motion").
+
+    Returns:
+        dict with keys:
+            status: "success" or "error"
+            message: confirmation of which filters were applied, or an error
+                if no filter was provided.
     """
     filters = {}
     if category:
@@ -132,6 +143,11 @@ def apply_filters(
 def clear_filters(tool_context: ToolContext) -> dict:
     """Reset all active filters to show the full library. Use this when the
     user wants to start over or see everything.
+
+    Returns:
+        dict with keys:
+            status: "success"
+            message: confirmation that all filters were cleared.
     """
     _append_action(tool_context, {"type": "clear_filters"})
     return {"status": "success", "message": "All filters cleared. Showing full library."}
@@ -144,6 +160,17 @@ def get_video_details(video_id: str, tool_context: ToolContext) -> dict:
 
     Args:
         video_id: The unique identifier of the video to inspect.
+
+    Returns:
+        dict with keys:
+            status: "success" or "error"
+            (on success) video_id, title, year, duration, category, mood,
+                color_mode, style, description, themes, characters, language,
+                has_dialogue, has_music, target_audience, setting, pacing,
+                content_warnings: the video's full AI-generated metadata.
+            message: terse human-readable confirmation. Summarize 2-3 most
+                relevant fields per the system instruction; do not dump every
+                field.
     """
     details = bq_get_video_details(video_id)
     if not details:
@@ -188,6 +215,14 @@ def find_similar(video_id: str, tool_context: ToolContext) -> dict:
 
     Args:
         video_id: The unique identifier of the video to find similar matches for.
+
+    Returns:
+        dict with keys:
+            status: "success" or "no_results"
+            total_results: int — number of similar videos found
+            results: list of {video_id, title, year, category} for top 8 matches.
+                Use these IDs for follow-up tool calls and position references.
+            message: terse human-readable status. Do not enumerate `results`.
     """
     result = bq_find_similar(video_id)
     _append_action(tool_context, {"type": "find_similar", "video_id": video_id})
@@ -199,14 +234,21 @@ def find_similar(video_id: str, tool_context: ToolContext) -> dict:
             "message": f"No similar videos found for '{video_id}'.",
         }
 
-    summaries = [_format_video_summary(v, i + 1) for i, v in enumerate(videos[:8])]
     return {
         "status": "success",
         "total_results": result["total_results"],
-        "top_results": "\n".join(summaries),
+        "results": [
+            {
+                "video_id": v.get("video_id"),
+                "title": v.get("title"),
+                "year": v.get("year"),
+                "category": v.get("category"),
+            }
+            for v in videos[:8]
+        ],
         "message": (
             f"Found {result['total_results']} similar videos. "
-            "The UI has been updated with results."
+            "The UI is showing them."
         ),
     }
 
@@ -216,6 +258,11 @@ def play_video(video_id: str, tool_context: ToolContext) -> dict:
 
     Args:
         video_id: The unique identifier of the video to play.
+
+    Returns:
+        dict with keys:
+            status: "success"
+            message: confirmation that playback started.
     """
     _append_action(tool_context, {"type": "play", "video_id": video_id})
     return {"status": "success", "message": f"Opening video player for '{video_id}'."}
@@ -233,6 +280,12 @@ def create_collection(
     Args:
         name: A descriptive name for the collection.
         video_ids: List of video IDs to include in the collection.
+
+    Returns:
+        dict with keys:
+            status: "success" or "error"
+            message: confirmation with the collection name and count, or an
+                error if no video IDs were provided.
     """
     if not video_ids:
         return {"status": "error", "message": "Please provide at least one video ID."}
@@ -260,6 +313,18 @@ def get_library_stats(tool_context: ToolContext) -> dict:
     """Get an overview of the entire video library including total videos,
     duration, year range, and breakdowns by category, mood, color mode, and style.
     Use this for questions like "how many videos do we have?" or "what categories exist?"
+
+    Returns:
+        dict with keys:
+            status: "success"
+            total_videos: int
+            total_duration_hours: float
+            earliest_year, latest_year: year range covered
+            total_categories: int
+            breakdowns: dict mapping label (Category, Mood, Color Mode, Style,
+                Content Warnings) to a multi-line "  value: count videos" string.
+            message: one-line summary of library size. Surface 1-3 most relevant
+                numbers per the system instruction; don't read the whole breakdown.
     """
     stats = bq_get_library_stats()
 
@@ -299,6 +364,23 @@ def query_metadata(query: str, tool_context: ToolContext) -> dict:
     Args:
         query: A standalone natural language question about the video data.
             Must be self-contained with all necessary context.
+
+    Returns:
+        dict with keys:
+            status: "success" or "error"
+            (on success) answer: the analytical answer from Conversational
+                Analytics. Pass through as-is, lightly framed; do not add
+                interpretation beyond what the tool returned.
+            (on success, optional) sql: the SQL CA generated, for transparency.
+            ca_time_ms: wall-clock latency of the Conversational Analytics
+                streaming call (always present; logged via after_tool_callback).
+            (on error) message: error description.
+
+        Note: chart specs (when CA produces a visualization) are routed to the
+        UI via tool_context.state["chart"] and intentionally not surfaced on
+        the return dict — telling the LLM "a chart was rendered" causes
+        hallucinated chart references in surfaces (like Gemini Enterprise)
+        where no chart actually appears.
     """
     try:
         from google.cloud import geminidataanalytics as ca
@@ -354,6 +436,7 @@ def query_metadata(query: str, tool_context: ToolContext) -> dict:
         sql: str | None = None
         error_text: str | None = None
         chart_spec: dict | None = None
+        start = time.time()
         for msg in client.chat(request=request):
             sm = msg.system_message
             if sm.text and sm.text.parts and sm.text.text_type == FINAL:
@@ -372,6 +455,7 @@ def query_metadata(query: str, tool_context: ToolContext) -> dict:
                 chart_spec = result_dict.get("vega_config") or chart_spec
             if sm.error and sm.error.text:
                 error_text = sm.error.text
+        elapsed_ms = int((time.time() - start) * 1000)
 
         answer = "\n".join(p for p in answer_parts if p).strip()
         if chart_spec:
@@ -381,7 +465,11 @@ def query_metadata(query: str, tool_context: ToolContext) -> dict:
             tool_context.state["chart"] = chart_spec
 
         if answer:
-            result = {"status": "success", "answer": answer}
+            result = {
+                "status": "success",
+                "answer": answer,
+                "ca_time_ms": elapsed_ms,
+            }
             if sql:
                 result["sql"] = sql
             # Chart spec deliberately not surfaced on the result dict — it
@@ -393,6 +481,7 @@ def query_metadata(query: str, tool_context: ToolContext) -> dict:
 
         return {
             "status": "error",
+            "ca_time_ms": elapsed_ms,
             "message": (
                 error_text
                 or "Conversational Analytics returned no answer. Try rephrasing."
