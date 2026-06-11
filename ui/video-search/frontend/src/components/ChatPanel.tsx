@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect, useCallback } from "react";
-import { Sparkles, X, Send, Loader2, RotateCcw } from "lucide-react";
+import { Sparkles, X, Send, Loader2, RotateCcw, Maximize2, Minimize2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { AgentAvatar } from "@/components/AgentAvatar";
@@ -13,6 +13,7 @@ interface ChatPanelProps {
 
 export function ChatPanel({ onAction }: ChatPanelProps) {
   const [isOpen, setIsOpen] = useState(false);
+  const [isExpanded, setIsExpanded] = useState(false);
   const [messages, setMessages] = useState<ChatMessageType[]>([]);
   const [input, setInput] = useState("");
   const [isLoading, setIsLoading] = useState(false);
@@ -101,7 +102,11 @@ export function ChatPanel({ onAction }: ChatPanelProps) {
     <div
       role="dialog"
       aria-label="The Archivist chat"
-      className="fixed bottom-0 right-0 sm:bottom-6 sm:right-6 z-50 w-full sm:w-[400px] h-[100dvh] sm:h-[600px] sm:max-h-[calc(100vh-3rem)] bg-background sm:rounded-xl border border-border shadow-2xl flex flex-col animate-in slide-in-from-bottom-5 fade-in"
+      className={`fixed bottom-0 right-0 sm:bottom-6 sm:right-6 z-50 w-full h-[100dvh] bg-background sm:rounded-xl border border-border shadow-2xl flex flex-col animate-in slide-in-from-bottom-5 fade-in transition-[width,height] duration-200 ${
+        isExpanded
+          ? "sm:w-[640px] sm:h-[calc(100vh-3rem)]"
+          : "sm:w-[400px] sm:h-[600px] sm:max-h-[calc(100vh-3rem)]"
+      }`}
     >
       {/* Header */}
       <div className="sm:rounded-t-xl bg-background/95 backdrop-blur border-b border-border px-5 py-3.5 flex items-center justify-between">
@@ -124,6 +129,19 @@ export function ChatPanel({ onAction }: ChatPanelProps) {
               <RotateCcw className="w-3.5 h-3.5" />
             </Button>
           )}
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() => setIsExpanded((v) => !v)}
+            aria-label={isExpanded ? "Shrink chat" : "Expand chat"}
+            className="hidden sm:inline-flex"
+          >
+            {isExpanded ? (
+              <Minimize2 className="w-3.5 h-3.5" />
+            ) : (
+              <Maximize2 className="w-3.5 h-3.5" />
+            )}
+          </Button>
           <Button variant="ghost" size="sm" onClick={() => setIsOpen(false)} aria-label="Close chat">
             <X className="w-4 h-4" />
           </Button>

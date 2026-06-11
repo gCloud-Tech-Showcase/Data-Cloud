@@ -1,4 +1,6 @@
 import { lazy, Suspense } from "react";
+import ReactMarkdown from "react-markdown";
+import remarkGfm from "remark-gfm";
 import { type LucideIcon, Search, Filter, Play, Info, Layers, RotateCcw } from "lucide-react";
 import { AgentAvatar } from "@/components/AgentAvatar";
 import type { ChatMessage as ChatMessageType, AgentAction } from "@/types";
@@ -60,9 +62,11 @@ export function ChatMessage({ message }: ChatMessageProps) {
       <AgentAvatar />
       <div className="space-y-1.5 max-w-[85%] min-w-0 flex-1">
         <div className="bg-muted rounded-lg rounded-tl-sm px-3.5 py-2.5">
-          <p className="text-sm text-foreground whitespace-pre-wrap">
-            {message.text}
-          </p>
+          <div className="prose prose-sm dark:prose-invert max-w-none text-foreground prose-p:my-0 prose-p:text-foreground prose-headings:text-foreground prose-strong:text-foreground prose-li:my-0.5">
+            <ReactMarkdown remarkPlugins={[remarkGfm]}>
+              {message.text}
+            </ReactMarkdown>
+          </div>
         </div>
         {message.chart && (
           <Suspense
