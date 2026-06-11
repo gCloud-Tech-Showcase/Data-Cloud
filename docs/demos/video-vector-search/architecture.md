@@ -21,7 +21,7 @@ graph TB
 
     subgraph "Silver Layer"
         G -->|AI.GENERATE_EMBEDDING| H[silver_segment_embeddings<br/>1408-dim vectors]
-        G -->|AI.GENERATE + Gemini 2.5| I[silver_video_metadata<br/>15 AI-extracted fields]
+        G -->|AI.GENERATE + Gemini 3.5| I[silver_video_metadata<br/>15 AI-extracted fields]
     end
 
     subgraph "Gold Layer"
@@ -33,7 +33,7 @@ graph TB
     subgraph "UI Layer"
         J -->|VECTOR_SEARCH| K[FastAPI Backend]
         K --> L[React Frontend]
-        K -->|ADK Agent| M[Gemini 2.5 Flash<br/>The Archivist]
+        K -->|ADK Agent| M[Gemini 3.5 Flash<br/>The Archivist]
         M -->|Conversational Analytics| J
     end
 
@@ -94,11 +94,11 @@ sequenceDiagram
 |-------|---------------|------|---------|
 | Bronze | `bronze_video_segments` | Object Table (SIMPLE) | GCS video segments queryable via SQL |
 | Model | `multimodal_embedding_model` | Remote Model | `multimodalembedding@001` for video/text embeddings |
-| Model | `gemini_video_model` | Remote Model | Gemini 2.5 Flash for AI metadata extraction |
+| Model | `gemini_video_model` | Remote Model | Gemini 3.5 Flash for AI metadata extraction |
 | Silver | `silver_segment_embeddings` | Incremental Table | 1408-dim embeddings per segment interval |
 | Silver | `silver_video_metadata` | Incremental Table | 15 AI-extracted fields per video |
 | Gold | `gold_searchable_videos` | Table | Embeddings + GCS metadata + AI metadata joined |
-| Agent | The Archivist (ADK) | LlmAgent | Conversational assistant with 9 tools (Gemini 2.5 Flash) |
+| Agent | The Archivist (ADK) | LlmAgent | Conversational assistant with 9 tools (Gemini 3.5 Flash) |
 
 ---
 
@@ -107,8 +107,8 @@ sequenceDiagram
 | Model | Endpoint | Purpose | Input |
 |-------|----------|---------|-------|
 | Multimodal Embedding | `multimodalembedding@001` | Cross-modal vector embeddings | Video segments (16s intervals) |
-| Gemini 2.5 Flash | `gemini-2.5-flash` | Structured metadata extraction | Video segment 0 via `AI.GENERATE` |
-| Gemini 2.5 Flash | `gemini-2.5-flash` | Agent reasoning + tool use | Natural language via ADK Agent (runtime) |
+| Gemini 3.5 Flash | `gemini-3.5-flash` (global endpoint URL) | Structured metadata extraction | Video segment 0 via `AI.GENERATE` |
+| Gemini 3.5 Flash | `gemini-3.5-flash` | Agent reasoning + tool use | Natural language via ADK Agent (runtime) |
 | Conversational Analytics | `geminidataanalytics` | NL-to-SQL on video metadata | Agent `query_metadata` tool |
 
 ---

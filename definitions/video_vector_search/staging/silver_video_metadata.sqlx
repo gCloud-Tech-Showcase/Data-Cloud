@@ -2,7 +2,7 @@ config {
   type: "incremental",
   schema: "video_vector_search",
   uniqueKey: ["video_id"],
-  description: "SILVER: Comprehensive AI-extracted video metadata using Gemini 2.5 Flash via AI.GENERATE. Incremental — only analyzes new videos not already in the table. Single-pass extraction of visual, content, and contextual metadata from each video's first segment.",
+  description: "SILVER: Comprehensive AI-extracted video metadata using Gemini 3.5 Flash via AI.GENERATE. Incremental — only analyzes new videos not already in the table. Single-pass extraction of visual, content, and contextual metadata from each video's first segment.",
   columns: {
     video_id: "Parent video identifier",
     category: "AI-detected content type",
@@ -56,7 +56,7 @@ UNNEST([
        'content_warnings: list any dated stereotypes, violence, or sensitive content, or empty if none.'
      )),
     connection_id => 'us.vertex-ai-connection',
-    endpoint => 'gemini-2.5-flash',
+    endpoint => 'https://aiplatform.googleapis.com/v1/projects/${dataform.projectConfig.defaultDatabase}/locations/global/publishers/google/models/gemini-3.5-flash',
     output_schema => 'category STRING, mood STRING, color_mode STRING, style STRING, description STRING, themes ARRAY<STRING>, characters ARRAY<STRING>, language STRING, has_dialogue BOOL, has_music BOOL, target_audience STRING, setting STRING, pacing STRING, content_warnings ARRAY<STRING>'
   )
 ]) AS r

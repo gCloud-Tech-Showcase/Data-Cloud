@@ -10,7 +10,7 @@ localhost:5173          →      localhost:8000          →      BigQuery + GCS
                                /api/search                   VECTOR_SEARCH
                                /api/videos                   gold_searchable_videos
                                /api/archive                  Archive.org API
-                               /api/agent/chat               ADK Agent + Gemini 2.5 Flash
+                               /api/agent/chat               ADK Agent + Gemini 3.5 Flash
 ```
 
 ## Quick Start
@@ -37,7 +37,7 @@ Open **http://localhost:5173**
 
 ## Features
 
-- **AI Agent ("The Archivist")** — Conversational assistant powered by Google ADK + Gemini 2.5 Flash. Search, filter, play, and analyze videos through natural language chat
+- **AI Agent ("The Archivist")** — Conversational assistant powered by Google ADK + Gemini 3.5 Flash. Search, filter, play, and analyze videos through natural language chat
 - **Semantic Search** — Natural language queries powered by BQ Vector Search
 - **AI Filters** — Category, mood, color, style, content warnings (all Gemini-generated)
 - **Video Playback** — Full video with segment navigation and match timeline
@@ -55,7 +55,7 @@ Open **http://localhost:5173**
 
 - **Frontend:** React 19, Vite, TypeScript, Tailwind CSS, shadcn/ui, Lucide icons
 - **Backend:** Python FastAPI, google-cloud-bigquery, google-cloud-storage
-- **AI Agent:** Google ADK, Gemini 2.5 Flash (via Vertex AI), Conversational Analytics API
+- **AI Agent:** Google ADK, Gemini 3.5 Flash (via Vertex AI), Conversational Analytics API
 - **Design System:** `local/branding_guide.md` (Roboto font, GCP blue primary)
 
 ## API Endpoints

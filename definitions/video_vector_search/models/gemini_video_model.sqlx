@@ -2,12 +2,16 @@ config {
   type: "operations",
   schema: "video_vector_search",
   hasOutput: true,
-  description: "Remote Gemini 2.5 Flash model for multimodal video analysis. Used to extract structured metadata (category, themes, characters, mood, etc.) from video content via AI.GENERATE with OBJ.GET_ACCESS_URL.",
+  description: "Remote Gemini 3.5 Flash model for multimodal video analysis. Used to extract structured metadata (category, themes, characters, mood, etc.) from video content via AI.GENERATE with OBJ.GET_ACCESS_URL.",
   tags: ["video_vector_search", "models"]
 }
 
+-- Gemini 3.x family models must be addressed via the global Vertex AI endpoint
+-- with the full publisher URL; the bare slug ('gemini-3.5-flash') is rejected.
+-- The connection stays US-regional — BigQuery connections are region-bound on
+-- the BQ side; the underlying SA can call the global Vertex endpoint regardless.
 CREATE OR REPLACE MODEL ${self()}
 REMOTE WITH CONNECTION `US.vertex-ai-connection`
 OPTIONS (
-  ENDPOINT = 'gemini-2.5-flash'
+  ENDPOINT = 'https://aiplatform.googleapis.com/v1/projects/${dataform.projectConfig.defaultDatabase}/locations/global/publishers/google/models/gemini-3.5-flash'
 )

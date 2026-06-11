@@ -78,7 +78,7 @@ Or wait for the hourly scheduled execution.
 The pipeline:
 1. **bronze_video_segments** — Object table refreshes (sees new segments in GCS)
 2. **silver_segment_embeddings** — Generates multimodal embeddings (incremental — only new segments)
-3. **silver_video_metadata** — Gemini 2.5 Flash extracts 15 metadata fields per video (incremental)
+3. **silver_video_metadata** — Gemini 3.5 Flash extracts 15 metadata fields per video (incremental)
 4. **gold_searchable_videos** — Joins embeddings + GCS metadata + AI metadata
 
 ---

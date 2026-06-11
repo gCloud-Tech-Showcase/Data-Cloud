@@ -133,7 +133,7 @@ Lists videos flagged by Gemini for dated stereotypes, violence, or sensitive con
 
 ---
 
-## 8. AI Metadata Extraction (Gemini 2.5 Flash)
+## 8. AI Metadata Extraction (Gemini 3.5 Flash)
 
 ```sql
 SELECT
@@ -145,14 +145,16 @@ UNNEST([
     (OBJ.GET_ACCESS_URL(ref, 'r'),
      'Classify this video. category: cartoon, educational, documentary, newsreel, or other. mood: humorous, dramatic, educational, suspenseful, lighthearted, or serious. description: one sentence about the main action. characters: character names if identifiable.'),
     connection_id => 'us.vertex-ai-connection',
-    endpoint => 'gemini-2.5-flash',
+    endpoint => 'https://aiplatform.googleapis.com/v1/projects/<your-project>/locations/global/publishers/google/models/gemini-3.5-flash',
     output_schema => 'category STRING, mood STRING, description STRING, characters ARRAY<STRING>'
   )
 ]) AS r
 WHERE uri LIKE '%/popeye-for-president/seg_000.mp4';
 ```
 
-Shows how `AI.GENERATE` with `OBJ.GET_ACCESS_URL` passes video content directly to Gemini 2.5 Flash for structured metadata extraction. No JSON parsing needed — `output_schema` returns typed columns.
+Shows how `AI.GENERATE` with `OBJ.GET_ACCESS_URL` passes video content directly to Gemini 3.5 Flash for structured metadata extraction. No JSON parsing needed — `output_schema` returns typed columns.
+
+> **Note:** Gemini 3.x family models require the **full global endpoint URL** (not the bare `gemini-3.5-flash` slug). The Dataform pipeline interpolates the project ID via `${dataform.projectConfig.defaultDatabase}` — in raw SQL, substitute your project ID into `<your-project>`.
 
 ---
 
