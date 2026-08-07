@@ -75,8 +75,8 @@ FROM ML.PREDICT(
       6 AS levels_completed,
       4 AS levels_failed,
       25.5 AS total_engagement_minutes,
-      1500 AS max_score,
-      150.0 AS avg_score,
+      12 AS max_score,
+      7.5 AS avg_score,
       0.6 AS level_completion_rate,
       5.0 AS avg_engagement_seconds_per_event,
       15.0 AS events_per_active_day,
@@ -84,7 +84,7 @@ FROM ML.PREDICT(
       6.4 AS events_per_day,
       3.6 AS engagement_minutes_per_day,
       'mobile' AS device_category,
-      'Android' AS operating_system,
+      'ANDROID' AS operating_system,
       'United States' AS country
   )
 );
