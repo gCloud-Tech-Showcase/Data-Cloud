@@ -33,7 +33,6 @@ config {
 }
 
 -- Aggregate user engagement from web events and orders
--- Pattern follows silver_user_sessions.sqlx from propensity_modeling
 
 WITH user_events AS (
   SELECT

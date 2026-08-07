@@ -14,7 +14,6 @@ config {
     country: "User's country from geo data",
     region: "User's region/state from geo data",
     engagement_time_msec: "Time spent engaged in milliseconds",
-    session_id: "Unique session identifier",
     screen_name: "Name of the screen/view displayed",
     score: "Game score achieved in the event",
     board: "Game board identifier",
@@ -38,14 +37,17 @@ SELECT
   geo.country AS country,
   geo.region AS region,
 
-  -- Unnested event parameters
+  -- Unnested event parameters.
+  -- This export writes `score` and `value` as double_value on most rows and
+  -- int_value on the rest, so reading either type alone silently drops ~90%
+  -- and ~27% of them respectively. Neither has a fractional value anywhere in
+  -- the source, so folding down to INT64 is lossless.
   (SELECT value.int_value FROM UNNEST(event_params) WHERE key = 'engagement_time_msec') AS engagement_time_msec,
-  (SELECT value.int_value FROM UNNEST(event_params) WHERE key = 'session_id') AS session_id,
   (SELECT value.string_value FROM UNNEST(event_params) WHERE key = 'firebase_screen') AS screen_name,
-  (SELECT value.int_value FROM UNNEST(event_params) WHERE key = 'score') AS score,
-  (SELECT value.int_value FROM UNNEST(event_params) WHERE key = 'board') AS board,
+  (SELECT COALESCE(value.int_value, CAST(value.double_value AS INT64)) FROM UNNEST(event_params) WHERE key = 'score') AS score,
+  (SELECT value.string_value FROM UNNEST(event_params) WHERE key = 'board') AS board,
   (SELECT value.string_value FROM UNNEST(event_params) WHERE key = 'level_name') AS level_name,
-  (SELECT value.int_value FROM UNNEST(event_params) WHERE key = 'value') AS event_value
+  (SELECT COALESCE(value.int_value, CAST(value.double_value AS INT64)) FROM UNNEST(event_params) WHERE key = 'value') AS event_value
 
 FROM ${ref("events_*")}
 
