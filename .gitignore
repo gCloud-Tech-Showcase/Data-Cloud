@@ -21,7 +21,7 @@ Thumbs.db
 
 # Credentials (never commit)
 *.json
-!examples/*.json
+!examples/**/*.json
 !*.json.example
 !package.json
 !package-lock.json

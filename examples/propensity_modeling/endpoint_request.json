@@ -1,0 +1,38 @@
+{
+  "instances": [
+    {
+      "days_in_window": 7,
+      "days_active": 5,
+      "total_events": 289,
+      "levels_started": 0,
+      "levels_completed": 0,
+      "total_engagement_minutes": 32.7437,
+      "max_score": 0,
+      "events_per_day": 41.285714285714285,
+      "engagement_minutes_per_day": 4.677671428571429,
+      "level_completion_rate": 0.0,
+      "events_per_active_day": 57.8,
+      "days_since_last_activity": 0,
+      "device_category": "mobile",
+      "operating_system": "ANDROID",
+      "country": "United States"
+    },
+    {
+      "days_in_window": 7,
+      "days_active": 1,
+      "total_events": 88,
+      "levels_started": 2,
+      "levels_completed": 2,
+      "total_engagement_minutes": 7.0911166666666665,
+      "max_score": 0,
+      "events_per_day": 12.571428571428571,
+      "engagement_minutes_per_day": 1.0130166666666667,
+      "level_completion_rate": 1.0,
+      "events_per_active_day": 88.0,
+      "days_since_last_activity": 6,
+      "device_category": "mobile",
+      "operating_system": "IOS",
+      "country": "Russia"
+    }
+  ]
+}
